@@ -12,11 +12,13 @@ abstract contract PolicyCRUDTest is RulesEngineCommon {
      *
      */
 
-    function testPolicyCreatePolicyType(uint8 _policyType) public ifDeploymentTestsEnabled resetsGlobalVariables {
-        _policyType = _policyType % 6;
+    function testPolicyCreatePolicy(uint8 _policyType) public ifDeploymentTestsEnabled resetsGlobalVariables {
+        uint8 policyTypes = 2;
+        _policyType = _policyType % (policyTypes * 2); // makes sure we have some valid and some invalid types
         vm.startPrank(user1);
-        // a low-level call is necessary for the test not to fail on an invalid policyType before hand
-        (bool success, ) = address(red).call(
+        // a low-level call is necessary for the test not to fail on a policyType negative-path test-building phase
+        if (_policyType > policyTypes) vm.expectRevert();
+        (, bytes memory data) = address(red).call(
             abi.encodeWithSelector(
                 RulesEnginePolicyFacet(address(red)).createPolicy.selector,
                 _policyType,
@@ -24,7 +26,9 @@ abstract contract PolicyCRUDTest is RulesEngineCommon {
                 "This is a test policy"
             )
         );
-        if (_policyType > 2 && success) revert("Policy type should not be created");
-        else if (_policyType <= 2 && !success) revert("Policy should've been created");
+        uint id = abi.decode(data, (uint));
+        /// we check if the policy id is handled correctly
+        if (_policyType <= policyTypes) require(id == 1, "Policy ID should be 1");
+        else require(id == 0, "Policy ID should be 0");
     }
 }
