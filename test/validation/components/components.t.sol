@@ -272,6 +272,41 @@ abstract contract components is RulesEngineCommon {
         assertEq(cf.signature, bytes4(""));
     }
 
+    function testRulesEngine_Unit_Calling_Function_Validate_Name_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256[] memory policyIds = new uint256[](1);
+        ParamTypes[] memory pTypes = new ParamTypes[](6);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        pTypes[2] = ParamTypes.ADDR;
+        pTypes[3] = ParamTypes.UINT;
+        pTypes[4] = ParamTypes.UINT;
+        pTypes[5] = ParamTypes.UINT;
+        policyIds[0] = _createBlankPolicy();
+        vm.expectRevert(abi.encodePacked(NAME_REQ));
+        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyIds[0],
+            bytes4(keccak256(bytes("transfer()"))),
+            pTypes,
+            "",//name
+            "address,uint256"
+        );
+    }
+
+    function testRulesEngine_Unit_Calling_Function_Validate_Signature_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256[] memory policyIds = new uint256[](1);
+        ParamTypes[] memory pTypes = new ParamTypes[](1);
+        pTypes[0] = ParamTypes.ADDR;
+        policyIds[0] = _createBlankPolicy();
+        vm.expectRevert(abi.encodePacked(SIG_REQ));
+        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyIds[0],
+            bytes4(keccak256(bytes(""))),// function signature
+            pTypes,
+            "transfer(address,uint256)",
+            "address,uint256"
+        );
+    }
+
     function testRulesEngine_Unit_deleteCallingFunctionMultiple_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory _callingFunctions;
@@ -792,4 +827,176 @@ abstract contract components is RulesEngineCommon {
         ForeignCall[] memory foreignCalls = RulesEngineForeignCallFacet(address(red)).getAllForeignCalls(policy2);
         assertEq(foreignCalls.length, 2);
     }
+    function testRulesEngine_Unit_Function_Signature_Validation_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicyOpen();
+        ParamTypes[] memory fcArgs = new ParamTypes[](1);
+        fcArgs[0] = ParamTypes.UINT;
+        ForeignCall memory fc;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        fc.parameterTypes = fcArgs;
+        fc.foreignCallAddress = address(testContract);
+        fc.signature = bytes4(keccak256(bytes("")));
+        fc.returnType = ParamTypes.UINT;
+        fc.foreignCallIndex = 0;
+        vm.expectRevert(abi.encodePacked(SIG_REQ));
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+    }
+
+    function testRulesEngine_Unit_Function_Signature_Name_Validation_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicyOpen();
+        ParamTypes[] memory fcArgs = new ParamTypes[](1);
+        fcArgs[0] = ParamTypes.UINT;
+        ForeignCall memory fc;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        fc.parameterTypes = fcArgs;
+        fc.foreignCallAddress = address(testContract);
+        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
+        fc.returnType = ParamTypes.UINT;
+        fc.foreignCallIndex = 0;
+        vm.expectRevert(abi.encodePacked(NAME_REQ));
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "");
+    }
+
+    function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
+        // start test as address 0x55556666
+        uint256 policyId = _createBlankPolicy();
+        ParamTypes[] memory fcArgs = new ParamTypes[](2);
+        fcArgs[0] = ParamTypes.UINT;
+        fcArgs[1] = ParamTypes.UINT;
+        ForeignCall memory fc;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](2);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
+        fc.encodedIndices[1].index = 0;
+        fc.encodedIndices[1].eType = EncodedIndexType.GLOBAL_VAR;
+        fc.mappedTrackerKeyIndices = new ForeignCallEncodedIndex[](1);
+        fc.mappedTrackerKeyIndices[0].index = 0;
+        fc.mappedTrackerKeyIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        fc.parameterTypes = fcArgs;
+        fc.foreignCallAddress = address(pfcContractAddress);
+        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
+        fc.returnType = ParamTypes.UINT;
+        fc.foreignCallIndex = 0;
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+    }
+
+    function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
+        // start test as address 0x55556666
+        uint256 policyId = _createBlankPolicy();
+        ParamTypes[] memory fcArgs = new ParamTypes[](2);
+        fcArgs[0] = ParamTypes.UINT;
+        fcArgs[1] = ParamTypes.UINT;
+        ForeignCall memory fc;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](2);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
+        fc.encodedIndices[1].index = 1;
+        fc.encodedIndices[1].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
+        fc.mappedTrackerKeyIndices = new ForeignCallEncodedIndex[](1);
+        fc.mappedTrackerKeyIndices[0].index = 0;
+        fc.mappedTrackerKeyIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        fc.parameterTypes = fcArgs;
+        fc.foreignCallAddress = address(pfcContractAddress);
+        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
+        fc.returnType = ParamTypes.UINT;
+        fc.foreignCallIndex = 0;
+        vm.expectRevert("Mapped tracker key indices length mismatch.");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+    }
+
+    function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Negative_ExtraMappedTrackerKey()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        // start test as address 0x55556666
+        uint256 policyId = _createBlankPolicy();
+        ParamTypes[] memory fcArgs = new ParamTypes[](2);
+        fcArgs[0] = ParamTypes.UINT;
+        fcArgs[1] = ParamTypes.UINT;
+        ForeignCall memory fc;
+
+        fc.encodedIndices = new ForeignCallEncodedIndex[](2);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
+        fc.encodedIndices[1].index = 0;
+        fc.encodedIndices[1].eType = EncodedIndexType.GLOBAL_VAR;
+        fc.mappedTrackerKeyIndices = new ForeignCallEncodedIndex[](2);
+        fc.mappedTrackerKeyIndices[0].index = 0;
+        fc.mappedTrackerKeyIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+        fc.mappedTrackerKeyIndices[1].index = 1;
+        fc.mappedTrackerKeyIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
+
+        fc.parameterTypes = fcArgs;
+        fc.foreignCallAddress = address(pfcContractAddress);
+        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
+
+        vm.expectRevert("Mapped tracker key indices length mismatch.");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+    }
+
+    function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Negative_DoubleNestedMappedTrackerKey()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        // start test as address 0x55556666
+        uint256 policyId = _createBlankPolicy();
+        ParamTypes[] memory fcArgs = new ParamTypes[](2);
+        fcArgs[0] = ParamTypes.UINT;
+        fcArgs[1] = ParamTypes.UINT;
+        ForeignCall memory fc;
+
+        fc.encodedIndices = new ForeignCallEncodedIndex[](2);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
+        fc.encodedIndices[1].index = 0;
+        fc.encodedIndices[1].eType = EncodedIndexType.GLOBAL_VAR;
+        fc.mappedTrackerKeyIndices = new ForeignCallEncodedIndex[](1);
+        fc.mappedTrackerKeyIndices[0].index = 0;
+        fc.mappedTrackerKeyIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
+
+        fc.parameterTypes = fcArgs;
+        fc.foreignCallAddress = address(pfcContractAddress);
+        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
+        fc.returnType = ParamTypes.UINT;
+
+        vm.expectRevert("Mapped tracker key cannot be double nested");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+    }
+
+    function testRulesEngine_Unit_Tracker_Name_Validation_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256 policyId = _createBlankPolicy();
+        Rule memory rule;
+        // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, 4, LogicalOp.GT, 0, 1
+        // Build the instruction set for the rule (including placeholders)
+        rule.instructionSet = _createInstructionSet(4);
+        // Build the calling function argument placeholder
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].pType = ParamTypes.UINT;
+        rule.placeHolders[0].typeSpecificIndex = 1;
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+        uint256 ruleId;
+        // Save the rule
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
+        Trackers memory tracker;
+        /// build the members of the struct:
+        tracker.pType = ParamTypes.BOOL;
+        tracker.set = true;
+        tracker.trackerValue = abi.encode(bool(false));
+        vm.expectRevert(abi.encodePacked(NAME_REQ));
+        RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "");
+    }
+
 }
