@@ -17,4 +17,7 @@ import "src/engine/RulesEngineErrors.sol";
  */
 abstract contract FacetCommonImports is AccessModifiers {
     uint256 constant MAX_LOOP = 10_000;
+    uint8 constant MAX_PTYPES = 8;
+    bytes32 constant EMPTY_STRING_HASH = keccak256(bytes(""));
+    bytes4 constant EMPTY_SIG = bytes4(keccak256(bytes("")));
 }

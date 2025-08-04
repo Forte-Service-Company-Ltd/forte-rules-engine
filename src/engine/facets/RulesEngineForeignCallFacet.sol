@@ -129,7 +129,7 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
     function _storeForeignCall(uint256 _policyId, ForeignCall calldata _foreignCall, uint256 _foreignCallIndex) internal {
         assert(_foreignCall.parameterTypes.length == _foreignCall.encodedIndices.length);
         if (_foreignCall.foreignCallAddress == address(0)) revert(ZERO_ADDRESS_NOT_ALLOWED);
-        if (_foreignCall.signature == bytes4(keccak256(bytes("")))) revert (SIG_REQ);
+        if (_foreignCall.signature == EMPTY_SIG) revert (SIG_REQ);
         require(_foreignCall.foreignCallIndex < MAX_LOOP, MAX_FC);
         require(_foreignCall.parameterTypes.length < MAX_LOOP, MAX_FC_PT);
         uint mappedTrackerKeyIndexCounter = 0;
@@ -176,7 +176,7 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
      * @param _foreignCallName The name of the foreign call.
      */
     function _storeForeignCallMetadata(uint256 _policyId, uint256 _foreignCallIndex, string calldata _foreignCallName) private {
-        require(keccak256(bytes(_foreignCallName)) != keccak256(bytes("")), NAME_REQ);
+        require(keccak256(bytes(_foreignCallName)) != EMPTY_STRING_HASH, NAME_REQ);
         lib._getForeignCallMetadataStorage().foreignCallMetadata[_policyId][_foreignCallIndex] = _foreignCallName;
     }
 
