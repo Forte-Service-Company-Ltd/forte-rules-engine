@@ -1207,6 +1207,6 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
     }
 
     function testRulesEngine_Utils_VersionCheck() public ifDeploymentTestsEnabled endWithStopPrank {
-        assertEq(RulesEngineProcessorFacet(address(red)).version(), "v1.0.0");
+        assertEq(RulesEngineProcessorFacet(address(red)).version(), "v0.3.0");
     }
 }
