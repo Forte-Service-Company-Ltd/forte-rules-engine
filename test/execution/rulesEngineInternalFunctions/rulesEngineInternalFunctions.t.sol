@@ -1151,6 +1151,507 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         console2.logBytes(retVal.value);
     }
 
+    function testRulesEngine_Unit_EncodingForeignCallBool() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "testSigWithBool(bool)";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.BOOL;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 0;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
+        typeSpecificIndices[0].index = 0;
+        typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        bytes memory vals = abi.encode(true);
+        bytes[] memory retVals = new bytes[](0);
+
+        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        assertEq(foreignCall.getDecodedBool(), true);
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallUint128() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "testSigWithUint128(uint128)";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.UINT;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 0;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
+        typeSpecificIndices[0].index = 0;
+        typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        uint128 testValue = 123456789012345678901234567890;
+        bytes memory vals = abi.encode(testValue);
+        bytes[] memory retVals = new bytes[](0);
+
+        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        assertEq(foreignCall.getDecodedUint128(), testValue);
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallUint64() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "testSigWithUint64(uint64)";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.UINT;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 0;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
+        typeSpecificIndices[0].index = 0;
+        typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        uint64 testValue = 18446744073709551615; // max uint64 value
+        bytes memory vals = abi.encode(testValue);
+        bytes[] memory retVals = new bytes[](0);
+
+        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        assertEq(foreignCall.getDecodedUint64(), testValue);
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallEmptyArray() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "testSigWithEmptyArray(uint256[])";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 0;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
+        typeSpecificIndices[0].index = 0;
+        typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        uint256[] memory emptyArray = new uint256[](0);
+        bytes memory vals = abi.encode(emptyArray);
+        bytes[] memory retVals = new bytes[](0);
+
+        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+
+        // Validate the array is indeed empty after execution
+        uint256[] memory resultArray = foreignCall.getInternalArrayUint();
+        assertEq(resultArray.length, 0, "Internal array should be empty");
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallReturningAddress() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "getDecodedAddr()";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+
+        // populate the decoded address
+        address testAddress = address(0x1234567890123456789012345678901234567890);
+        foreignCall.testSig(testAddress);
+
+        // test the getter as a foreign call
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](0); // No parameters
+        fc.returnType = ParamTypes.ADDR; // Returning address
+        fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
+
+        bytes memory vals = abi.encode(); // No parameters
+        bytes[] memory retVals = new bytes[](0);
+
+        ForeignCallReturnValue memory result = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+
+        assertEq(uint256(result.pType), uint256(ParamTypes.ADDR));
+
+        // Decode the returned address and verify it matches expected
+        address returnedAddress = abi.decode(result.value, (address));
+        assertEq(returnedAddress, testAddress);
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallReturningString() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "testSigReturningString(uint256)";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.UINT;
+        fc.returnType = ParamTypes.STR;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 0;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
+        typeSpecificIndices[0].index = 0;
+        typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        bytes[] memory retVals = new bytes[](0);
+
+        bytes memory vals1 = abi.encode(44);
+        ForeignCallReturnValue memory result1 = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals1,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+        assertEq(uint256(result1.pType), uint256(ParamTypes.STR));
+        string memory returnedString1 = abi.decode(result1.value, (string));
+        assertEq(returnedString1, "forty-four");
+
+        bytes memory vals2 = abi.encode(0);
+        ForeignCallReturnValue memory result2 = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals2,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+        assertEq(uint256(result2.pType), uint256(ParamTypes.STR));
+        string memory returnedString2 = abi.decode(result2.value, (string));
+        assertEq(returnedString2, "zero");
+
+        bytes memory vals3 = abi.encode(1337);
+        ForeignCallReturnValue memory result3 = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals3,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+        assertEq(uint256(result3.pType), uint256(ParamTypes.STR));
+        string memory returnedString3 = abi.decode(result3.value, (string));
+        assertEq(returnedString3, "other");
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallReturningUintArray() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "getInternalArrayUint()";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+
+        // populate the internal array using the setter
+        uint256[] memory testArray = new uint256[](3);
+        testArray[0] = 100;
+        testArray[1] = 200;
+        testArray[2] = 300;
+        foreignCall.testSigWithArray(testArray);
+
+        // test the getter as a foreign call
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](0); // No parameters
+        fc.returnType = ParamTypes.STATIC_TYPE_ARRAY; // Returning uint256 array
+        fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
+
+        bytes memory vals = abi.encode(); // No parameters
+        bytes[] memory retVals = new bytes[](0);
+
+        ForeignCallReturnValue memory result = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+
+        assertEq(uint256(result.pType), uint256(ParamTypes.STATIC_TYPE_ARRAY));
+
+        // Decode the returned array and verify it matches expected
+        uint256[] memory returnedArray = abi.decode(result.value, (uint256[]));
+        assertEq(returnedArray.length, 3);
+        assertEq(returnedArray[0], 100);
+        assertEq(returnedArray[1], 200);
+        assertEq(returnedArray[2], 300);
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallReturningAddressArray() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "getInternalArrayAddr()";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+
+        // populate the internal address array
+        address[] memory testArray = new address[](3);
+        testArray[0] = address(0x1234);
+        testArray[1] = address(0x0987);
+        testArray[2] = address(0x1337);
+        foreignCall.testSigWithArray(testArray);
+
+        // test the getter as a foreign call
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](0); // No parameters
+        fc.returnType = ParamTypes.STATIC_TYPE_ARRAY; // Returning address array
+        fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
+
+        bytes memory vals = abi.encode(); // No parameters
+        bytes[] memory retVals = new bytes[](0);
+
+        ForeignCallReturnValue memory result = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+
+        assertEq(uint256(result.pType), uint256(ParamTypes.STATIC_TYPE_ARRAY));
+
+        // Decode the returned array and verify it matches expected
+        address[] memory returnedArray = abi.decode(result.value, (address[]));
+        assertEq(returnedArray.length, 3);
+        assertEq(returnedArray[0], address(0x1234));
+        assertEq(returnedArray[1], address(0x0987));
+        assertEq(returnedArray[2], address(0x1337));
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallReturningStringArray() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "getInternalArrayStr()";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+
+        // populate the internal string arra
+        string[] memory testArray = new string[](3);
+        testArray[0] = "Gordon";
+        testArray[1] = "Tayler";
+        testArray[2] = "Shane";
+        foreignCall.testSigWithArray(testArray);
+
+        // test the getter as a foreign call
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](0); // No parameters
+        fc.returnType = ParamTypes.DYNAMIC_TYPE_ARRAY; // Returning string array
+        fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
+
+        bytes memory vals = abi.encode(); // No parameters
+        bytes[] memory retVals = new bytes[](0);
+
+        ForeignCallReturnValue memory result = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+
+        assertEq(uint256(result.pType), uint256(ParamTypes.DYNAMIC_TYPE_ARRAY));
+
+        // Decode the returned array and verify it matches expected
+        string[] memory returnedArray = abi.decode(result.value, (string[]));
+        assertEq(returnedArray.length, 3);
+        assertEq(returnedArray[0], "Gordon");
+        assertEq(returnedArray[1], "Tayler");
+        assertEq(returnedArray[2], "Shane");
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallReturningBytesArray() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "getInternalArrayBytes()";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+
+        // populate the internal bytes array
+        bytes[] memory testArray = new bytes[](3);
+        testArray[0] = abi.encode("Michael");
+        testArray[1] = abi.encode("RJ");
+        testArray[2] = abi.encode("Oscar");
+        foreignCall.testSigWithArray(testArray);
+
+        // test the getter as a foreign call
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](0); // No parameters
+        fc.returnType = ParamTypes.DYNAMIC_TYPE_ARRAY; // Returning bytes array
+        fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
+
+        bytes memory vals = abi.encode(); // No parameters
+        bytes[] memory retVals = new bytes[](0);
+
+        ForeignCallReturnValue memory result = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+
+        assertEq(uint256(result.pType), uint256(ParamTypes.DYNAMIC_TYPE_ARRAY));
+
+        // Decode the returned array and verify it matches expected
+        bytes[] memory returnedArray = abi.decode(result.value, (bytes[]));
+        assertEq(returnedArray.length, 3);
+        assertEq(returnedArray[0], abi.encode("Michael"));
+        assertEq(returnedArray[1], abi.encode("RJ"));
+        assertEq(returnedArray[2], abi.encode("Oscar"));
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallReturningBool() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "getDecodedBool()";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+
+        // populate the internal bool
+        foreignCall.testSigWithBool(true);
+
+        // test the getter as a foreign call
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](0); // No parameters
+        fc.returnType = ParamTypes.BOOL; // Returning bool
+        fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
+
+        bytes memory vals = abi.encode(); // No parameters
+        bytes[] memory retVals = new bytes[](0);
+
+        ForeignCallReturnValue memory result = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+
+        assertEq(uint256(result.pType), uint256(ParamTypes.BOOL));
+
+        // Decode the returned bool and verify it matches expected
+        bool returnedBool = abi.decode(result.value, (bool));
+        assertTrue(returnedBool);
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallReturningBytes() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "getDecodedBytes()";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+
+        // populate the bytes
+        bytes memory testBytes = abi.encode("test", 42, "data");
+        foreignCall.testSigWithBytes(testBytes);
+
+        // test the getter as a foreign call
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](0); // No parameters
+        fc.returnType = ParamTypes.BYTES; // Returning bytes
+        fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
+
+        bytes memory vals = abi.encode(); // No parameters
+        bytes[] memory retVals = new bytes[](0);
+
+        ForeignCallReturnValue memory result = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+
+        assertEq(uint256(result.pType), uint256(ParamTypes.BYTES));
+
+        // Decode the returned bytes and verify it matches expected
+        bytes memory returnedBytes = abi.decode(result.value, (bytes));
+        assertEq(returnedBytes, testBytes);
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallReturningUint128() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "getDecodedUint128()";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+
+        // populate the decoded uint128
+        uint128 testValue = 123456789012345678901234567890;
+        foreignCall.testSigWithUint128(testValue);
+
+        // test the getter as a foreign call
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](0); // No parameters
+        fc.returnType = ParamTypes.UINT; // Returning uint128 (treated as UINT)
+        fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
+
+        bytes memory vals = abi.encode(); // No parameters
+        bytes[] memory retVals = new bytes[](0);
+
+        ForeignCallReturnValue memory result = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+
+        assertEq(uint256(result.pType), uint256(ParamTypes.UINT));
+
+        // Decode the returned uint128 and verify it matches expected
+        uint128 returnedValue = abi.decode(result.value, (uint128));
+        assertEq(returnedValue, testValue);
+    }
+
+    function testRulesEngine_Unit_EncodingForeignCallReturningUint64() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory functionSig = "getDecodedUint64()";
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+
+        // populate the decoded uint64
+        uint64 testValue = 9876543210123456789;
+        foreignCall.testSigWithUint64(testValue);
+
+        // test the getter as a foreign call
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](0); // No parameters
+        fc.returnType = ParamTypes.UINT; // Returning uint64 (treated as UINT)
+        fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
+
+        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
+
+        bytes memory vals = abi.encode(); // No parameters
+        bytes[] memory retVals = new bytes[](0);
+
+        ForeignCallReturnValue memory result = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            fc,
+            vals,
+            retVals,
+            typeSpecificIndices,
+            1
+        );
+
+        assertEq(uint256(result.pType), uint256(ParamTypes.UINT));
+
+        // Decode the returned uint64 and verify it matches expected
+        uint64 returnedValue = abi.decode(result.value, (uint64));
+        assertEq(returnedValue, testValue);
+    }
+
     // /// Test utility functions within ExampleUserContract.sol and RulesEngineRunRulesEngineProcessorFacet(address(red)).sol
     function testRulesEngine_Utils_UserContract_setRulesEngineAddress() public ifDeploymentTestsEnabled endWithStopPrank {
         userContractInternal.setRulesEngineAddress(address(red));

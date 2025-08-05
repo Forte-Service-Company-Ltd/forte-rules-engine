@@ -19,6 +19,9 @@ contract ForeignCallTestContract {
     address[] internalArrayAddr;
     string[] internalArrayStr;
     bytes[] internalArrayBytes;
+    bool public decodedBool;
+    uint128 public decodedUint128;
+    uint64 public decodedUint64;
 
     function testSig(
         uint256 encodedIntOne,
@@ -183,6 +186,21 @@ contract ForeignCallTestContract {
         return true;
     }
 
+    function testSigWithBool(bool encodedBool) public returns (bool) {
+        decodedBool = encodedBool;
+        return true;
+    }
+
+    function testSigWithUint128(uint128 encodedUint128) public returns (uint128) {
+        decodedUint128 = encodedUint128;
+        return encodedUint128;
+    }
+
+    function testSigWithUint64(uint64 encodedUint64) public returns (uint64) {
+        decodedUint64 = encodedUint64;
+        return encodedUint64;
+    }
+
     function simpleCheck(uint256 value) public returns (uint256) {
         internalValue = value;
         return value;
@@ -238,6 +256,37 @@ contract ForeignCallTestContract {
 
     function getDecodedAddrTwo() public view returns (address) {
         return decodedAddrTwo;
+    }
+
+    function getDecodedBool() public view returns (bool) {
+        return decodedBool;
+    }
+
+    function getDecodedUint128() public view returns (uint128) {
+        return decodedUint128;
+    }
+
+    function getDecodedUint64() public view returns (uint64) {
+        return decodedUint64;
+    }
+
+    function testSigWithEmptyArray(uint256[] memory emptyArray) public returns (bool) {
+        // Clear existing array and add empty array elements (should be none)
+        delete internalArrayUint;
+        for (uint256 i = 0; i < emptyArray.length; i++) {
+            internalArrayUint.push(emptyArray[i]);
+        }
+        return true;
+    }
+
+    function testSigReturningString(uint256 input) public pure returns (string memory) {
+        if (input == 44) {
+            return "forty-four";
+        } else if (input == 0) {
+            return "zero";
+        } else {
+            return "other";
+        }
     }
 }
 
