@@ -778,7 +778,7 @@ abstract contract policies is RulesEngineCommon {
         assertEq(data.policyDescription, policyDescription);
     }
 
-    function testRulesEngine_Unit_deletePolicy() public {
+    function testRulesEngine_Unit_deletePolicy() public ifDeploymentTestsEnabled endWithStopPrank {
         vm.startPrank(user1);
         uint policyId = _createBlankPolicy();
 
@@ -876,7 +876,7 @@ abstract contract policies is RulesEngineCommon {
             rule.negEffects = new Effect[](1);
             rule.negEffects[0] = effectId_revert;
             // we check that a rule cannot be made for the erased policy
-            vm.expectRevert("PolicyId is invalid");
+            vm.expectRevert("Policy does not exist");
             ruleId = RulesEngineRuleFacet(address(red)).updateRule(1, 0, rule, "My rule", "My way or the highway");
         }
         // we check that we can't create a calling function for a deleted policy
