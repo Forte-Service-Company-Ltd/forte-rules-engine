@@ -12,13 +12,13 @@ abstract contract PolicyCRUDTest is RulesEngineCommon {
      *
      */
 
-    function testPolicyCreatePolicy(uint8 _policyType) public ifDeploymentTestsEnabled resetsGlobalVariables {
+    function testPolicy_createPolicy(uint8 _policyType) public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint8 policyTypes = 2;
         _policyType = _policyType % (policyTypes * 2); // makes sure we have some valid and some invalid types
         vm.startPrank(user1);
         // a low-level call is necessary for the test not to fail on a policyType negative-path test-building phase
-        if (_policyType > policyTypes) vm.expectRevert();
-        (, bytes memory data) = address(red).call(
+        if (_policyType > policyTypes) vm.expectRevert("PolicyType is invalid");
+        (bool success, bytes memory data) = address(red).call(
             abi.encodeWithSelector(
                 RulesEnginePolicyFacet(address(red)).createPolicy.selector,
                 _policyType,
@@ -29,6 +29,257 @@ abstract contract PolicyCRUDTest is RulesEngineCommon {
         uint id = abi.decode(data, (uint));
         /// we check if the policy id is handled correctly
         if (_policyType <= policyTypes) require(id == 1, "Policy ID should be 1");
-        else require(id == 0, "Policy ID should be 0");
+        else require(success == false, "Policy ID should be 0");
+    }
+
+    function testPolicy_updatePolicy_policyType(uint8 _policyType) public {
+        uint8 policyTypes = 2;
+        _policyType = _policyType % (policyTypes * 2); // makes sure we have some valid and some invalid types
+        vm.startPrank(user1);
+        uint policyId = _createBlankPolicy();
+        bytes4[] memory selectors = new bytes4[](0);
+        uint256[] memory functionIds = new uint256[](0);
+        uint256[][] memory _ruleIds = new uint256[][](0);
+        if (_policyType > policyTypes) vm.expectRevert("PolicyType is invalid");
+        (, bytes memory data) = address(red).call(
+            abi.encodeWithSelector(
+                RulesEnginePolicyFacet(address(red)).updatePolicy.selector,
+                policyId,
+                selectors,
+                functionIds,
+                _ruleIds,
+                _policyType,
+                "Test Policy",
+                "This is a test policy"
+            )
+        );
+        if (!(_policyType > policyTypes)) {
+            assertEq(RulesEnginePolicyFacet(address(red)).isClosedPolicy(policyId), _policyType == 0 ? true : false);
+        }
+    }
+
+    function testPolicy_updatePolicy_notAuthorizedToPolicy(uint randomPolicyId) public {
+        randomPolicyId = randomPolicyId % 10;
+        vm.startPrank(user1);
+        uint policyId = _createBlankPolicy();
+        bytes4[] memory selectors = new bytes4[](0);
+        uint256[] memory functionIds = new uint256[](0);
+        uint256[][] memory _ruleIds = new uint256[][](0);
+        if (policyId != randomPolicyId) vm.expectRevert("Not Authorized To Policy");
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            randomPolicyId,
+            selectors,
+            functionIds,
+            _ruleIds,
+            PolicyType.OPEN_POLICY,
+            "Test Policy",
+            "This is a test policy"
+        );
+        if (policyId == randomPolicyId) {
+            (bytes4[] memory callingFunctions_, uint256[] memory callingFunctionIds_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(
+                address(red)
+            ).getPolicy(policyId);
+            assertEq(callingFunctions_.length, selectors.length);
+            assertEq(callingFunctionIds_.length, functionIds.length);
+            assertEq(ruleIds_.length, _ruleIds.length);
+        }
+    }
+
+    function testPolicy_updatePolicy_invalidSignature(uint selectorAmount) public {
+        uint maxSizeArray = 7;
+        selectorAmount = (selectorAmount % maxSizeArray) + 1;
+        vm.startPrank(user1);
+        uint policyId = _createBlankPolicy();
+        bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
+        // we skip the creation of the function to provoke the error
+        uint functionId = 1;
+        bytes4[] memory selectors = new bytes4[](selectorAmount);
+        if (selectorAmount > 0) for (uint i; i < selectorAmount; i++) selectors[i] = sigCallingFunction;
+        uint256[] memory functionIds = new uint256[](selectorAmount);
+        if (selectorAmount > 0) for (uint i; i < selectorAmount; i++) functionIds[i] = functionId;
+        uint256[][] memory _ruleIds = new uint256[][](0);
+        vm.expectRevert("Invalid Signature");
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            functionIds,
+            _ruleIds,
+            PolicyType.OPEN_POLICY,
+            "Test Policy",
+            "This is a test policy"
+        );
+    }
+
+    function testPolicy_updatePolicy_arrayLengthWithoutRules(uint selectorAmount, uint functionIdAmount) public {
+        uint maxSizeArray = 7;
+        selectorAmount = selectorAmount % maxSizeArray;
+        functionIdAmount = functionIdAmount % maxSizeArray;
+        vm.startPrank(user1);
+        uint policyId = _createBlankPolicy();
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
+        uint functionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            sigCallingFunction,
+            pTypes,
+            callingFunction,
+            ""
+        );
+        bytes4[] memory selectors = new bytes4[](selectorAmount);
+        if (selectorAmount > 0) for (uint i; i < selectorAmount; i++) selectors[i] = sigCallingFunction;
+        uint256[] memory functionIds = new uint256[](functionIdAmount);
+        if (functionIdAmount > 0) for (uint i; i < functionIdAmount; i++) functionIds[i] = functionId;
+        uint256[][] memory _ruleIds = new uint256[][](0);
+        if (selectorAmount != functionIdAmount) vm.expectRevert("Signatures and signature id's are inconsistent");
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            functionIds,
+            _ruleIds,
+            PolicyType.OPEN_POLICY,
+            "Test Policy",
+            "This is a test policy"
+        );
+        if (selectorAmount == functionIdAmount) {
+            (bytes4[] memory callingFunctions_, uint256[] memory callingFunctionIds_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(
+                address(red)
+            ).getPolicy(policyId);
+            assertEq(callingFunctions_.length, selectors.length, "selector length mismatch");
+            assertEq(callingFunctionIds_.length, functionIds.length, "function id length mismatch");
+            assertEq(ruleIds_.length, selectorAmount, "rule id length mismatch");
+            for (uint i; i < selectorAmount; i++) assertEq(ruleIds_[i].length, 0, "rule id length mismatch");
+        }
+    }
+
+    function testPolicy_updatePolicy_InvalidRule(uint functionAmount) public {
+        uint maxSizeArray = 7;
+        functionAmount = (functionAmount % maxSizeArray) + 1;
+        vm.startPrank(user1);
+        uint policyId = _createBlankPolicy();
+
+        // we skip the rule creation to provoke the error
+        uint ruleId = 1;
+
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
+        uint functionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            sigCallingFunction,
+            pTypes,
+            callingFunction,
+            ""
+        );
+        bytes4[] memory selectors = new bytes4[](functionAmount);
+        if (functionAmount > 0) for (uint i; i < functionAmount; i++) selectors[i] = sigCallingFunction;
+        uint256[] memory functionIds = new uint256[](functionAmount);
+        if (functionAmount > 0) for (uint i; i < functionAmount; i++) functionIds[i] = functionId;
+        uint256[][] memory _ruleIds = new uint256[][](functionAmount);
+        uint256[] memory _ids = new uint256[](functionAmount);
+        _ids[0] = ruleId;
+        if (functionAmount > 0) for (uint i; i < functionAmount; i++) _ruleIds[i] = _ids;
+        vm.expectRevert("Invalid Rule");
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            functionIds,
+            _ruleIds,
+            PolicyType.OPEN_POLICY,
+            "Test Policy",
+            "This is a test policy"
+        );
+    }
+
+    function testPolicy_updatePolicy_arrayLengthWithRules(uint functionAmount, uint ruleAmounts) public {
+        {
+            uint maxSizeArray = 7;
+            functionAmount = functionAmount % maxSizeArray;
+            ruleAmounts = ruleAmounts % maxSizeArray;
+        }
+        vm.startPrank(user1);
+        uint policyId = _createBlankPolicy();
+
+        uint ruleId;
+        {
+            Rule memory rule;
+            // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, *uint256 representation of Bad Info*, LogicalOp.EQ, 0, 1
+            // Build the instruction set for the rule (including placeholders)
+            rule.instructionSet = new uint256[](7);
+            rule.instructionSet[0] = uint(LogicalOp.PLH);
+            rule.instructionSet[1] = 0;
+            rule.instructionSet[2] = uint(LogicalOp.NUM);
+            rule.instructionSet[3] = uint256(keccak256(abi.encode("Bad Info")));
+            rule.instructionSet[4] = uint(LogicalOp.EQ);
+            rule.instructionSet[5] = 0;
+            rule.instructionSet[6] = 1;
+
+            rule.rawData.argumentTypes = new ParamTypes[](1);
+            rule.rawData.dataValues = new bytes[](1);
+            rule.rawData.instructionSetIndex = new uint256[](1);
+            rule.rawData.argumentTypes[0] = ParamTypes.STR;
+            rule.rawData.dataValues[0] = abi.encode("Bad Info");
+            rule.rawData.instructionSetIndex[0] = 3;
+
+            // Build the calling function argument placeholder
+            rule.placeHolders = new Placeholder[](1);
+            rule.placeHolders[0].pType = ParamTypes.STR;
+            rule.placeHolders[0].typeSpecificIndex = 1;
+            rule.negEffects = new Effect[](1);
+            rule.negEffects[0] = effectId_revert;
+            // Save the rule
+            ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, "My rule", "My way or the highway");
+        }
+
+        uint functionId;
+        bytes4 sigCallingFunction;
+        {
+            ParamTypes[] memory pTypes = new ParamTypes[](2);
+            pTypes[0] = ParamTypes.ADDR;
+            pTypes[1] = ParamTypes.UINT;
+            sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
+            functionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyId,
+                sigCallingFunction,
+                pTypes,
+                callingFunction,
+                ""
+            );
+        }
+        bytes4[] memory selectors = new bytes4[](functionAmount);
+        if (functionAmount > 0) for (uint i; i < functionAmount; i++) selectors[i] = sigCallingFunction;
+        uint256[] memory functionIds = new uint256[](functionAmount);
+        if (functionAmount > 0) for (uint i; i < functionAmount; i++) functionIds[i] = functionId;
+        uint256[][] memory _ruleIds = new uint256[][](ruleAmounts);
+        uint256[] memory _ids = new uint256[](1);
+        _ids[0] = ruleId;
+        if (ruleAmounts > 0) for (uint i; i < ruleAmounts; i++) _ruleIds[i] = _ids;
+        // bool willRevert = functionAmount != ruleAmounts && ruleAmounts > 0 && functionAmount > 0;
+        if (functionAmount != ruleAmounts && ruleAmounts > 0 && functionAmount > 0) vm.expectRevert("Invalid rule array length");
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            functionIds,
+            _ruleIds,
+            PolicyType.OPEN_POLICY,
+            "Test Policy",
+            "This is a test policy"
+        );
+
+        if (functionAmount == ruleAmounts && ruleAmounts > 0 && functionAmount > 0) {
+            (bytes4[] memory callingFunctions_, uint256[] memory callingFunctionIds_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(
+                address(red)
+            ).getPolicy(policyId);
+            assertEq(callingFunctions_.length, selectors.length, "selector length mismatch");
+            assertEq(callingFunctionIds_.length, functionIds.length, "function id length mismatch");
+            assertEq(ruleIds_.length, _ruleIds.length, "rule id length mismatch");
+            for (uint i; i < _ruleIds.length; i++) {
+                assertEq(ruleIds_[i].length, functionAmount, "rule id length mismatch");
+                RuleStorageSet memory ruleStorage = RulesEngineRuleFacet(address(red)).getRule(policyId, ruleIds_[i][0]);
+                assertEq(ruleStorage.rule.instructionSet.length, 7, "instruction set length mismatch");
+            }
+        }
     }
 }

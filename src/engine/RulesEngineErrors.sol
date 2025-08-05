@@ -27,6 +27,7 @@ string constant PARM_NOT_SAME_TYPE = "New parameter types must be of the same ty
 string constant NOT_ALLOWED_CEMENTED_POLICY = "Not allowed for cemented policy";
 string constant SIG_REQ = "Function signature is required";
 string constant NAME_REQ = "Name is required";
+string constant INVALID_RULE_LENGTH = "Invalid rule array length";
 
 string constant MAX_FC = "Max foreign calls reached";
 string constant MAX_FC_PT = "Max foreign parameter types reached.";

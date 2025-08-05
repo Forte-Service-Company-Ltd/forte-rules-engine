@@ -440,8 +440,6 @@ abstract contract rulesExecution is RulesEngineCommon {
             ""
         );
 
-        ruleIds.push(new uint256[](1));
-        ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
 
         // Save the Policy
@@ -527,8 +525,6 @@ abstract contract rulesExecution is RulesEngineCommon {
             ""
         );
 
-        ruleIds.push(new uint256[](1));
-        ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunctionWithBytes))));
@@ -624,8 +620,6 @@ abstract contract rulesExecution is RulesEngineCommon {
             ""
         );
 
-        ruleIds.push(new uint256[](1));
-        ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunctionBytes))));
@@ -716,8 +710,6 @@ abstract contract rulesExecution is RulesEngineCommon {
             ""
         );
 
-        ruleIds.push(new uint256[](1));
-        ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
 
         // Save the Policy
@@ -809,8 +801,6 @@ abstract contract rulesExecution is RulesEngineCommon {
             ""
         );
 
-        ruleIds.push(new uint256[](1));
-        ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
 
         // Save the Policy
@@ -902,8 +892,6 @@ abstract contract rulesExecution is RulesEngineCommon {
             ""
         );
 
-        ruleIds.push(new uint256[](1));
-        ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunctionArrayDynamic))));
@@ -996,8 +984,6 @@ abstract contract rulesExecution is RulesEngineCommon {
             ""
         );
 
-        ruleIds.push(new uint256[](1));
-        ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunctionArrayDynamic))));

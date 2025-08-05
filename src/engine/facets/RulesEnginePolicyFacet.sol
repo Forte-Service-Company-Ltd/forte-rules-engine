@@ -36,13 +36,11 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         string calldata policyName,
         string calldata policyDescription
     ) external returns (uint256) {
+        // if policy ID is zero no policy has been created and cannot be updated.
         _policyAdminOnly(policyId, msg.sender);
         StorageLib._notCemented(policyId);
         // calling functions length must match the calling function ids length
         if (callingFunctions.length != callingFunctionIds.length) revert(SIGNATURES_INCONSISTENT);
-        // if policy ID is zero no policy has been created and cannot be updated.
-        if (policyId == 0) revert(POLICY_ID_0);
-
         // Update the policy type
         return _storePolicyData(policyId, callingFunctions, callingFunctionIds, ruleIds, policyType, policyName, policyDescription);
     }
@@ -386,6 +384,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         uint256[][] calldata _ruleIds,
         Policy storage data
     ) private {
+        if (_ruleIds.length != _callingFunctions.length && _callingFunctions.length > 0) revert(INVALID_RULE_LENGTH);
         for (uint256 i = 0; i < _callingFunctions.length; i++) {
             // Validate calling function
             if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctionIds[i])) revert(INVALID_SIGNATURE);

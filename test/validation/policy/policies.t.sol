@@ -25,7 +25,9 @@ abstract contract policies is RulesEngineCommon {
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
         callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
-        ruleIds[0][0] = 1;
+        ruleIds[0][0] = ruleId;
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = ruleId;
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         vm.expectRevert("Invalid Rule");
