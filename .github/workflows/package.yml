@@ -59,9 +59,10 @@ jobs:
           else
             npm version prerelease --preid=rc
           fi
-          version=$(npm view $(npm pkg get name | tr -d '"') version)
+          version=$(perl -ne 'print $1 if /"version":\s*"([^"]+)"/' package.json)
           export newVersion="[version-image]: https://img.shields.io/badge/Version-${version}-brightgreen?style=for-the-badge&logo=appveyor"
           perl -i -pe's/^\[version-image\]:.*$/$ENV{newVersion}/g' README.md
+          perl -i -pe 's/string public constant version = "[^"]*";/string public constant version = "v$ENV{version}";/' ./src/engine/facets/RulesEngineProcessorFacet.sol
       - name: Push changes to the repository
         if: github.event.inputs.versionUpdateSignificance != 'current'
         uses: ad-m/github-push-action@master
