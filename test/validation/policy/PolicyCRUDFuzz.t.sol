@@ -16,8 +16,8 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         uint8 policyTypes = 2;
         _policyType = _policyType % (policyTypes * 2); // makes sure we have some valid and some invalid types
         vm.startPrank(user1);
-        // a low-level call is necessary for the test not to fail on a policyType negative-path test-building phase
         if (_policyType > policyTypes) vm.expectRevert("PolicyType is invalid");
+        // a low-level call is necessary for the test not to fail on a policyType negative-path test-building phase
         (bool success, bytes memory data) = address(red).call(
             abi.encodeWithSelector(
                 RulesEnginePolicyFacet(address(red)).createPolicy.selector,
@@ -37,7 +37,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         PolicyType initialState = PolicyType(_initialState % states);
         PolicyType toState = PolicyType(_toState % states);
         vm.startPrank(user1);
-        // a low-level call is necessary for the test not to fail on a policyType negative-path test-building phase
         uint policyId = RulesEnginePolicyFacet(address(red)).createPolicy(initialState, "Test Policy", "This is a test policy");
         if (initialState == PolicyType.CLOSED_POLICY) assertTrue(RulesEnginePolicyFacet(address(red)).isClosedPolicy(policyId));
         else if (initialState == PolicyType.OPEN_POLICY) assertFalse(RulesEnginePolicyFacet(address(red)).isClosedPolicy(policyId));
@@ -64,6 +63,7 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         uint256[] memory functionIds = new uint256[](0);
         uint256[][] memory _ruleIds = new uint256[][](0);
         if (_policyType > policyTypes) vm.expectRevert("PolicyType is invalid");
+        // a low-level call is necessary for the test not to fail on a policyType negative-path test-building phase
         (, bytes memory data) = address(red).call(
             abi.encodeWithSelector(
                 RulesEnginePolicyFacet(address(red)).updatePolicy.selector,
