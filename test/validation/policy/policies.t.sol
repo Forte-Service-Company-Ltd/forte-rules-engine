@@ -848,7 +848,7 @@ abstract contract policies is RulesEngineCommon {
 
         // now we can delete the policy
         RulesEnginePolicyFacet(address(red)).deletePolicy(policyId);
-
+        // we check that we can't create a rule for a deleted policy
         {
             Rule memory rule;
             // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, *uint256 representation of Bad Info*, LogicalOp.EQ, 0, 1
@@ -879,6 +879,7 @@ abstract contract policies is RulesEngineCommon {
             vm.expectRevert("PolicyId is invalid");
             ruleId = RulesEngineRuleFacet(address(red)).updateRule(1, 0, rule, "My rule", "My way or the highway");
         }
+        // we check that we can't create a calling function for a deleted policy
         {
             ParamTypes[] memory pTypes = new ParamTypes[](2);
             pTypes[0] = ParamTypes.ADDR;
@@ -893,7 +894,7 @@ abstract contract policies is RulesEngineCommon {
                 ""
             );
         }
-        // we check that a rule was actually deleted
+        // we check that we can't update a deleted policy
         vm.expectRevert("Invalid Rule");
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,

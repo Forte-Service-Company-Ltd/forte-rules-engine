@@ -170,7 +170,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
      */
     function _storeRule(RuleStorage storage _data, uint256 _policyId, uint256 _ruleId, Rule calldata _rule) internal returns (uint256) {
         // Validate that the policy exists
-        if (!lib._getPolicyStorage().policyStorageSets[_policyId].set) revert(POLICY_ID_INV);
+        if (!lib._getPolicyStorage().policyStorageSets[_policyId].set) revert(POLICY_DOES_NOT_EXIST);
 
         _data.ruleStorageSets[_policyId][_ruleId].set = true;
         _data.ruleStorageSets[_policyId][_ruleId].rule = _rule;
