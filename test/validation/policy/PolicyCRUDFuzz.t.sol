@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import "test/utils/RulesEngineCommon.t.sol";
 
-abstract contract PolicyCRUDTest is RulesEngineCommon {
+abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
     /**
      *
      *
