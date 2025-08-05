@@ -2,10 +2,12 @@
 pragma solidity ^0.8.24;
 
 import "test/utils/RulesEngineCommon.t.sol";
+import "@openzeppelin/utils/Strings.sol";
 
 abstract contract storageTest is RulesEngineCommon {
 
     Effect[] effectArray;
+    using Strings for uint256;
     /**
      * Storage tests for policies within the rules engine
      */
@@ -13,6 +15,7 @@ abstract contract storageTest is RulesEngineCommon {
     function testPolicyStorageFuzz(uint16 total) public {
         uint256 index = bound(uint256(total), 0, 3000);
         for (uint256 i = 0; i < index; i++) {
+            policyName = index.toString();
             uint256 policyId = _createBlankPolicy();
             PolicyMetadata memory metadata2 = RulesEnginePolicyFacet(address(red)).getPolicyMetadata(policyId);
             assertEq(policyName, metadata2.policyName);
@@ -34,6 +37,7 @@ abstract contract storageTest is RulesEngineCommon {
         rule.negEffects[0] = effectId_revert;
         uint256 ruleId;
         for (uint256 i = 0; i < index; i++) {
+            ruleName = index.toString();
             // Save the rule
             ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
             RuleMetadata memory metadata2 = RulesEngineRuleFacet(address(red)).getRuleMetadata(policyId, ruleId);
@@ -54,7 +58,7 @@ abstract contract storageTest is RulesEngineCommon {
         rule.placeHolders[0].typeSpecificIndex = 1;
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
-
+        ruleName = "testRule";
         ruleIds.push(new uint256[](1));
         uint256 ruleId;
         for (uint256 i = 0; i < index; i++) {
@@ -69,7 +73,8 @@ abstract contract storageTest is RulesEngineCommon {
                 policyName,
                 policyDescription
             );
-            RulesEngineRuleFacet(address(red)).getRule(policyId, ruleId);
+            RuleMetadata memory metadata2 = RulesEngineRuleFacet(address(red)).getRuleMetadata(policyId, ruleId);
+            assertEq(ruleName, metadata2.ruleName);
         }
     }
 
@@ -103,6 +108,7 @@ abstract contract storageTest is RulesEngineCommon {
                 policyName,
                 policyDescription
             );
+            assertTrue(RulesEngineComponentFacet(address(red)).getCallingFunction(policyIds[0], callingFunctionId).set);
         }
     }
 
@@ -125,7 +131,7 @@ abstract contract storageTest is RulesEngineCommon {
                 callingFunction,
                 ""
             );
-            RulesEngineComponentFacet(address(red)).getCallingFunction(policyIds[0], callingFunctionId);
+            assertTrue(RulesEngineComponentFacet(address(red)).getCallingFunction(policyIds[0], callingFunctionId).set);
         }
     }
 
@@ -151,7 +157,7 @@ abstract contract storageTest is RulesEngineCommon {
             fc.returnType = ParamTypes.UINT;
             fc.foreignCallIndex = 0;
             id = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
-            RulesEngineForeignCallFacet(address(red)).getForeignCall(policyIds[0], id);
+            // assertEq(RulesEngineForeignCallFacet(address(red)).getForeignCall(policyIds[0], id).parameterTypes[0],fcArgs[0]);
         }
     }
 
@@ -162,13 +168,15 @@ abstract contract storageTest is RulesEngineCommon {
         policyIds[0] = _createBlankPolicy();
 
         Trackers memory tracker;
+        Trackers memory tracker2;
         uint256 id;
         for (uint256 i = 0; i < index; i++) {
             /// build the members of the struct:
             tracker.pType = ParamTypes.UINT;
-            tracker.trackerValue = abi.encode(1000000000);
+            tracker.trackerValue = abi.encode(index);
             id = RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
-            RulesEngineComponentFacet(address(red)).getTracker(policyIds[0], id);
+            tracker2 = RulesEngineComponentFacet(address(red)).getTracker(policyIds[0], id);
+            assertEq(tracker.trackerValue,tracker2.trackerValue);
         }
     }
 
@@ -194,7 +202,7 @@ abstract contract storageTest is RulesEngineCommon {
             effectArray.push(effect);
             rule.negEffects = effectArray;
             RulesEngineRuleFacet(address(red)).updateRule(policyIds[0], ruleId, rule, ruleName, ruleDescription);
-
+            assertEq(RulesEngineRuleFacet(address(red)).getRule(policyIds[0], ruleId).rule.negEffects.length, i+2);
         }
     }
 }
