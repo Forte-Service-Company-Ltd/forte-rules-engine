@@ -32,6 +32,29 @@ abstract contract PolicyCRUDTest is RulesEngineCommon {
         else require(success == false, "Policy ID should be 0");
     }
 
+    function testPolicy_openClosePolicy(uint8 _initialState, uint8 _toState) public ifDeploymentTestsEnabled resetsGlobalVariables {
+        uint8 states = 3;
+        PolicyType initialState = PolicyType(_initialState % states);
+        PolicyType toState = PolicyType(_toState % states);
+        vm.startPrank(user1);
+        // a low-level call is necessary for the test not to fail on a policyType negative-path test-building phase
+        uint policyId = RulesEnginePolicyFacet(address(red)).createPolicy(initialState, "Test Policy", "This is a test policy");
+        if (initialState == PolicyType.CLOSED_POLICY) assertTrue(RulesEnginePolicyFacet(address(red)).isClosedPolicy(policyId));
+        else if (initialState == PolicyType.OPEN_POLICY) assertFalse(RulesEnginePolicyFacet(address(red)).isClosedPolicy(policyId));
+        else assertTrue(RulesEnginePolicyFacet(address(red)).isDisabledPolicy(policyId));
+
+        if (toState == PolicyType.CLOSED_POLICY) {
+            RulesEnginePolicyFacet(address(red)).closePolicy(policyId);
+            assertTrue(RulesEnginePolicyFacet(address(red)).isClosedPolicy(policyId));
+        } else if (toState == PolicyType.OPEN_POLICY) {
+            RulesEnginePolicyFacet(address(red)).openPolicy(policyId);
+            assertFalse(RulesEnginePolicyFacet(address(red)).isClosedPolicy(policyId));
+        } else {
+            RulesEnginePolicyFacet(address(red)).disablePolicy(policyId);
+            assertTrue(RulesEnginePolicyFacet(address(red)).isDisabledPolicy(policyId));
+        }
+    }
+
     function testPolicy_updatePolicy_policyType(uint8 _policyType) public {
         uint8 policyTypes = 2;
         _policyType = _policyType % (policyTypes * 2); // makes sure we have some valid and some invalid types
