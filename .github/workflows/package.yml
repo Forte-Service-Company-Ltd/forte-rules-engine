@@ -62,7 +62,13 @@ jobs:
           version=$(perl -ne 'print $1 if /"version":\s*"([^"]+)"/' package.json)
           export newVersion="[version-image]: https://img.shields.io/badge/Version-${version}-brightgreen?style=for-the-badge&logo=appveyor"
           perl -i -pe's/^\[version-image\]:.*$/$ENV{newVersion}/g' README.md
-          perl -i -pe 's/string public constant version = "[^"]*";/string public constant version = "v$ENV{version}";/' ./src/engine/facets/RulesEngineProcessorFacet.sol
+          # Update the Solidity version constant with a flexible regex
+          perl -i -pe 's/string\s+public\s+constant\s+version\s*=\s*"[^"]*"\s*;/string public constant version = "v$ENV{version}";/' ./src/engine/facets/RulesEngineProcessorFacet.sol
+          # Validate that the replacement was successful
+          if ! grep -q "string public constant version = \"v$version\";" ./src/engine/facets/RulesEngineProcessorFacet.sol; then
+            echo "Error: Failed to update version in RulesEngineProcessorFacet.sol"
+            exit 1
+          fi
       - name: Push changes to the repository
         if: github.event.inputs.versionUpdateSignificance != 'current'
         uses: ad-m/github-push-action@master
