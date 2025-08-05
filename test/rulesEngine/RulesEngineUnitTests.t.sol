@@ -8,6 +8,7 @@ import "test/validation/components/components.t.sol";
 import "test/validation/rules/rules.t.sol";
 import "test/validation/rules/rulesFuzz.t.sol";
 import "test/validation/policy/policies.t.sol";
+import "test/validation/policy/PolicyCRUDFuzz.t.sol";
 // execution tests
 import "test/execution/diamondInternalFunctions/diamondInternalFunctions.t.sol";
 import "test/execution/rulesEngineInternalFunctions/rulesEngineInternalFunctions.t.sol";
@@ -17,8 +18,11 @@ import "test/execution/rulesExecution/rulesExecution.t.sol";
 import "test/execution/instructionSet/instructionSet.t.sol";
 import "test/execution/foreignCalls/foreignCalls.t.sol";
 import "test/execution/trackers/trackers.t.sol";
+<<<<<<< HEAD
 import "test/execution/storage/storage.t.sol";
 import "test/execution/policies/PolicyCRUD.t.sol";
+=======
+>>>>>>> ad2e00fbd (finished delete-policy test, and added check for callingFunction creation)
 
 contract RulesEngineUnitTests is
     adminRoles,
@@ -36,7 +40,7 @@ contract RulesEngineUnitTests is
     foreignCalls,
     trackers,
     storageTest
-    PolicyCRUDTest
+    PolicyCRUDFuzzTest
 {
     function setUp() public {
         // Start test as the policyAdmin account

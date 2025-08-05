@@ -36,7 +36,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         string calldata policyName,
         string calldata policyDescription
     ) external returns (uint256) {
-        // if policy ID is zero no policy has been created and cannot be updated.
+        // only the admin of the policy can update. This covers policyId == 0 case.
         _policyAdminOnly(policyId, msg.sender);
         StorageLib._notCemented(policyId);
         // calling functions length must match the calling function ids length

@@ -334,6 +334,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
     ) external returns (uint256) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
+        if (!lib._getPolicyStorage().policyStorageSets[policyId].set) revert(POLICY_DOES_NOT_EXIST);
         // Step 1: Increment function ID
         uint256 functionId = _incrementFunctionId(policyId);
 
