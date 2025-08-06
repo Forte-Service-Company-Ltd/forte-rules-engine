@@ -20,7 +20,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     uint8 constant GLOBAL_BLOCK_NUMBER = 4;
     uint8 constant GLOBAL_TX_ORIGIN = 5;
 
-    string public constant version = "v0.3.0";
+    string public constant version = "v0.3.1";
 
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
     // Rule Evaluation Functions
