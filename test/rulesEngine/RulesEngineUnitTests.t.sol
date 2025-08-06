@@ -18,11 +18,7 @@ import "test/execution/rulesExecution/rulesExecution.t.sol";
 import "test/execution/instructionSet/instructionSet.t.sol";
 import "test/execution/foreignCalls/foreignCalls.t.sol";
 import "test/execution/trackers/trackers.t.sol";
-<<<<<<< HEAD
 import "test/execution/storage/storage.t.sol";
-import "test/execution/policies/PolicyCRUD.t.sol";
-=======
->>>>>>> ad2e00fbd (finished delete-policy test, and added check for callingFunction creation)
 
 contract RulesEngineUnitTests is
     adminRoles,
@@ -39,7 +35,7 @@ contract RulesEngineUnitTests is
     instructionSet,
     foreignCalls,
     trackers,
-    storageTest
+    storageTest,
     PolicyCRUDFuzzTest
 {
     function setUp() public {

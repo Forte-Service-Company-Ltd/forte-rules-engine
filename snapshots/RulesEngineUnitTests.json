@@ -41,8 +41,8 @@
   "MappedTrackerUpdatedFromEffects_UintToUint": "37368",
   "PauseRuleRecreation": "55040",
   "checkRule_ForeignCall": "57470",
-  "checkRule_ForeignCall_ForeignCallReferenced": "57588",
-  "checkRule_ForeignCall_TrackerValuesUsed": "30982",
+  "checkRule_ForeignCall_ForeignCallReferenced": "57589",
+  "checkRule_ForeignCall_TrackerValuesUsed": "30983",
   "checkRule_simpleGTEQL": "26139",
   "checkRule_simpleLTEQL": "26168",
   "checkRule_simple_GT": "25980"
