@@ -8,9 +8,12 @@ library RulesEngineProcessorLib {
     /**
      * @dev converts a uint256 to a bool
      * @param _x the uint256 to convert
+     * @return _ans is false if _x is zero. True otherwise.
      */
-    function _uintToBool(uint256 _x) internal pure returns (bool) {
-        return _x == 1;
+    function _uintToBool(uint256 _x) internal pure returns (bool _ans) {
+        assembly {
+            _ans := _x
+        }
     }
 
     /**

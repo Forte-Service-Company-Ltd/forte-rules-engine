@@ -52,7 +52,7 @@ abstract contract runFunction is RulesEngineCommon {
         // the instruction set has to have double the size of the instructions we want since the opcode NUM
         // requires 2 slots
         rule.instructionSet = new uint256[](size * 2);
-        // we fill up the instruction set with the instruction "Put number i at i position in _mem_"
+        // we fill up the instruction set with the instruction "Put number _i_ at _i_th position in _mem_"
         for (uint i; i < size; i++) {
             rule.instructionSet[i * 2] = uint(LogicalOp.NUM);
             rule.instructionSet[i * 2 + 1] = i;
@@ -83,9 +83,8 @@ abstract contract runFunction is RulesEngineCommon {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = policyId;
         RulesEnginePolicyFacet(address(red)).applyPolicy(address(_exampleERC20), policyIds);
-        // the transfer reverts for different reasons depending on the size of the instruction set (toOverflow flag)
+        // the transfer reverts when the size of the instruction set is greater than _memorySize_ (toOverflow flag)
         if (toOverflow) vm.expectRevert("panic: array out-of-bounds access (0x32)");
-        else vm.expectRevert("Rules Engine Revert");
         _exampleERC20.transfer(address(0x7654321), 3);
     }
 }
