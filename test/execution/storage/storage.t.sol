@@ -157,7 +157,7 @@ abstract contract storageTest is RulesEngineCommon {
             fc.returnType = ParamTypes.UINT;
             fc.foreignCallIndex = 0;
             id = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
-            // assertEq(RulesEngineForeignCallFacet(address(red)).getForeignCall(policyIds[0], id).parameterTypes[0],fcArgs[0]);
+            assertEq(uint(RulesEngineForeignCallFacet(address(red)).getForeignCall(policyIds[0], id).parameterTypes[0]),uint(fcArgs[0]));
         }
     }
 
