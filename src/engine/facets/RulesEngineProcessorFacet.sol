@@ -599,7 +599,12 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     v = abi.decode(value, (uint256));
                 } else if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {
                     // Convert string to uint256 for direct comparison using == and != operations
-                    v = uint256(keccak256(value));
+                    (bool isTrackerValue, , ) = _extractFlags(_placeHolders[pli]);
+                    if (isTrackerValue) {
+                        v = abi.decode(value, (uint256));
+                    } else {
+                        v = uint256(keccak256(value));
+                    }
                 } else if (typ == ParamTypes.STATIC_TYPE_ARRAY || typ == ParamTypes.DYNAMIC_TYPE_ARRAY) {
                     // length of array for direct comparison using == and != operations
                     v = abi.decode(value, (uint256));
