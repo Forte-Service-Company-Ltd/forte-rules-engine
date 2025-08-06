@@ -2458,6 +2458,17 @@ contract RulesEngineCommon is DiamondMine, Test {
         console.log("testString: %s", testString);
     }
 
+    function _createInstructionSet(uint256 plh1, LogicalOp plcType) public pure returns (uint256[] memory instructionSet) {
+        instructionSet = new uint256[](7);
+        instructionSet[0] = uint(LogicalOp.PLH);
+        instructionSet[1] = 0;
+        instructionSet[2] = uint(LogicalOp.NUM);
+        instructionSet[3] = plh1;
+        instructionSet[4] = uint(plcType);
+        instructionSet[5] = 0;
+        instructionSet[6] = 1;
+    }
+
     function _createInstructionSet(uint256 plh1, uint256 plh2) public pure returns (uint256[] memory instructionSet) {
         instructionSet = new uint256[](7);
         instructionSet[0] = uint(LogicalOp.PLH);
