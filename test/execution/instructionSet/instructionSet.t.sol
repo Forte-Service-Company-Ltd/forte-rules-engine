@@ -295,7 +295,7 @@ abstract contract instructionSet is RulesEngineCommon {
             memory longString = "This is a very long string that exceeds the normal bounds of a string comparison in the rules engine. It is meant to test how the rules engine handles strings that are larger than expected and whether it can still process them correctly without running into issues or errors.";
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction2))), address(0x7654321), longString);
         vm.startPrank(address(userContract));
-        vm.expectRevert("Rules Engine Revert");
+        vm.expectRevert("Rules Engine Revert"); // Revert on rule check not from the string length
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
