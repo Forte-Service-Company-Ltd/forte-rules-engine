@@ -61,6 +61,7 @@ contract RulesEngineCommon is DiamondMine, Test {
     string ruleDescription = "ruleDescription";
     string policyName = "policyName";
     string policyDescription = "policyDescription";
+    ExampleERC721 nftContract;
 
     //bytes32
     bytes32 public constant EVENTTEXT = bytes32("Rules Engine Event");
@@ -826,6 +827,109 @@ contract RulesEngineCommon is DiamondMine, Test {
         vm.stopPrank();
         vm.startPrank(callingContractAdmin);
         RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+    }
+
+    function _setupRuleWithMintEffect(uint256 _transferValue, address _userContractAddr) public returns (address nftAddress) {
+        // setup
+        nftContract = new ExampleERC721("Token Name", "SYMB");
+        testContract2 = new ForeignCallTestContractOFAC();
+
+        // policy
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+
+        uint256 callingFunctionId;
+        {
+            ParamTypes[] memory pTypes = new ParamTypes[](2);
+            pTypes[0] = ParamTypes.ADDR;
+            pTypes[1] = ParamTypes.UINT;
+            // Save the calling function
+            callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyIds[0],
+                bytes4(bytes4(keccak256(bytes(callingFunction)))),
+                pTypes,
+                callingFunction,
+                ""
+            );
+        }
+
+        uint256 mintCallId;
+        {
+            ParamTypes[] memory fcArgs = new ParamTypes[](1);
+            fcArgs[0] = ParamTypes.ADDR;
+            ForeignCall memory fc;
+            fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+            fc.encodedIndices[0].index = 2;
+            fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES; // the from, to, and msg.sender are all part of the regular encoded values (calldata)
+            fc.parameterTypes = fcArgs;
+            fc.foreignCallAddress = address(nftContract);
+            fc.signature = bytes4(keccak256(("safeMint(address)")));
+            fc.returnType = ParamTypes.VOID;
+            fc.foreignCallIndex = 1;
+            mintCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "safeMint(address)");
+        }
+
+        // Rule: amount > 1e18 -> mint -> transfer(address _to, uint256 amount) returns (bool)"
+        Rule memory rule;
+        // Build the foreign call placeholder
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].pType = ParamTypes.UINT;
+        rule.placeHolders[0].typeSpecificIndex = 1; // amount
+
+        // Build the instruction set for the rule (including placeholders)
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.PLH); // amount
+        rule.instructionSet[1] = 0; //
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = _transferValue;
+        rule.instructionSet[4] = uint(LogicalOp.GT);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        rule.effectPlaceHolders = new Placeholder[](1);
+        rule.effectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
+        rule.effectPlaceHolders[0].typeSpecificIndex = uint128(mintCallId);
+
+        uint256[] memory mintEffectBytecode = new uint256[](2);
+        mintEffectBytecode[0] = uint(LogicalOp.PLH);
+        mintEffectBytecode[1] = 0;
+        Effect memory mintEffect = Effect({
+            valid: true,
+            dynamicParam: false,
+            effectType: EffectTypes.EXPRESSION,
+            pType: ParamTypes.ADDR,
+            param: abi.encode(address(nftAddress)),
+            text: EVENTTEXT,
+            errorMessage: "",
+            instructionSet: mintEffectBytecode
+        });
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0] = mintEffect;
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        bytes4[] memory functions = new bytes4[](1);
+        bytes memory _callingFunction = bytes(callingFunction);
+        functions[0] = bytes4(keccak256(_callingFunction));
+        uint256[] memory functionIds = new uint256[](1);
+        functionIds[0] = callingFunctionId;
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = ruleId;
+        // _addRuleIdsToPolicy(policyIds[0], ruleIds);
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyIds[0],
+            functions,
+            functionIds,
+            ruleIds,
+            PolicyType.CLOSED_POLICY,
+            "policyName",
+            "policyDescription"
+        );
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(_userContractAddr, policyIds);
+        nftAddress = address(nftContract);
     }
 
     function _setupRuleWithPosEventParams(

@@ -24,7 +24,11 @@ contract ExampleUserContract is RulesEngineClient {
      * @return bool True if the transfer is allowed by the Rules Engine, false otherwise.
      */
     function transfer(address to, uint256 value) public returns (bool) {
-        _invokeRulesEngine(msg.data);
+        uint msgSender;
+        assembly {
+            msgSender := caller()
+        }
+        _invokeRulesEngine(abi.encodePacked(msg.data, msgSender));
         to;
         value;
         return true;

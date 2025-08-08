@@ -1106,4 +1106,11 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         25837056493731107400212975313110805414715314646597854337469320516987899609613
         */
     }
+
+    function testRulesEngine_Unit_ForeignCall_MintEffect() public {
+        _setupRuleWithMintEffect(1e18, address(userContract));
+        vm.startPrank(user1);
+        // vm.expectRevert(abi.encodePacked(revert_text));
+        userContract.transfer(address(0x7654321), 1e19);
+    }
 }
