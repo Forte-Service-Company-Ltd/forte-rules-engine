@@ -868,6 +868,21 @@ contract RulesEngineCommon is DiamondMine, Test {
             fc.foreignCallIndex = 1;
             mintCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "safeMint(address)");
         }
+        uint256 banCallId;
+        {
+            ParamTypes[] memory fcArgs = new ParamTypes[](1);
+            fcArgs[0] = ParamTypes.ADDR;
+            ForeignCall memory fc;
+            fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+            fc.encodedIndices[0].index = 2;
+            fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES; // the from, to, and msg.sender are all part of the regular encoded values (calldata)
+            fc.parameterTypes = fcArgs;
+            fc.foreignCallAddress = address(testContract2);
+            fc.signature = bytes4(keccak256(("addToNaughtyList(address)")));
+            fc.returnType = ParamTypes.VOID;
+            fc.foreignCallIndex = 2;
+            banCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "addToNaughtyList(address)");
+        }
 
         // Rule: amount > 1e18 -> mint -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule;
@@ -886,27 +901,47 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.instructionSet[5] = 0;
         rule.instructionSet[6] = 1;
 
-        rule.effectPlaceHolders = new Placeholder[](1);
+        rule.effectPlaceHolders = new Placeholder[](2);
         rule.effectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
         rule.effectPlaceHolders[0].typeSpecificIndex = uint128(mintCallId);
+        rule.effectPlaceHolders[1].flags = FLAG_FOREIGN_CALL;
+        rule.effectPlaceHolders[1].typeSpecificIndex = uint128(banCallId);
 
-        uint256[] memory mintEffectBytecode = new uint256[](2);
-        mintEffectBytecode[0] = uint(LogicalOp.PLH);
-        mintEffectBytecode[1] = 0;
-        Effect memory mintEffect = Effect({
-            valid: true,
-            dynamicParam: false,
-            effectType: EffectTypes.EXPRESSION,
-            pType: ParamTypes.ADDR,
-            param: abi.encode(address(nftAddress)),
-            text: EVENTTEXT,
-            errorMessage: "",
-            instructionSet: mintEffectBytecode
-        });
-        rule.posEffects = new Effect[](1);
-        rule.posEffects[0] = mintEffect;
-        rule.negEffects = new Effect[](1);
-        rule.negEffects[0] = effectId_revert;
+        {
+            // positive effect
+            uint256[] memory mintEffectBytecode = new uint256[](2);
+            mintEffectBytecode[0] = uint(LogicalOp.PLH);
+            mintEffectBytecode[1] = 0; // we flag that we will be using placeholder 0
+            Effect memory mintEffect = Effect({
+                valid: true,
+                dynamicParam: false,
+                effectType: EffectTypes.EXPRESSION,
+                pType: ParamTypes.ADDR,
+                param: "",
+                text: EVENTTEXT,
+                errorMessage: "mint call failed",
+                instructionSet: mintEffectBytecode
+            });
+            rule.posEffects = new Effect[](1);
+            rule.posEffects[0] = mintEffect;
+
+            // negative effect
+            uint256[] memory banEffectBytecode = new uint256[](2);
+            banEffectBytecode[0] = uint(LogicalOp.PLH);
+            banEffectBytecode[1] = 1; // we flag that we will be using placeholder 1
+            Effect memory banEffect = Effect({
+                valid: true,
+                dynamicParam: false,
+                effectType: EffectTypes.EXPRESSION,
+                pType: ParamTypes.ADDR,
+                param: "",
+                text: EVENTTEXT,
+                errorMessage: "deny listing call failed",
+                instructionSet: banEffectBytecode
+            });
+            rule.negEffects = new Effect[](1);
+            rule.negEffects[0] = banEffect;
+        }
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         bytes4[] memory functions = new bytes4[](1);
