@@ -1106,5 +1106,10 @@ abstract contract foreignCalls is RulesEngineCommon {
         */
     }
 
-    
+    function testRulesEngine_Unit_ForeignCall_MintEffect() public {
+        _setupRuleWithMintEffect(1e18, address(userContract));
+        vm.startPrank(user1);
+        // vm.expectRevert(abi.encodePacked(revert_text));
+        userContract.transfer(address(0x7654321), 1e19);
+    }
 }
