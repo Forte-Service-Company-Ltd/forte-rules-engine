@@ -14,11 +14,6 @@ import {RulesEngineStorageLib as StorageLib} from "src/engine/facets/RulesEngine
  * @author @mpetersoCode55, @ShaneDuncan602, @TJ-Everett, @VoR0220
  */
 contract RulesEngineRuleFacet is FacetCommonImports {
-    uint public constant memorySize = 90; // size of the mem array
-    uint public constant opsSize1 = 3; // the first 3 opcodes use only one argument
-    uint public constant opsSizeUpTo2 = 17; // the first 16 opcodes use up to two arguments
-    uint public constant opsSizeUpTo3 = 18; // the first 17 opcodes use up to three arguments
-    uint public constant opsTotalSize = 19; // there are a total of 18 opcode in the set LogicalOp
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
     // Rule Management
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -150,6 +145,22 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         if (policyId == 0) revert(POLICY_ID_0);
         // Load the rule data from storage
         return lib._getRuleStorage().ruleStorageSets[policyId][ruleId];
+    }
+
+    function getMemorySize() external view returns (uint) {
+        return memorySize;
+    }
+    function getOpsSize1() external view returns (uint) {
+        return opsSize1;
+    }
+    function getOpsSizeUpTo2() external view returns (uint) {
+        return opsSizeUpTo2;
+    }
+    function getOpsSizeUpTo3() external view returns (uint) {
+        return opsSizeUpTo3;
+    }
+    function getOpsTotalSize() external view returns (uint) {
+        return opsTotalSize;
     }
 
     /**

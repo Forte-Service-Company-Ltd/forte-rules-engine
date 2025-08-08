@@ -329,7 +329,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes memory value,
         ParamTypes argType,
         uint256 parameterTypesLength
-    ) public pure returns (bytes memory, uint256, bytes memory) {
+    ) internal pure returns (bytes memory, uint256, bytes memory) {
         if (argType == ParamTypes.STR || argType == ParamTypes.BYTES) {
             encodedCall = bytes.concat(encodedCall, bytes32(32 * (parameterTypesLength) + lengthToAppend));
             bytes memory stringData = ProcessorLib._extractStringData(value);

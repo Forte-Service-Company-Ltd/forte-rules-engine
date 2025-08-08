@@ -20,4 +20,9 @@ abstract contract FacetCommonImports is AccessModifiers {
     uint8 constant MAX_PTYPES = 8;
     bytes32 constant EMPTY_STRING_HASH = keccak256(bytes(""));
     bytes4 constant EMPTY_SIG = bytes4(keccak256(bytes("")));
+    uint constant memorySize = 90; // size of the mem array
+    uint constant opsSize1 = 3; // the first 3 opcodes use only one argument
+    uint constant opsSizeUpTo2 = 17; // the first 16 opcodes use up to two arguments
+    uint constant opsSizeUpTo3 = 18; // the first 17 opcodes use up to three arguments
+    uint constant opsTotalSize = 19; // there are a total of 18 opcode in the set LogicalOp
 }
