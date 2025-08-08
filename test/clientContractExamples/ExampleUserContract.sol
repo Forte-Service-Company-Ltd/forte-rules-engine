@@ -24,11 +24,7 @@ contract ExampleUserContract is RulesEngineClient {
      * @return bool True if the transfer is allowed by the Rules Engine, false otherwise.
      */
     function transfer(address to, uint256 value) public returns (bool) {
-        uint msgSender;
-        assembly {
-            msgSender := caller()
-        }
-        _invokeRulesEngine(abi.encodePacked(msg.data, msgSender));
+        _invokeRulesEngine(abi.encodePacked(msg.data, uint(uint160(msg.sender)))); // msg.sender address needs to be encoded as 32 bytes
         to;
         value;
         return true;
@@ -94,7 +90,7 @@ contract ExampleUserContractExtraParams is RulesEngineClient {
      * @return bool True if the transfer is allowed by the Rules Engine, false otherwise.
      */
     function transfer(address to, uint256 value) public returns (bool) {
-        _invokeRulesEngine(abi.encode(msg.data, msg.sender));
+        _invokeRulesEngine(abi.encode(msg.data, uint(uint160(msg.sender))));
         to;
         value;
         return true;
