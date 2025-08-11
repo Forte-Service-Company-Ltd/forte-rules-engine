@@ -529,37 +529,30 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         if (placeholderType == PlaceholderType.CONDITION) placeHolders = _rule.placeHolders;
         else placeHolders = _rule.effectPlaceHolders;
 
-        bool[] memory effectBranchMaskPlaceholders = new bool[](placeHolders.length);
+        bool[] memory effectBranchPlaceholdersMask = new bool[](placeHolders.length);
+        // we apply a mask for placeholders depending if we are triggering positive or negative effects.
+        // some code duplication is necessary to avoid high gas consumption
         {
+            // positive effects
             if (placeholderType == PlaceholderType.POS_EFFECT) {
                 for (uint i; i < _rule.posEffects.length; i++) {
                     for (uint j; j < _rule.posEffects[i].instructionSet.length; j++) {
                         uint instruction = _rule.posEffects[i].instructionSet[j];
                         uint data = _rule.posEffects[i].instructionSet[j + 1];
-                        if (instruction == uint(LogicalOp.PLH) || instruction == uint(LogicalOp.PLHM)) {
-                            effectBranchMaskPlaceholders[data] = true;
-                            if (instruction == uint(LogicalOp.PLH)) ++j;
-                            else j += 2;
-                        } else if (instruction < opsSize1) ++j;
-                        else if (instruction < opsSizeUpTo2) j += 2;
-                        else if (instruction < opsSizeUpTo3) j += 3;
-                        else if (instruction < opsTotalSize) j += 4;
+                        bool isPlaceholder;
+                        (j, isPlaceholder) = placeholerMaskHelper(instruction, data, j);
+                        if (isPlaceholder) effectBranchPlaceholdersMask[data] = true; // avoid array-out-of-bounds
                     }
                 }
-            }
+            } // negative effects
             if (placeholderType == PlaceholderType.NEG_EFFECT) {
                 for (uint i; i < _rule.negEffects.length; i++) {
                     for (uint j; j < _rule.negEffects[i].instructionSet.length; j++) {
                         uint instruction = _rule.negEffects[i].instructionSet[j];
                         uint data = _rule.negEffects[i].instructionSet[j + 1];
-                        if (instruction == uint(LogicalOp.PLH) || instruction == uint(LogicalOp.PLHM)) {
-                            effectBranchMaskPlaceholders[data] = true;
-                            if (instruction == uint(LogicalOp.PLH)) ++j;
-                            else j += 2;
-                        } else if (instruction < opsSize1) ++j;
-                        else if (instruction < opsSizeUpTo2) j += 2;
-                        else if (instruction < opsSizeUpTo3) j += 3;
-                        else if (instruction < opsTotalSize) j += 4;
+                        bool isPlaceholder;
+                        (j, isPlaceholder) = placeholerMaskHelper(instruction, data, j);
+                        if (isPlaceholder) effectBranchPlaceholdersMask[data] = true; // avoid array-out-of-bounds
                     }
                 }
             }
@@ -569,7 +562,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         ForeignCallEncodedIndex[] memory metadata = new ForeignCallEncodedIndex[](placeHolders.length);
         for (uint256 placeholderIndex = 0; placeholderIndex < placeHolders.length; placeholderIndex++) {
             // we only use the placeholders we need to avoid making undesired calls or firing undesired events
-            if (placeholderType != PlaceholderType.CONDITION && !effectBranchMaskPlaceholders[placeholderIndex]) continue;
+            if (placeholderType != PlaceholderType.CONDITION && !effectBranchPlaceholdersMask[placeholderIndex]) continue;
             // Determine if the placeholder represents the return value of a foreign call or a function parameter from the calling function
             Placeholder memory placeholder = placeHolders[placeholderIndex];
 
@@ -600,6 +593,18 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             }
         }
         return (retVals, placeHolders);
+    }
+
+    function placeholerMaskHelper(uint instruction, uint data, uint j) internal returns (uint _j, bool isPlaceholder) {
+        if (instruction == uint(LogicalOp.PLH) || instruction == uint(LogicalOp.PLHM)) {
+            isPlaceholder = true;
+            if (instruction == uint(LogicalOp.PLH)) ++j;
+            else j += 2;
+        } else if (instruction < opsSize1) ++j;
+        else if (instruction < opsSizeUpTo2) j += 2;
+        else if (instruction < opsSizeUpTo3) j += 3;
+        else if (instruction < opsTotalSize) j += 4;
+        _j = j;
     }
 
     /**
