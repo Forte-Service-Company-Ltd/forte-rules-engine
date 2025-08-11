@@ -1107,7 +1107,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         */
     }
 
-    function testRulesEngine_Unit_ForeignCall_MintPosEffect() public {
+    function testRulesEngine_Unit_ForeignCall_MintPosEffect() public ifDeploymentTestsEnabled endWithStopPrank {
         uint ruleAmount = 1e18;
         // we setup the rule: if amount > ruleAmount -> mint NFT else get banned
         _setupRuleWithMintEffect(ruleAmount, address(userContract));
@@ -1116,8 +1116,10 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         bool statusBefore = testContract2.getNaughty(user1);
         assertFalse(statusBefore);
         vm.startPrank(user1);
+        vm.startSnapshotGas("checkRule_Effect_ForeignCall");
         // the transfer should trigger the mint effect since we are transferring above the rule's amount
         userContract.transfer(address(0x7654321), ruleAmount + 1);
+        vm.stopSnapshotGas();
         // we check that the nft balance increased by 1, and that the user didn't get banned
         assertEq(balanceBefore + 1, nftContract.balanceOf(user1), "NFT balance should increase by 1");
         assertFalse(testContract2.getNaughty(user1), "user should not be banned");
