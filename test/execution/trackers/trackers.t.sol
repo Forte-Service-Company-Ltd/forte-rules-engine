@@ -177,8 +177,6 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.UINT;
         tracker.trackerKeyType = ParamTypes.UINT;
 
-        ParamTypes ruleParamType = ParamTypes.UINT;
-
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(1); // key 1
@@ -228,8 +226,6 @@ abstract contract trackers is RulesEngineCommon {
         Trackers memory tracker;
         tracker.pType = ParamTypes.UINT;
         tracker.trackerKeyType = ParamTypes.UINT;
-
-        ParamTypes ruleParamType = ParamTypes.UINT;
 
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
@@ -286,8 +282,6 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.ADDR;
         tracker.trackerKeyType = ParamTypes.ADDR;
 
-        ParamTypes ruleParamType = ParamTypes.ADDR;
-
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(1); // key 1
@@ -341,8 +335,6 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.ADDR;
         tracker.trackerKeyType = ParamTypes.UINT;
 
-        ParamTypes ruleParamType = ParamTypes.ADDR;
-
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(1); // key 1
@@ -395,8 +387,6 @@ abstract contract trackers is RulesEngineCommon {
         Trackers memory tracker;
         tracker.pType = ParamTypes.UINT; // set the ParamType for the tracker value to be decoded as
         tracker.trackerKeyType = ParamTypes.ADDR;
-
-        ParamTypes ruleParamType = ParamTypes.UINT; // set the ParamTypes for the rule placeholder
 
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
@@ -452,8 +442,6 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.UINT; // set the ParamType for the tracker value to be decoded as
         tracker.trackerKeyType = ParamTypes.ADDR;
 
-        ParamTypes ruleParamType = ParamTypes.UINT; // set the ParamTypes for the rule placeholder
-
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
@@ -506,8 +494,6 @@ abstract contract trackers is RulesEngineCommon {
         Trackers memory tracker;
         tracker.pType = ParamTypes.ADDR; // set the ParamType for the tracker value to be decoded as
         tracker.trackerKeyType = ParamTypes.ADDR;
-
-        ParamTypes ruleParamType = ParamTypes.ADDR; // set the ParamTypes for the rule placeholder
 
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
@@ -563,8 +549,6 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.ADDR; // set the ParamType for the tracker value to be decoded as
         tracker.trackerKeyType = ParamTypes.ADDR;
 
-        ParamTypes ruleParamType = ParamTypes.ADDR; // set the ParamTypes for the rule placeholder
-
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
@@ -615,8 +599,6 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.BOOL;
         tracker.trackerKeyType = ParamTypes.UINT;
 
-        ParamTypes ruleParamType = ParamTypes.BOOL;
-
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(1); // key 1
@@ -665,8 +647,6 @@ abstract contract trackers is RulesEngineCommon {
         Trackers memory tracker;
         tracker.pType = ParamTypes.BOOL;
         tracker.trackerKeyType = ParamTypes.UINT;
-
-        ParamTypes ruleParamType = ParamTypes.BOOL;
 
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
@@ -718,8 +698,6 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.UINT;
         tracker.trackerKeyType = ParamTypes.BOOL;
 
-        ParamTypes ruleParamType = ParamTypes.BOOL;
-
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(1); // key 1
@@ -768,8 +746,6 @@ abstract contract trackers is RulesEngineCommon {
         Trackers memory tracker;
         tracker.pType = ParamTypes.BOOL;
         tracker.trackerKeyType = ParamTypes.UINT;
-
-        ParamTypes ruleParamType = ParamTypes.UINT;
 
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
@@ -824,8 +800,6 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.ADDR;
         tracker.trackerKeyType = ParamTypes.ADDR;
 
-        ParamTypes ruleParamType = ParamTypes.ADDR;
-
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
@@ -878,8 +852,6 @@ abstract contract trackers is RulesEngineCommon {
         Trackers memory tracker;
         tracker.pType = ParamTypes.ADDR;
         tracker.trackerKeyType = ParamTypes.ADDR;
-
-        ParamTypes ruleParamType = ParamTypes.ADDR;
 
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
@@ -934,8 +906,6 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.ADDR;
         tracker.trackerKeyType = ParamTypes.BOOL;
 
-        ParamTypes ruleParamType = ParamTypes.ADDR;
-
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(true); // key 1
@@ -989,8 +959,6 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.ADDR;
         tracker.trackerKeyType = ParamTypes.ADDR;
 
-        ParamTypes ruleParamType = ParamTypes.ADDR;
-
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
@@ -1043,8 +1011,6 @@ abstract contract trackers is RulesEngineCommon {
         Trackers memory tracker;
         tracker.pType = ParamTypes.STR;
         tracker.trackerKeyType = ParamTypes.ADDR;
-
-        ParamTypes ruleParamType = ParamTypes.STR;
 
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
@@ -1104,8 +1070,6 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.STR;
         tracker.trackerKeyType = ParamTypes.ADDR;
 
-        ParamTypes ruleParamType = ParamTypes.STR;
-
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
@@ -1160,8 +1124,6 @@ abstract contract trackers is RulesEngineCommon {
         Trackers memory tracker;
         tracker.pType = ParamTypes.ADDR;
         tracker.trackerKeyType = ParamTypes.STR;
-
-        ParamTypes ruleParamType = ParamTypes.ADDR;
 
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);

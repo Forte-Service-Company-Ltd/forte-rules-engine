@@ -64,7 +64,7 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         uint256[][] memory _ruleIds = new uint256[][](0);
         if (_policyType > policyTypes) vm.expectRevert("PolicyType is invalid");
         // a low-level call is necessary for the test not to fail on a policyType negative-path test-building phase
-        (, bytes memory data) = address(red).call(
+        (bool success, ) = address(red).call(
             abi.encodeWithSelector(
                 RulesEnginePolicyFacet(address(red)).updatePolicy.selector,
                 policyId,
@@ -76,6 +76,11 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
                 "This is a test policy"
             )
         );
+        if (_policyType <= policyTypes) {
+            require(success, "Policy update should succeed");
+        } else {
+            require(!success, "Policy update should fail");
+        }
         if (!(_policyType > policyTypes)) {
             assertEq(RulesEnginePolicyFacet(address(red)).isClosedPolicy(policyId), _policyType == 0 ? true : false);
         }

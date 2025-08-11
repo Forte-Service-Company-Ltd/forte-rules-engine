@@ -5,7 +5,6 @@ import "test/utils/RulesEngineCommon.t.sol";
 import "@openzeppelin/utils/Strings.sol";
 
 abstract contract storageTest is RulesEngineCommon {
-
     Effect[] effectArray;
     using Strings for uint256;
     /**
@@ -157,7 +156,7 @@ abstract contract storageTest is RulesEngineCommon {
             fc.returnType = ParamTypes.UINT;
             fc.foreignCallIndex = 0;
             id = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
-            assertEq(uint(RulesEngineForeignCallFacet(address(red)).getForeignCall(policyIds[0], id).parameterTypes[0]),uint(fcArgs[0]));
+            assertEq(uint(RulesEngineForeignCallFacet(address(red)).getForeignCall(policyIds[0], id).parameterTypes[0]), uint(fcArgs[0]));
         }
     }
 
@@ -176,7 +175,7 @@ abstract contract storageTest is RulesEngineCommon {
             tracker.trackerValue = abi.encode(index);
             id = RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
             tracker2 = RulesEngineComponentFacet(address(red)).getTracker(policyIds[0], id);
-            assertEq(tracker.trackerValue,tracker2.trackerValue);
+            assertEq(tracker.trackerValue, tracker2.trackerValue);
         }
     }
 
@@ -197,12 +196,11 @@ abstract contract storageTest is RulesEngineCommon {
         rule.negEffects = effectArray;
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
-        uint256 id;
         for (uint256 i = 0; i < index; i++) {
             effectArray.push(effect);
             rule.negEffects = effectArray;
             RulesEngineRuleFacet(address(red)).updateRule(policyIds[0], ruleId, rule, ruleName, ruleDescription);
-            assertEq(RulesEngineRuleFacet(address(red)).getRule(policyIds[0], ruleId).rule.negEffects.length, i+2);
+            assertEq(RulesEngineRuleFacet(address(red)).getRule(policyIds[0], ruleId).rule.negEffects.length, i + 2);
         }
     }
 }

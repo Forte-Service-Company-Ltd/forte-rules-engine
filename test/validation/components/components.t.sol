@@ -283,11 +283,11 @@ abstract contract components is RulesEngineCommon {
         pTypes[5] = ParamTypes.UINT;
         policyIds[0] = _createBlankPolicy();
         vm.expectRevert(abi.encodePacked(NAME_REQ));
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(keccak256(bytes("transfer()"))),
             pTypes,
-            "",//name
+            "", //name
             "address,uint256"
         );
     }
@@ -298,9 +298,9 @@ abstract contract components is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         policyIds[0] = _createBlankPolicy();
         vm.expectRevert(abi.encodePacked(SIG_REQ));
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
-            bytes4(keccak256(bytes(""))),// function signature
+            bytes4(keccak256(bytes(""))), // function signature
             pTypes,
             "transfer(address,uint256)",
             "address,uint256"
@@ -998,5 +998,4 @@ abstract contract components is RulesEngineCommon {
         vm.expectRevert(abi.encodePacked(NAME_REQ));
         RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "");
     }
-
 }

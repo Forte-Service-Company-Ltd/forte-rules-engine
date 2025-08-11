@@ -49,7 +49,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param callingFunctionArgs representation of the calling function arguments
      * @param foreignCallIndex Index of the foreign call.
      * @param retVals array of return values from previous foreign calls, trackers, etc.
-     * @return The output of the foreign call.
+     * @return retVal The output of the foreign call.
      */
     function evaluateForeignCalls(
         uint256 policyId,
@@ -57,11 +57,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 foreignCallIndex,
         bytes[] memory retVals,
         ForeignCallEncodedIndex[] memory metadata
-    ) public returns (ForeignCallReturnValue memory) {
+    ) public returns (ForeignCallReturnValue memory retVal) {
         // Load the Foreign Call data from storage
         ForeignCall memory foreignCall = lib._getForeignCallStorage().foreignCalls[policyId][foreignCallIndex];
         if (foreignCall.set) {
-            return evaluateForeignCallForRule(foreignCall, callingFunctionArgs, retVals, metadata, policyId);
+            retVal = evaluateForeignCallForRule(foreignCall, callingFunctionArgs, retVals, metadata, policyId);
         }
     }
 
@@ -149,7 +149,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes memory dynamicData,
         ForeignCallEncodedIndex memory mappedTrackerKeyEI,
         uint256 parameterTypesLength
-    ) public returns (bytes memory, uint256, bytes memory) {
+    ) public view returns (bytes memory, uint256, bytes memory) {
         bytes memory mappedTrackerValue;
         ParamTypes typ = lib._getTrackerStorage().trackers[policyId][trackerIndex].trackerKeyType;
 
@@ -180,7 +180,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 trackerIndex,
         ForeignCallEncodedIndex memory mappedTrackerKeyEI,
         ParamTypes typ
-    ) internal returns (bytes memory mappedTrackerValue, ParamTypes valueType) {
+    ) internal view returns (bytes memory mappedTrackerValue, ParamTypes valueType) {
         uint256 mappedTrackerKey;
         if (mappedTrackerKeyEI.eType == EncodedIndexType.ENCODED_VALUES) {
             if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {

@@ -24,7 +24,7 @@ import "test/clientContractExamples/ExampleERC1155.sol";
 
 /**
  * Shared testing logic, set ups, helper functions and global test variables for Rules Engine Testing Framework
- * Code used across multiple testing directories belogns here
+ * Code used across multiple testing directories belogns here tester
  */
 
 contract RulesEngineCommon is DiamondMine, Test {
@@ -1596,14 +1596,12 @@ contract RulesEngineCommon is DiamondMine, Test {
         uint256 mappedTrackerKeyIndex,
         uint256 ruleConditional
     ) internal returns (Rule memory rule, ForeignCall memory fc) {
-        // create rule
-        // Rule: FC:simpleCheck(mappedTrackerValue) = ruleParam -> revert -> transfer(address _to, uint256 amount) returns (bool)"
-        Rule memory rule;
         // create mapped tracker
         _createMappedTrackerHelper(policyIds, trackerPType, trackerKeyType, trkKeys, trackerVls);
         // decode rule param
 
         /// set up rule
+        // Rule: FC:simpleCheck(mappedTrackerValue) = ruleParam -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         rule.placeHolders = new Placeholder[](3);
         rule.placeHolders[0].pType = trackerPType; // keyValueType;
         rule.placeHolders[0].typeSpecificIndex = 2; //keyTypeSpecificIndex;
@@ -1640,7 +1638,6 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
         fcArgs[0] = ParamTypes.UINT;
-        ForeignCall memory fc;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
@@ -1666,13 +1663,11 @@ contract RulesEngineCommon is DiamondMine, Test {
         uint256 mappedTrackerKeyIndex,
         uint256 ruleConditional
     ) internal returns (Rule memory rule, ForeignCall memory fc) {
-        // create rule
-        // Rule: FC:simpleCheck(mappedTrackerValue) = ruleParam -> revert -> transfer(address _to, uint256 amount) returns (bool)"
-        Rule memory rule;
         // create mapped tracker
         _createMappedTrackerHelper(policyIds, trackerPType, trackerKeyType, trkKeys, trackerVls);
 
         /// set up rule
+        // Rule: FC:simpleCheck(mappedTrackerValue) = ruleParam -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         rule.placeHolders = new Placeholder[](3);
         rule.placeHolders[0].pType = ParamTypes.BYTES; // keyValueType;
         rule.placeHolders[0].typeSpecificIndex = 2; //keyTypeSpecificIndex;
@@ -1709,7 +1704,6 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
         fcArgs[0] = ParamTypes.UINT;
-        ForeignCall memory fc;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
@@ -1735,13 +1729,11 @@ contract RulesEngineCommon is DiamondMine, Test {
         uint256 mappedTrackerKeyIndex,
         uint256 ruleConditional
     ) internal returns (Rule memory rule, ForeignCall memory fc) {
-        // create rule
-        // Rule: FC:simpleCheck(mappedTrackerValue) = ruleParam -> revert -> transfer(address _to, uint256 amount) returns (bool)"
-        Rule memory rule;
         // create mapped tracker
         _createMappedTrackerHelper(policyIds, trackerPType, trackerKeyType, trkKeys, trackerVls);
 
         /// set up rule
+        // Rule: FC:simpleCheck(mappedTrackerValue) = ruleParam -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         rule.placeHolders = new Placeholder[](4);
         rule.placeHolders[0].pType = ParamTypes.BYTES; // keyValueType;
         rule.placeHolders[0].typeSpecificIndex = 2; //keyTypeSpecificIndex;
@@ -1776,7 +1768,6 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
         fcArgs[0] = ParamTypes.UINT;
-        ForeignCall memory fc;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
@@ -1817,13 +1808,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         /// create tracker name
         string memory trackerName = "tracker1";
         // Add the tracker
-        uint256 trackerIndex = RulesEngineComponentFacet(address(red)).createTracker(
-            policyIds[0],
-            tracker,
-            trackerName,
-            trackerKeys,
-            trackerValues
-        );
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, trackerName, trackerKeys, trackerValues);
     }
 
     function _createForeignCallUsingMappedTrackerValueHelper(

@@ -72,7 +72,7 @@ abstract contract diamondInternalFunctions is RulesEngineCommon {
         checkDiamondImmutability();
     }
 
-    function checkDiamondImmutability() public {
+    function checkDiamondImmutability() public view {
         assertEq(ERC173Facet(address(red)).owner(), diamondOwner, "Rules Engine Diamond address mismatch");
         IDiamondLoupe.Facet[] memory facets = IDiamondLoupe(address(red)).facets();
         for (uint facet; facet < facets.length; facet++) {

@@ -16,7 +16,7 @@ abstract contract instructionSet is RulesEngineCommon {
         vm.startPrank(policyAdmin);
 
         // Test the addition of two registers
-        _logicalOperatorSetUpArthimetic("Add", 5, 10, 15, LogicalOp.ADD);
+        _logicalOperatorSetUpArthimetic(5, 10, 15, LogicalOp.ADD);
 
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 5);
         vm.startPrank(address(userContract));
@@ -27,7 +27,7 @@ abstract contract instructionSet is RulesEngineCommon {
         vm.startPrank(policyAdmin);
 
         // Test the subtraction of two registers
-        _logicalOperatorSetUpArthimetic("Sub", 5, 10, 5, LogicalOp.SUB);
+        _logicalOperatorSetUpArthimetic(5, 10, 5, LogicalOp.SUB);
 
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 5);
         vm.startPrank(address(userContract));
@@ -38,7 +38,7 @@ abstract contract instructionSet is RulesEngineCommon {
         vm.startPrank(policyAdmin);
 
         // Test the multiplication of two registers
-        _logicalOperatorSetUpArthimetic("Mul", 5, 10, 50, LogicalOp.MUL);
+        _logicalOperatorSetUpArthimetic(5, 10, 50, LogicalOp.MUL);
 
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 5);
         vm.startPrank(address(userContract));
@@ -49,7 +49,7 @@ abstract contract instructionSet is RulesEngineCommon {
         vm.startPrank(policyAdmin);
 
         // Test the division of two registers
-        _logicalOperatorSetUpArthimetic("Div", 10, 5, 2, LogicalOp.DIV);
+        _logicalOperatorSetUpArthimetic(10, 5, 2, LogicalOp.DIV);
 
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 5);
         vm.startPrank(address(userContract));
@@ -60,7 +60,7 @@ abstract contract instructionSet is RulesEngineCommon {
         vm.startPrank(policyAdmin);
 
         // Test the multiplication of two registers to induce overflow
-        _logicalOperatorSetUpArthimetic("Mul", 5, type(uint256).max, 50, LogicalOp.MUL);
+        _logicalOperatorSetUpArthimetic(5, type(uint256).max, 50, LogicalOp.MUL);
 
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 5);
         vm.startPrank(address(userContract));
@@ -72,7 +72,7 @@ abstract contract instructionSet is RulesEngineCommon {
         vm.startPrank(policyAdmin);
 
         // Test the subtraction of two registers to induce underflow
-        _logicalOperatorSetUpArthimetic("Sub", 100, 10, 2, LogicalOp.SUB);
+        _logicalOperatorSetUpArthimetic(100, 10, 2, LogicalOp.SUB);
 
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 5);
         vm.startPrank(address(userContract));
@@ -84,7 +84,7 @@ abstract contract instructionSet is RulesEngineCommon {
         vm.startPrank(policyAdmin);
 
         // Test the division of two registers
-        _logicalOperatorSetUpArthimetic("Div", 0, 10, 2, LogicalOp.DIV);
+        _logicalOperatorSetUpArthimetic(0, 10, 2, LogicalOp.DIV);
 
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 5);
         vm.startPrank(address(userContract));
@@ -92,13 +92,7 @@ abstract contract instructionSet is RulesEngineCommon {
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
-    function _logicalOperatorSetUpArthimetic(
-        string memory operatorTypeString,
-        uint256 opValue,
-        uint256 compValue,
-        uint256 expectedResult,
-        LogicalOp logicOperator
-    ) internal {
+    function _logicalOperatorSetUpArthimetic(uint256 opValue, uint256 compValue, uint256 expectedResult, LogicalOp logicOperator) internal {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
         // Add the calling function to the policy
@@ -157,7 +151,7 @@ abstract contract instructionSet is RulesEngineCommon {
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
         vm.expectRevert("Invalid Instruction");
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
     function testInstructionSet_Unit_MemoryRegisters_TwoExpected() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -183,7 +177,7 @@ abstract contract instructionSet is RulesEngineCommon {
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
         vm.expectRevert("Invalid Instruction");
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
     function testInstructionSet_Unit_MemoryRegisters_ThreeExpected() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -210,7 +204,7 @@ abstract contract instructionSet is RulesEngineCommon {
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
         vm.expectRevert("Memory Overflow");
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
     function testInstructionSet_Unit_MemoryRegisters_TwoExpected_OneGiven() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -234,7 +228,7 @@ abstract contract instructionSet is RulesEngineCommon {
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
         vm.expectRevert("Invalid Instruction Set");
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
     function testInstructionSet_Unit_MemoryRegisters_ThreeExpected_TwoGiven() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -259,7 +253,7 @@ abstract contract instructionSet is RulesEngineCommon {
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
         vm.expectRevert("Invalid Instruction Set");
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
     ///  bound tests
@@ -284,7 +278,7 @@ abstract contract instructionSet is RulesEngineCommon {
 
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
     function testInstructionSet_Unit_BoundsTesting_PlaceHolder_StringBounds() public ifDeploymentTestsEnabled endWithStopPrank {

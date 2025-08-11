@@ -1498,8 +1498,6 @@ abstract contract rules is RulesEngineCommon {
 
     function testRulesEngine_Unit_RulesValidationCreateRule_PolicyIdCannotBeZero() public ifDeploymentTestsEnabled resetsGlobalVariables {
         vm.startPrank(policyAdmin);
-        // Create a blank policy
-        uint256 policyId = _createBlankPolicy();
 
         // Create a rule with a zero policyId - should fail
         Rule memory rule;
@@ -1522,7 +1520,7 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
 
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(1, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
         vm.expectRevert("Policy ID cannot be 0. Create policy before updating");
         RulesEngineRuleFacet(address(red)).updateRule(0, ruleId, rule, ruleName, ruleDescription);
@@ -1543,7 +1541,7 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
 
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(1, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
         vm.expectRevert("Policy ID cannot be 0. Create policy before updating");
         RulesEngineRuleFacet(address(red)).deleteRule(0, ruleId);
@@ -1564,7 +1562,7 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
 
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(1, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
         vm.expectRevert("Policy ID cannot be 0. Create policy before updating");
         RulesEngineRuleFacet(address(red)).getRule(0, ruleId);
