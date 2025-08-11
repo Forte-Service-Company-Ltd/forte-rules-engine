@@ -37,7 +37,7 @@ jobs:
           node-version: "22.4.0"
           registry-url: "https://registry.npmjs.org"
           # Defaults to the user or organization that owns the workflow file
-          scope: "@thrackle-io"
+          scope: "@fortefoundation"
           always-auth: true
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1

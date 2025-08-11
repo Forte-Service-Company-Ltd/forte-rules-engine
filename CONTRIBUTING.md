@@ -8,11 +8,11 @@ We're so glad you would want to come and contribute! We are a small team and we 
 
 ## Asking For Help
 
-If you have reviewed existing documentation and still have questions or are having problems, we are always a message away. You can reach out to the [Team](mailto:rules@thrackle.io). Opening an issue is also a great way to get help for particularly complex issues. 
+If you have reviewed existing documentation and still have questions or are having problems, we are always a message away. You can reach out to the [Team](mailto:rules@thrackle.io). Opening an issue is also a great way to get help for particularly complex issues.
 
 ## Submitting a Bug Report
 
-If you feel you have stumbled upon a particularly severe bug, please quietly message the [Team](mailto:rules@thrackle.io) as soon as possible and keep the bug report private so the incident response team can react accordingly. If you have found a bug that is not severe or an optimization potential, please open an issue on the repository, and (if possible) a PR with a solution, and a test to show the bug and the fix.  
+If you feel you have stumbled upon a particularly severe bug, please quietly message the [Team](mailto:rules@thrackle.io) as soon as possible and keep the bug report private so the incident response team can react accordingly. If you have found a bug that is not severe or an optimization potential, please open an issue on the repository, and (if possible) a PR with a solution, and a test to show the bug and the fix.
 
 The most important pieces of information we need in a bug report are:
 
@@ -39,7 +39,7 @@ All code changes should be accompanied by tests. If you are not sure how to writ
 
 ## Adding a new feature
 
-Please ensure you make yourself familiar with the current architecture and best practices around working with that architecture. All new features should first go through a strenuous effort of having been tested on a local network and verified by team members on a test network before being merged into mainnet release. If you are adding a new feature, please ensure that you have added a new test to cover that feature. 
+Please ensure you make yourself familiar with the current architecture and best practices around working with that architecture. All new features should first go through a strenuous effort of having been tested on a local network and verified by team members on a test network before being merged into mainnet release. If you are adding a new feature, please ensure that you have added a new test to cover that feature.
 
 ## Adding dependencies
 
@@ -51,13 +51,13 @@ If possible, please use JIRA to create new branch names. If you do not have acce
 
 ## Code Style
 
-If possible, please fill out all [nat spec parameters](https://docs.soliditylang.org/en/latest/natspec-format.html) available to fill out in the code and try to follow the official [solidity styling guide](https://docs.soliditylang.org/en/latest/style-guide.html) and [order of layout](https://docs.soliditylang.org/en/latest/style-guide.html#order-of-layout). If you are at all unsure, please feel free to ask us. 
+If possible, please fill out all [nat spec parameters](https://docs.soliditylang.org/en/latest/natspec-format.html) available to fill out in the code and try to follow the official [solidity styling guide](https://docs.soliditylang.org/en/latest/style-guide.html) and [order of layout](https://docs.soliditylang.org/en/latest/style-guide.html#order-of-layout). If you are at all unsure, please feel free to ask us.
 
 ## Commits
 
 Always make sure your commits messages are informative and describe the changes within the commit at a high level. In order to ensure that commits have a chronological sensibility, it may make sense to squash many commits together. In the case of potential merge conflicts, the preferred methodology to resolve said conflicts is to rebase against the trunk and make corrections along the way.
 
-
 <!-- These are the header links -->
+
 [version-image]: https://img.shields.io/badge/Version-2.4.0-brightgreen?style=for-the-badge&logo=appveyor
-[version-url]: https://github.com/thrackle-io/forte-rules-engine
+[version-url]: https://github.com/Forte-Service-Company-Ltd/forte-rules-engine

@@ -1,5 +1,5 @@
 {
-  "name": "@thrackle-io/forte-rules-engine",
+  "name": "@fortefoundation/forte-rules-engine",
   "version": "0.3.1",
   "description": "Forte Rules Engine",
   "files": [
@@ -22,14 +22,13 @@
     "ethereum",
     "smart contracts",
     "forte",
-    "rules engine",
-    "thrackle"
+    "rules engine"
   ],
-  "author": "Thrackle",
-  "homepage": "https://github.com/thrackle-io/forte-rules-engine#readme",
+  "author": "Forte",
+  "homepage": "https://github.com/Forte-Service-Company-Ltd/forte-rules-engine#readme",
   "license": "BUSL-1.1",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/thrackle-io/forte-rules-engine.git"
+    "url": "git+https://github.com/Forte-Service-Company-Ltd/forte-rules-engine.git"
   }
 }

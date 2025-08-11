@@ -14,10 +14,6 @@ This repository contains an EVM-based protocol designed to meet the unique needs
 
 Please visit our [Contributor Guide](./CONTRIBUTING.md).
 
-## Forte x Thrackle
-
-Forte’s work is aided and supported by our ecosystem partner, Thrackle, a team of industry experts, including PhD-level engineers specializing in computer science, math, engineering, economics, and finance. Thrackle leverages its deep technical expertise to develop purpose-built, customizable products that enable the creation, growth, and stability of thriving digital asset economies. Together, Forte and Thrackle are driving innovation to build healthy, sustainable blockchain economies.
-
 ## Getting Started
 
 ### Environment dependencies
@@ -148,4 +144,4 @@ The primary license for Forte Protocol Rules Engine is the Business Source Licen
   Other Exceptions
 
 [version-image]: https://img.shields.io/badge/Version-0.3.1-brightgreen?style=for-the-badge&logo=appveyor
-[version-url]: https://github.com/thrackle-io/forte-rules-engine
+[version-url]: https://github.com/Forte-Service-Company-Ltd/forte-rules-engine
