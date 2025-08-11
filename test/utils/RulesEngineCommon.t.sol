@@ -1007,13 +1007,28 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         _addCallingFunctionToPolicy(policyIds[0]);
         Rule memory rule;
+        uint[] memory effectInstructionSet = new uint[](2);
+        effectInstructionSet[0] = uint(LogicalOp.PLH);
+        effectInstructionSet[1] = 0;
+        Effect memory posEffect = Effect({
+            valid: true,
+            dynamicParam: true,
+            effectType: EffectTypes.EVENT,
+            pType: ParamTypes.STR,
+            param: "",
+            text: EVENTTEXT,
+            errorMessage: "",
+            instructionSet: effectInstructionSet
+        });
         // Rule: amount > 4 -> event -> transfer(address _to, uint256 amount) returns (bool)"
         if (pType == ParamTypes.ADDR) {
             rule = _createGTRuleWithDynamicEventParamsAddress(4);
-            rule.posEffects[0] = effectId_event;
+            // Add a negative/positive effects
+
+            rule.posEffects[0] = posEffect;
         } else {
             rule = _createGTRuleWithDynamicEventParams(4);
-            rule.posEffects[0] = effectId_event;
+            rule.posEffects[0] = posEffect;
         }
 
         // Save the rule
