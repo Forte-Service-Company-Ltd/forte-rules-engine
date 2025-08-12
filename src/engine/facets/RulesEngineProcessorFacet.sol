@@ -27,6 +27,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
 
     string public constant version = "v0.3.1";
 
+    event Log(string, uint);
+    event Log(string, bytes);
+    event Log(string, bool);
+    event Log(string);
+
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
     // Rule Evaluation Functions
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -481,8 +486,10 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             Rule storage rule = _ruleData[_applicableRules[i]].rule;
             if (!_evaluateIndividualRule(rule, _policyId, _callingFunctionArgs)) {
                 _retVal = false;
+                emit Log("negative effect");
                 _doEffects(rule, _policyId, rule.negEffects, _callingFunctionArgs, _retVal);
             } else {
+                emit Log("positive effect");
                 _doEffects(rule, _policyId, rule.posEffects, _callingFunctionArgs, _retVal);
             }
         }
@@ -538,10 +545,29 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 for (uint i; i < _rule.posEffects.length; i++) {
                     for (uint j; j < _rule.posEffects[i].instructionSet.length; j++) {
                         uint instruction = _rule.posEffects[i].instructionSet[j];
-                        uint data = _rule.posEffects[i].instructionSet[j + 1];
-                        bool isPlaceholder;
-                        (j, isPlaceholder) = placeholerMaskHelper(instruction, data, j);
-                        if (isPlaceholder) effectBranchPlaceholdersMask[data] = true; // avoid array-out-of-bounds
+                        uint data;
+                        if (instruction == uint(LogicalOp.PLH) || instruction == uint(LogicalOp.PLHM)) {
+                            data = _rule.posEffects[i].instructionSet[j + 1];
+                            effectBranchPlaceholdersMask[data] = true;
+                            if (instruction == uint(LogicalOp.PLH)) ++j;
+                            else if (instruction == uint(LogicalOp.PLHM)) j += 2;
+                        } else if (
+                            instruction == uint(LogicalOp.TRU) &&
+                            _rule.posEffects[i].instructionSet[j + 3] == uint(TrackerTypes.PLACE_HOLDER)
+                        ) {
+                            effectBranchPlaceholdersMask[data] = true;
+                            data = _rule.posEffects[i].instructionSet[j + 2];
+                            j += 3;
+                        } else if (
+                            instruction == uint(LogicalOp.TRUM) &&
+                            _rule.posEffects[i].instructionSet[j + 4] == uint(TrackerTypes.PLACE_HOLDER)
+                        ) {
+                            data = _rule.posEffects[i].instructionSet[j + 2];
+                            effectBranchPlaceholdersMask[data] = true;
+                        } else if (instruction < opsSize1) ++j;
+                        else if (instruction < opsSizeUpTo2) j += 2;
+                        else if (instruction < opsSizeUpTo3) j += 3;
+                        else if (instruction < opsTotalSize) j += 4;
                     }
                 }
             } // negative effects
@@ -549,14 +575,34 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 for (uint i; i < _rule.negEffects.length; i++) {
                     for (uint j; j < _rule.negEffects[i].instructionSet.length; j++) {
                         uint instruction = _rule.negEffects[i].instructionSet[j];
-                        uint data = _rule.negEffects[i].instructionSet[j + 1];
-                        bool isPlaceholder;
-                        (j, isPlaceholder) = placeholerMaskHelper(instruction, data, j);
-                        if (isPlaceholder) effectBranchPlaceholdersMask[data] = true; // avoid array-out-of-bounds
+                        uint data;
+                        if (instruction == uint(LogicalOp.PLH) || instruction == uint(LogicalOp.PLHM)) {
+                            data = _rule.negEffects[i].instructionSet[j + 1];
+                            effectBranchPlaceholdersMask[data] = true;
+                            if (instruction == uint(LogicalOp.PLH)) ++j;
+                            else if (instruction == uint(LogicalOp.PLHM)) j += 2;
+                        } else if (
+                            instruction == uint(LogicalOp.TRU) &&
+                            _rule.negEffects[i].instructionSet[j + 3] == uint(TrackerTypes.PLACE_HOLDER)
+                        ) {
+                            effectBranchPlaceholdersMask[data] = true;
+                            data = _rule.negEffects[i].instructionSet[j + 2];
+                            j += 3;
+                        } else if (
+                            instruction == uint(LogicalOp.TRUM) &&
+                            _rule.negEffects[i].instructionSet[j + 4] == uint(TrackerTypes.PLACE_HOLDER)
+                        ) {
+                            data = _rule.negEffects[i].instructionSet[j + 2];
+                            effectBranchPlaceholdersMask[data] = true;
+                        } else if (instruction < opsSize1) ++j;
+                        else if (instruction < opsSizeUpTo2) j += 2;
+                        else if (instruction < opsSizeUpTo3) j += 3;
+                        else if (instruction < opsTotalSize) j += 4;
                     }
                 }
             }
         }
+
         bytes[] memory retVals = new bytes[](placeHolders.length);
         // Data validation will alway ensure ruleCount will be less than MAX_LOOP
         ForeignCallEncodedIndex[] memory metadata = new ForeignCallEncodedIndex[](placeHolders.length);
@@ -599,7 +645,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         if (instruction == uint(LogicalOp.PLH) || instruction == uint(LogicalOp.PLHM)) {
             isPlaceholder = true;
             if (instruction == uint(LogicalOp.PLH)) ++j;
-            else j += 2;
+            else if (instruction == uint(LogicalOp.PLHM)) j += 2;
+            else if (instruction == uint(LogicalOp.TRU)) j += 3;
+            else if (instruction == uint(LogicalOp.TRUM)) j += 4;
         } else if (instruction < opsSize1) ++j;
         else if (instruction < opsSizeUpTo2) j += 2;
         else if (instruction < opsSizeUpTo3) j += 3;
@@ -1000,6 +1048,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 if (effect.effectType == EffectTypes.REVERT) {
                     _doRevert(effect.errorMessage);
                 } else if (effect.effectType == EffectTypes.EVENT) {
+                    emit Log("event");
                     _buildEvent(
                         _rule,
                         _effects[i].dynamicParam,
@@ -1036,9 +1085,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     ) internal {
         // determine if we need to dynamically build event key
         if (_isDynamicParam) {
+            emit Log("dynamic event");
             // fire event by param type based on return value
-            _fireDynamicEvent(_rule, _policyId, _message, _callingFunctionArgs);
+            _fireDynamicEvent(_rule, _policyId, _message, _callingFunctionArgs, isPosEffect);
         } else {
+            emit Log("fixed event");
             _fireEvent(_policyId, _message, _effectStruct);
         }
     }
@@ -1050,14 +1101,23 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _message Event Message String
      * @param _callingFunctionArgs calling function arguments
      */
-    function _fireDynamicEvent(Rule storage _rule, uint256 _policyId, bytes32 _message, bytes calldata _callingFunctionArgs) internal {
+    function _fireDynamicEvent(
+        Rule storage _rule,
+        uint256 _policyId,
+        bytes32 _message,
+        bytes calldata _callingFunctionArgs,
+        bool isPosEffect
+    ) internal {
+        emit Log("isPosEffect", isPosEffect);
+        emit Log("isPosi_policyIdtive", _policyId);
         // Build the effect arguments struct for event parameters:
         (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(
             _rule,
             _policyId,
             _callingFunctionArgs,
-            PlaceholderType.POS_EFFECT
+            isPosEffect ? PlaceholderType.POS_EFFECT : PlaceholderType.NEG_EFFECT
         );
+        emit Log("after buildArguments");
         // Data validation will always ensure effectArguments.length will be less than MAX_LOOP
         for (uint256 i = 0; i < effectArguments.length; i++) {
             // loop through parameter types and set eventParam
