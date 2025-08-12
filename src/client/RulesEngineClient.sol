@@ -20,7 +20,7 @@ abstract contract RulesEngineClient {
      * @dev This function assigns the admin role for the calling contract to the specified address.
      * @param callingContractAdmin The address to be assigned as the admin for the calling contract.
      */
-    function setCallingContractAdmin(address callingContractAdmin) external virtual {
+    function setCallingContractAdmin(address callingContractAdmin) public virtual {
         IRulesEngine(rulesEngineAddress).grantCallingContractRole(address(this), callingContractAdmin);
     }
 
