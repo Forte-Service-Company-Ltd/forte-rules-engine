@@ -634,20 +634,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         return (retVals, placeHolders);
     }
 
-    function placeholerMaskHelper(uint instruction, uint data, uint j) internal returns (uint _j, bool isPlaceholder) {
-        if (instruction == uint(LogicalOp.PLH) || instruction == uint(LogicalOp.PLHM)) {
-            isPlaceholder = true;
-            if (instruction == uint(LogicalOp.PLH)) ++j;
-            else if (instruction == uint(LogicalOp.PLHM)) j += 2;
-            else if (instruction == uint(LogicalOp.TRU)) j += 3;
-            else if (instruction == uint(LogicalOp.TRUM)) j += 4;
-        } else if (instruction < opsSize1) ++j;
-        else if (instruction < opsSizeUpTo2) j += 2;
-        else if (instruction < opsSizeUpTo3) j += 3;
-        else if (instruction < opsTotalSize) j += 4;
-        _j = j;
-    }
-
     /**
      * @dev Internal function to decode the arguments and do the comparisons.
      * @param _prog An array of uint256 representing the program to be executed.
