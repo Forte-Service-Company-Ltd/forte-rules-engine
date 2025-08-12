@@ -1020,15 +1020,27 @@ contract RulesEngineCommon is DiamondMine, Test {
             errorMessage: "",
             instructionSet: effectInstructionSet
         });
+        Effect memory negEffect = Effect({
+            valid: true,
+            dynamicParam: true,
+            effectType: EffectTypes.EVENT,
+            pType: ParamTypes.STR,
+            param: "",
+            text: EVENTTEXT2,
+            errorMessage: "",
+            instructionSet: effectInstructionSet
+        });
         // Rule: amount > 4 -> event -> transfer(address _to, uint256 amount) returns (bool)"
         if (pType == ParamTypes.ADDR) {
             rule = _createGTRuleWithDynamicEventParamsAddress(4);
             // Add a negative/positive effects
 
             rule.posEffects[0] = posEffect;
+            rule.negEffects[0] = negEffect;
         } else {
             rule = _createGTRuleWithDynamicEventParams(4);
             rule.posEffects[0] = posEffect;
+            rule.negEffects[0] = negEffect;
         }
 
         // Save the rule
@@ -2054,10 +2066,14 @@ contract RulesEngineCommon is DiamondMine, Test {
     }
 
     function _createGTRuleWithDynamicEventParams(uint256 _amount) public returns (Rule memory) {
+        return _createGTRuleWithDynamicEventParams(_amount, true);
+    }
+
+    function _createGTRuleWithDynamicEventParams(uint256 _amount, bool isPositiveEffect) public returns (Rule memory) {
         // Rule: amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule;
         // Set up custom event param effect.
-        effectId_event = _createEffectEventDynamicParams();
+        effectId_event = isPositiveEffect ? _createEffectEventDynamicParams() : _createEffectEventDynamicParams2();
         // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, _amount, LogicalOp.GT, 0, 1
         rule.instructionSet = rule.instructionSet = _createInstructionSet(_amount);
         rule.placeHolders = new Placeholder[](1);
@@ -2074,12 +2090,16 @@ contract RulesEngineCommon is DiamondMine, Test {
     }
 
     function _createGTRuleWithDynamicEventParamsAddress(uint256 _amount) public returns (Rule memory) {
+        return _createGTRuleWithDynamicEventParamsAddress(_amount, true);
+    }
+
+    function _createGTRuleWithDynamicEventParamsAddress(uint256 _amount, bool isPositiveEffect) public returns (Rule memory) {
         // Rule: amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule;
         // Set up custom event param effect.
-        effectId_event = _createEffectEventDynamicParamsAddress();
+        effectId_event = isPositiveEffect ? _createEffectEventDynamicParamsAddress() : _createEffectEventDynamicParamsAddress2();
         // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, _amount, LogicalOp.GT, 0, 1
-        rule.instructionSet = rule.instructionSet = _createInstructionSet(_amount);
+        rule.instructionSet = _createInstructionSet(_amount);
         rule.placeHolders = new Placeholder[](1);
         rule.placeHolders[0].pType = ParamTypes.UINT;
         rule.placeHolders[0].typeSpecificIndex = 1;
@@ -2331,11 +2351,19 @@ contract RulesEngineCommon is DiamondMine, Test {
     }
 
     function _createEffectEventDynamicParams() public pure returns (Effect memory) {
+        return _createEffectEventDynamicParams(EVENTTEXT);
+    }
+
+    function _createEffectEventDynamicParams2() public pure returns (Effect memory) {
+        return _createEffectEventDynamicParams(EVENTTEXT2);
+    }
+
+    function _createEffectEventDynamicParams(bytes32 text) public pure returns (Effect memory) {
         Effect memory effect;
         effect.valid = true;
         effect.dynamicParam = true;
         effect.effectType = EffectTypes.EVENT;
-        effect.text = EVENTTEXT;
+        effect.text = text;
         effect.instructionSet = new uint256[](4);
         // Foreign Call Placeholder
         effect.instructionSet[0] = uint(LogicalOp.NUM);
@@ -2348,11 +2376,19 @@ contract RulesEngineCommon is DiamondMine, Test {
     }
 
     function _createEffectEventDynamicParamsAddress() public pure returns (Effect memory) {
+        return _createEffectEventDynamicParamsAddress(EVENTTEXT);
+    }
+
+    function _createEffectEventDynamicParamsAddress2() public pure returns (Effect memory) {
+        return _createEffectEventDynamicParamsAddress(EVENTTEXT2);
+    }
+
+    function _createEffectEventDynamicParamsAddress(bytes32 text) public pure returns (Effect memory) {
         Effect memory effect;
         effect.valid = true;
         effect.dynamicParam = true;
         effect.effectType = EffectTypes.EVENT;
-        effect.text = EVENTTEXT;
+        effect.text = text;
         effect.instructionSet = new uint256[](4);
         // Foreign Call Placeholder
         effect.instructionSet[0] = uint(LogicalOp.NUM);
