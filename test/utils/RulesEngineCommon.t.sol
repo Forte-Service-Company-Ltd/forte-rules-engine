@@ -24,7 +24,7 @@ import "test/clientContractExamples/ExampleERC1155.sol";
 
 /**
  * Shared testing logic, set ups, helper functions and global test variables for Rules Engine Testing Framework
- * Code used across multiple testing directories belogns here tester
+ * Code used across multiple testing directories belongs here
  */
 
 contract RulesEngineCommon is DiamondMine, Test {
