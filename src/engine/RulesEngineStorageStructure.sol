@@ -198,6 +198,7 @@ struct Arguments {
  */
 struct ForeignCall {
     bool set;
+    bool isNegativeEffect;
     // Address of the contract to make the call to
     address foreignCallAddress;
     // The function signature of the foreign call

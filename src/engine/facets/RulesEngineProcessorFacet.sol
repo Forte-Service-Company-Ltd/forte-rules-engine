@@ -19,6 +19,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     uint8 constant GLOBAL_MSG_DATA = 3;
     uint8 constant GLOBAL_BLOCK_NUMBER = 4;
     uint8 constant GLOBAL_TX_ORIGIN = 5;
+    uint8 constant FOREIGN_CALL = 1; // 0X01 = 1
+    uint8 constant TRACKER_VALUE = 2; // 0x02 = 2
     enum PlaceholderType {
         CONDITION,
         POS_EFFECT,
@@ -61,11 +63,12 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes calldata callingFunctionArgs,
         uint256 foreignCallIndex,
         bytes[] memory retVals,
-        ForeignCallEncodedIndex[] memory metadata
+        ForeignCallEncodedIndex[] memory metadata,
+        bool isNegativeEffect
     ) public returns (ForeignCallReturnValue memory) {
         // Load the Foreign Call data from storage
         ForeignCall memory foreignCall = lib._getForeignCallStorage().foreignCalls[policyId][foreignCallIndex];
-        if (foreignCall.set) {
+        if (foreignCall.set && foreignCall.isNegativeEffect == isNegativeEffect) {
             return evaluateForeignCallForRule(foreignCall, callingFunctionArgs, retVals, metadata, policyId);
         }
     }
@@ -154,7 +157,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes memory dynamicData,
         ForeignCallEncodedIndex memory mappedTrackerKeyEI,
         uint256 parameterTypesLength
-    ) public returns (bytes memory, uint256, bytes memory) {
+    ) internal returns (bytes memory, uint256, bytes memory) {
         bytes memory mappedTrackerValue;
         ParamTypes typ = lib._getTrackerStorage().trackers[policyId][trackerIndex].trackerKeyType;
 
@@ -226,7 +229,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 lengthToAppend,
         bytes memory dynamicData,
         uint256 i
-    ) public pure returns (bytes memory, uint256, bytes memory) {
+    ) internal pure returns (bytes memory, uint256, bytes memory) {
         uint256 typeSpecificIndex = fc.encodedIndices[i].index;
         bytes32 value = bytes32(functionArguments[typeSpecificIndex * 32:(typeSpecificIndex + 1) * 32]);
         if (argType == ParamTypes.STR || argType == ParamTypes.BYTES) {
@@ -293,7 +296,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 lengthToAppend,
         uint256 i,
         bytes memory dynamicData
-    ) public view returns (bytes memory, uint256, bytes memory) {
+    ) internal view returns (bytes memory, uint256, bytes memory) {
         ParamTypes argType = fc.parameterTypes[i];
         uint256 index = fc.encodedIndices[i].index;
         // Handle global variables separately
@@ -334,7 +337,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes memory value,
         ParamTypes argType,
         uint256 parameterTypesLength
-    ) public pure returns (bytes memory, uint256, bytes memory) {
+    ) internal pure returns (bytes memory, uint256, bytes memory) {
         if (argType == ParamTypes.STR || argType == ParamTypes.BYTES) {
             encodedCall = bytes.concat(encodedCall, bytes32(32 * (parameterTypesLength) + lengthToAppend));
             bytes memory stringData = ProcessorLib._extractStringData(value);
@@ -529,89 +532,18 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         if (placeholderType == PlaceholderType.CONDITION) placeHolders = _rule.placeHolders;
         else placeHolders = _rule.effectPlaceHolders;
 
-        bool[] memory effectBranchPlaceholdersMask = new bool[](placeHolders.length);
-        // we apply a mask for placeholders depending if we are triggering positive or negative effects.
-        // some code duplication is necessary to avoid high gas consumption and array-out-of-bounds error in the instruction array
-        {
-            // positive effects
-            if (placeholderType == PlaceholderType.POS_EFFECT) {
-                for (uint i; i < _rule.posEffects.length; i++) {
-                    for (uint j; j < _rule.posEffects[i].instructionSet.length; j++) {
-                        uint instruction = _rule.posEffects[i].instructionSet[j];
-                        uint data;
-                        if (instruction == uint(LogicalOp.PLH) || instruction == uint(LogicalOp.PLHM)) {
-                            data = _rule.posEffects[i].instructionSet[j + 1];
-                            effectBranchPlaceholdersMask[data] = true;
-                            if (instruction == uint(LogicalOp.PLH)) ++j;
-                            else if (instruction == uint(LogicalOp.PLHM)) j += 2;
-                        } else if (
-                            instruction == uint(LogicalOp.TRU) &&
-                            _rule.posEffects[i].instructionSet[j + 3] == uint(TrackerTypes.PLACE_HOLDER)
-                        ) {
-                            effectBranchPlaceholdersMask[data] = true;
-                            data = _rule.posEffects[i].instructionSet[j + 2];
-                            j += 3;
-                        } else if (
-                            instruction == uint(LogicalOp.TRUM) &&
-                            _rule.posEffects[i].instructionSet[j + 4] == uint(TrackerTypes.PLACE_HOLDER)
-                        ) {
-                            data = _rule.posEffects[i].instructionSet[j + 2];
-                            effectBranchPlaceholdersMask[data] = true;
-                        } else if (instruction < opsSize1) ++j;
-                        else if (instruction < opsSizeUpTo2) j += 2;
-                        else if (instruction < opsSizeUpTo3) j += 3;
-                        else if (instruction < opsTotalSize) j += 4;
-                    }
-                }
-            } // negative effects
-            if (placeholderType == PlaceholderType.NEG_EFFECT) {
-                for (uint i; i < _rule.negEffects.length; i++) {
-                    for (uint j; j < _rule.negEffects[i].instructionSet.length; j++) {
-                        uint instruction = _rule.negEffects[i].instructionSet[j];
-                        uint data;
-                        if (instruction == uint(LogicalOp.PLH) || instruction == uint(LogicalOp.PLHM)) {
-                            data = _rule.negEffects[i].instructionSet[j + 1];
-                            effectBranchPlaceholdersMask[data] = true;
-                            if (instruction == uint(LogicalOp.PLH)) ++j;
-                            else if (instruction == uint(LogicalOp.PLHM)) j += 2;
-                        } else if (
-                            instruction == uint(LogicalOp.TRU) &&
-                            _rule.negEffects[i].instructionSet[j + 3] == uint(TrackerTypes.PLACE_HOLDER)
-                        ) {
-                            effectBranchPlaceholdersMask[data] = true;
-                            data = _rule.negEffects[i].instructionSet[j + 2];
-                            j += 3;
-                        } else if (
-                            instruction == uint(LogicalOp.TRUM) &&
-                            _rule.negEffects[i].instructionSet[j + 4] == uint(TrackerTypes.PLACE_HOLDER)
-                        ) {
-                            data = _rule.negEffects[i].instructionSet[j + 2];
-                            effectBranchPlaceholdersMask[data] = true;
-                        } else if (instruction < opsSize1) ++j;
-                        else if (instruction < opsSizeUpTo2) j += 2;
-                        else if (instruction < opsSizeUpTo3) j += 3;
-                        else if (instruction < opsTotalSize) j += 4;
-                    }
-                }
-            }
-        }
-
         bytes[] memory retVals = new bytes[](placeHolders.length);
         // Data validation will alway ensure ruleCount will be less than MAX_LOOP
         ForeignCallEncodedIndex[] memory metadata = new ForeignCallEncodedIndex[](placeHolders.length);
         for (uint256 placeholderIndex = 0; placeholderIndex < placeHolders.length; placeholderIndex++) {
-            // we only use the placeholders we need to avoid making undesired calls or firing undesired events
-            if (placeholderType != PlaceholderType.CONDITION && !effectBranchPlaceholdersMask[placeholderIndex]) continue;
             // Determine if the placeholder represents the return value of a foreign call or a function parameter from the calling function
             Placeholder memory placeholder = placeHolders[placeholderIndex];
 
-            // Extract flags using helper function
-            (bool isTrackerValue, bool isForeignCall, uint8 globalVarType) = _extractFlags(placeholder);
-            if (globalVarType != GLOBAL_NONE) {
+            if (placeholder.flags > TRACKER_VALUE) {
                 metadata[placeholderIndex].eType = EncodedIndexType.GLOBAL_VAR;
-                metadata[placeholderIndex].index = globalVarType;
-                (retVals[placeholderIndex], placeHolders[placeholderIndex].pType) = _handleGlobalVar(globalVarType);
-            } else if (isForeignCall) {
+                metadata[placeholderIndex].index = placeholder.flags >> 2;
+                (retVals[placeholderIndex], placeHolders[placeholderIndex].pType) = _handleGlobalVar(placeholder.flags >> 2);
+            } else if (placeholder.flags == FOREIGN_CALL) {
                 metadata[placeholderIndex].eType = EncodedIndexType.FOREIGN_CALL;
                 metadata[placeholderIndex].index = placeholder.typeSpecificIndex;
                 (retVals[placeholderIndex], placeHolders[placeholderIndex].pType) = _handleForeignCall(
@@ -619,9 +551,10 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     _callingFunctionArgs,
                     placeholder.typeSpecificIndex,
                     retVals,
-                    metadata
+                    metadata,
+                    placeholderType == PlaceholderType.NEG_EFFECT ? true : false
                 );
-            } else if (isTrackerValue) {
+            } else if (placeholder.flags == TRACKER_VALUE) {
                 metadata[placeholderIndex].eType = EncodedIndexType.TRACKER;
                 metadata[placeholderIndex].index = placeholder.typeSpecificIndex;
                 retVals[placeholderIndex] = _handleTrackerValue(_policyId, placeholder);
@@ -909,9 +842,17 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes calldata _callingFunctionArgs,
         uint256 typeSpecificIndex,
         bytes[] memory retVals,
-        ForeignCallEncodedIndex[] memory metadata
+        ForeignCallEncodedIndex[] memory metadata,
+        bool isNegativeEffect
     ) internal returns (bytes memory, ParamTypes) {
-        ForeignCallReturnValue memory retVal = evaluateForeignCalls(_policyId, _callingFunctionArgs, typeSpecificIndex, retVals, metadata);
+        ForeignCallReturnValue memory retVal = evaluateForeignCalls(
+            _policyId,
+            _callingFunctionArgs,
+            typeSpecificIndex,
+            retVals,
+            metadata,
+            isNegativeEffect
+        );
         return (retVal.value, retVal.pType);
     }
 

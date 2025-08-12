@@ -875,6 +875,7 @@ contract RulesEngineCommon is DiamondMine, Test {
             ForeignCall memory fc;
             fc.encodedIndices = new ForeignCallEncodedIndex[](1);
             fc.encodedIndices[0].index = 2;
+            fc.isNegativeEffect = true;
             fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES; // the from, to, and msg.sender are all part of the regular encoded values (calldata)
             fc.parameterTypes = fcArgs;
             fc.foreignCallAddress = address(testContract2);
