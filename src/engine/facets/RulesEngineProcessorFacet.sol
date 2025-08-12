@@ -27,11 +27,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
 
     string public constant version = "v0.3.1";
 
-    event Log(string, uint);
-    event Log(string, bytes);
-    event Log(string, bool);
-    event Log(string);
-
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
     // Rule Evaluation Functions
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -486,10 +481,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             Rule storage rule = _ruleData[_applicableRules[i]].rule;
             if (!_evaluateIndividualRule(rule, _policyId, _callingFunctionArgs)) {
                 _retVal = false;
-                emit Log("negative effect");
                 _doEffects(rule, _policyId, rule.negEffects, _callingFunctionArgs, _retVal);
             } else {
-                emit Log("positive effect");
                 _doEffects(rule, _policyId, rule.posEffects, _callingFunctionArgs, _retVal);
             }
         }
@@ -538,7 +531,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
 
         bool[] memory effectBranchPlaceholdersMask = new bool[](placeHolders.length);
         // we apply a mask for placeholders depending if we are triggering positive or negative effects.
-        // some code duplication is necessary to avoid high gas consumption
+        // some code duplication is necessary to avoid high gas consumption and array-out-of-bounds error in the instruction array
         {
             // positive effects
             if (placeholderType == PlaceholderType.POS_EFFECT) {
@@ -1048,7 +1041,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 if (effect.effectType == EffectTypes.REVERT) {
                     _doRevert(effect.errorMessage);
                 } else if (effect.effectType == EffectTypes.EVENT) {
-                    emit Log("event");
                     _buildEvent(
                         _rule,
                         _effects[i].dynamicParam,
@@ -1085,11 +1077,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     ) internal {
         // determine if we need to dynamically build event key
         if (_isDynamicParam) {
-            emit Log("dynamic event");
             // fire event by param type based on return value
             _fireDynamicEvent(_rule, _policyId, _message, _callingFunctionArgs, isPosEffect);
         } else {
-            emit Log("fixed event");
             _fireEvent(_policyId, _message, _effectStruct);
         }
     }
@@ -1108,8 +1098,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes calldata _callingFunctionArgs,
         bool isPosEffect
     ) internal {
-        emit Log("isPosEffect", isPosEffect);
-        emit Log("isPosi_policyIdtive", _policyId);
         // Build the effect arguments struct for event parameters:
         (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(
             _rule,
@@ -1117,7 +1105,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             _callingFunctionArgs,
             isPosEffect ? PlaceholderType.POS_EFFECT : PlaceholderType.NEG_EFFECT
         );
-        emit Log("after buildArguments");
         // Data validation will always ensure effectArguments.length will be less than MAX_LOOP
         for (uint256 i = 0; i < effectArguments.length; i++) {
             // loop through parameter types and set eventParam
