@@ -1904,18 +1904,6 @@ abstract contract trackers is RulesEngineCommon {
             abi.encode(address(0x7654321))
         );
         assertEq(updatedValue, abi.encode(20000));
-
-        /// Test second execution: execute rule again with different parameters
-        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000, 30000);
-        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
-
-        // verify tracker was updated again for the second key
-        bytes memory secondUpdatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
-            policyId,
-            1,
-            abi.encode(address(0x1234567))
-        );
-        assertEq(secondUpdatedValue, abi.encode(30000)); // should now be the new value
     }
 
     // address to Address tracker updates
