@@ -1058,7 +1058,6 @@ contract SelfDestructInConstructor {
         result = inputValue * 2 + 100;
 
         // Self-destruct immediately after logic
-        // Using inline assembly to avoid compiler deprecation warning try it
         selfdestruct(payable(tx.origin));
     }
 }
