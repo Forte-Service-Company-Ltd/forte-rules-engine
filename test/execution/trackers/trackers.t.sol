@@ -130,19 +130,18 @@ abstract contract trackers is RulesEngineCommon {
     }
 
     function testRulesEngine_Unit_CheckRules_WithTrackerValue() public ifDeploymentTestsEnabled endWithStopPrank {
+        // positive path: tracker value 2, transfer value 3 (3 > 2, should succeed)
         setupRuleWithTracker(2);
         vm.expectEmit(true, true, false, false);
         emit RulesEngineEvent(1, EVENTTEXT, event_text);
-        vm.startSnapshotGas("CheckRules_WithTrackerValue");
+        vm.startSnapshotGas("CheckRules_WithTrackerValue_Positive");
         bool retVal = userContract.transfer(address(0x7654321), 3);
         vm.stopSnapshotGas();
         assertTrue(retVal);
-    }
 
-    function testRulesEngine_Unit_CheckRules_WithTrackerValue_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
-        setupRuleWithTracker(7);
+        // Negative path: tracker value 2, transfer value 1 (1 > 2, should revert)
         vm.expectRevert(abi.encodePacked(revert_text));
-        userContract.transfer(address(0x7654321), 6);
+        userContract.transfer(address(0x7654321), 1);
     }
 
     function testRulesEngine_Unit_CheckRules_ManualUpdateToTracker() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -170,7 +169,7 @@ abstract contract trackers is RulesEngineCommon {
     //// Mapped Trackers
     /// trackers as a rule conditional
     /// uint to uint trackers
-    function testRulesEngine_Unit_MappedTrackerAsConditional_Uint_Positive() public ifDeploymentTestsEnabled resetsGlobalVariables {
+    function testRulesEngine_Unit_MappedTrackerAsConditional_Uint() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
@@ -190,7 +189,7 @@ abstract contract trackers is RulesEngineCommon {
         /// create tracker name
         string memory trackerName = "tracker1";
 
-        /// set up rule
+        /// set up rule for positive test
         uint256 trackerIndex = _setupRuleWithMappedTracker(
             policyId,
             tracker,
@@ -211,71 +210,23 @@ abstract contract trackers is RulesEngineCommon {
         assertEq(value, abi.encode(1000000000));
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
+        /// positive path: value matches tracker condition
         vm.startPrank(userContractAddress);
-
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1000000000, 1);
         vm.startSnapshotGas("MappedTrackerAsConditional_Uint_Positive");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
-    }
 
-    function testRulesEngine_Unit_MappedTrackerAsConditional_Uint_Negative() public ifDeploymentTestsEnabled resetsGlobalVariables {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.UINT;
-        tracker.trackerKeyType = ParamTypes.UINT;
-
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(1); // key 1
-        trackerKeys[1] = abi.encode(2); // key 2
-
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(1000000000); // value 1
-        trackerValues[1] = abi.encode(2000000000); // value
-
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTracker(
-            policyId,
-            tracker,
-            ParamTypes.UINT, // key type
-            ParamTypes.UINT, // value type
-            ParamTypes.UINT, // tracker type
-            0, // key type specific index
-            1, // value type specific index
-            trackerKeys,
-            trackerValues,
-            trackerName
-        );
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertEq(value, abi.encode(1000000000));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 2000000000);
+        /// negative path: value doesn't match tracker condition
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 2000000000, 1);
         vm.expectRevert(abi.encodePacked(revert_text));
-        vm.startSnapshotGas("MappedTrackerAsConditional_UintToUint");
+        vm.startSnapshotGas("MappedTrackerAsConditional_Uint_Negative");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
     }
 
     /// uint to address
-    function testRulesEngine_Unit_MappedTrackerAsConditional_UintToAddress_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    function testRulesEngine_Unit_MappedTrackerAsConditional_UintToAddress() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
@@ -316,72 +267,21 @@ abstract contract trackers is RulesEngineCommon {
         assertEq(value, abi.encode(address(0x7654321)));
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
+        /// Test positive path: value matches tracker condition
         vm.startPrank(userContractAddress);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1);
-        vm.startSnapshotGas("MappedTrackerAsConditional_UintToAddress");
+        vm.startSnapshotGas("MappedTrackerAsConditional_UintToAddress_Positive");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
-    }
 
-    function testRulesEngine_Unit_MappedTrackerAsConditional_UintToAddress_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.ADDR;
-        tracker.trackerKeyType = ParamTypes.UINT;
-
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(1); // key 1
-        trackerKeys[1] = abi.encode(2); // key 2
-
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(address(0x7654321)); // value 1
-        trackerValues[1] = abi.encode(address(0x1234567)); // value 2
-
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTracker(
-            policyId,
-            tracker,
-            ParamTypes.UINT, // key type
-            ParamTypes.ADDR, // value type
-            ParamTypes.ADDR, // tracker type
-            0, // key type specific index
-            1, // value type specific index
-            trackerKeys,
-            trackerValues,
-            trackerName
-        );
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertEq(value, abi.encode(address(0x7654321)));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000);
+        /// Test negative path: value doesn't match tracker condition (should revert)
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000);
         vm.expectRevert(abi.encodePacked(revert_text));
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
-    /// address to uint
-    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToUint_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    /// address to uint - Combined positive and negative test
+    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToUint() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
@@ -422,73 +322,24 @@ abstract contract trackers is RulesEngineCommon {
         assertEq(value, abi.encode(1));
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
         vm.startPrank(userContractAddress);
-        // address to uint mapped tracker (is the amount to allowed for address)
+
+        /// POSITIVE PATH: Test that valid address-to-uint mapping passes
+        // address to uint mapped tracker (is the amount allowed for address)
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1);
         vm.startSnapshotGas("MappedTrackerAsConditional_AddressToUint");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
-    }
 
-    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToUint_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.UINT; // set the ParamType for the tracker value to be decoded as
-        tracker.trackerKeyType = ParamTypes.ADDR;
-
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
-        trackerKeys[1] = abi.encode(address(0x1234567)); // key 2
-
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(1); // value 1
-        trackerValues[1] = abi.encode(2); // value 2
-
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTracker(
-            policyId,
-            tracker,
-            ParamTypes.UINT, // key type
-            ParamTypes.ADDR, // value type
-            ParamTypes.ADDR, // tracker type
-            0, // key type specific index
-            1, // value type specific index
-            trackerKeys,
-            trackerValues,
-            trackerName
-        );
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(1));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000);
+        /// NEGATIVE PATH: Test that invalid amount for address causes revert
+        // Using an amount (2000000000) that exceeds the tracked value (2) for address 0x1234567
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000);
         vm.expectRevert(abi.encodePacked(revert_text));
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
     /// address to Address
-    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToAddress_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToAddress() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
@@ -502,8 +353,8 @@ abstract contract trackers is RulesEngineCommon {
 
         /// create tracker value arrays
         bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(address(0x7654321)); // value 1
-        trackerValues[1] = abi.encode(address(0x7654321)); // value 2
+        trackerValues[0] = abi.encode(address(0x7654321)); // value 1 - allowed recipient
+        trackerValues[1] = abi.encode(address(0x7654321)); // value 2 - allowed recipient
 
         /// create tracker name
         string memory trackerName = "tracker1";
@@ -529,119 +380,22 @@ abstract contract trackers is RulesEngineCommon {
         assertEq(value, abi.encode(address(0x7654321)));
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
         vm.startPrank(userContractAddress);
-        // address to Address mapped tracker (Tracked addresses can only transfer to address(0x7654321));
+
+        /// POSITIVE PATH: Test that valid address-to-address mapping passes
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1);
         vm.startSnapshotGas("MappedTrackerAsConditional_AddressToAddress");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
-    }
 
-    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToAddress_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.ADDR; // set the ParamType for the tracker value to be decoded as
-        tracker.trackerKeyType = ParamTypes.ADDR;
-
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
-        trackerKeys[1] = abi.encode(address(0x1234567)); // key 2
-
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(address(0x7654321)); // value 1
-        trackerValues[1] = abi.encode(address(0x7654321)); // value 2
-
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTracker(
-            policyId,
-            tracker,
-            ParamTypes.UINT, // key type
-            ParamTypes.BOOL, // value type
-            ParamTypes.BOOL, // tracker type
-            0, // key type specific index
-            1, // value type specific index
-            trackerKeys,
-            trackerValues,
-            trackerName
-        );
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(address(0x7654321)));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        // address to Address mapped tracker (Tracked addresses can only transfer to address(0x7654321));
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000);
+        /// NEGATIVE PATH: Test that trying to transfer to an untracked/invalid address causes revert
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x9999999), 1);
         vm.expectRevert(abi.encodePacked(revert_text));
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
     // Uint to Bool
-    function testRulesEngine_Unit_MappedTrackerAsConditional_UintToBool_Negative() public ifDeploymentTestsEnabled resetsGlobalVariables {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.BOOL;
-        tracker.trackerKeyType = ParamTypes.UINT;
-
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(1); // key 1
-        trackerKeys[1] = abi.encode(2); // key 2
-
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(true); // value 1
-        trackerValues[1] = abi.encode(false); // value 2
-
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTracker(
-            policyId,
-            tracker,
-            ParamTypes.UINT, // key type
-            ParamTypes.BOOL, // value type
-            ParamTypes.BOOL, // tracker type
-            0, // key type specific index
-            1, // value type specific index
-            trackerKeys,
-            trackerValues,
-            trackerName
-        );
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertEq(value, abi.encode(true));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000, false);
-        vm.expectRevert(abi.encodePacked(revert_text));
-        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
-    }
-
-    /// uint to bool
-    function testRulesEngine_Unit_MappedTrackerAsConditional_UintToBool_Positive() public ifDeploymentTestsEnabled resetsGlobalVariables {
+    function testRulesEngine_Unit_MappedTrackerAsConditional_UintToBool() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
@@ -682,65 +436,21 @@ abstract contract trackers is RulesEngineCommon {
         assertEq(value, abi.encode(true));
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
+        /// positive path: value matches tracker condition
         vm.startPrank(userContractAddress);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1, true);
-        vm.startSnapshotGas("MappedTrackerAsConditional_UintToBool");
+        vm.startSnapshotGas("MappedTrackerAsConditional_UintToBool_Positive");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
-    }
 
-    // Bool to Uint
-    function testRulesEngine_Unit_MappedTrackerAsConditional_BoolToUint_Negative() public ifDeploymentTestsEnabled resetsGlobalVariables {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.UINT;
-        tracker.trackerKeyType = ParamTypes.BOOL;
-
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(1); // key 1
-        trackerKeys[1] = abi.encode(2); // key 2
-
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(true); // value 1
-        trackerValues[1] = abi.encode(false); // value 2
-
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTracker(
-            policyId,
-            tracker,
-            ParamTypes.UINT, // key type
-            ParamTypes.BOOL, // value type
-            ParamTypes.BOOL, // tracker type
-            0, // key type specific index
-            1, // value type specific index
-            trackerKeys,
-            trackerValues,
-            trackerName
-        );
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertEq(value, abi.encode(true));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000, false);
+        /// negative path: value doesn't match tracker condition (should revert)
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000, true);
         vm.expectRevert(abi.encodePacked(revert_text));
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
     /// bool to uint
-    function testRulesEngine_Unit_MappedTrackerAsConditional_BoolToUint_Positive() public ifDeploymentTestsEnabled resetsGlobalVariables {
+    function testRulesEngine_Unit_MappedTrackerAsConditional_BoolToUint() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
@@ -780,73 +490,22 @@ abstract contract trackers is RulesEngineCommon {
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
         assertEq(value, abi.encode(true));
         assertEq(trackerIndex, 1);
-        /// validate tracker is checked as conditional
+
+        /// positive path: validate tracker is checked as conditional
         vm.startPrank(userContractAddress);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1, true);
         vm.startSnapshotGas("MappedTrackerAsConditional_BoolToUint");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
-    }
 
-    // address to bool
-    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToBool_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.ADDR;
-        tracker.trackerKeyType = ParamTypes.ADDR;
-
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
-        trackerKeys[1] = abi.encode(address(0x1234567)); // key 2
-
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(true); // value 1
-        trackerValues[1] = abi.encode(false); // value 2
-
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTracker(
-            policyId,
-            tracker,
-            ParamTypes.UINT, // key type
-            ParamTypes.BOOL, // value type
-            ParamTypes.BOOL, // tracker type
-            0, // key type specific index
-            1, // value type specific index
-            trackerKeys,
-            trackerValues,
-            trackerName
-        );
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(true));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000, true);
+        /// negative path: use a bool key that causes rule failure
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2, true);
         vm.expectRevert(abi.encodePacked(revert_text));
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
     /// Address to Bool
-    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToBool_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToBool() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
@@ -892,29 +551,29 @@ abstract contract trackers is RulesEngineCommon {
         vm.startSnapshotGas("MappedTrackerAsConditional_AddressToBool");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
+
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000, true);
+        vm.expectRevert(abi.encodePacked(revert_text));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
     // Bool To Address
-    function testRulesEngine_Unit_MappedTrackerAsConditional_BoolToAddress_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    function testRulesEngine_Unit_MappedTrackerAsConditional_BoolToAddress() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
+        /// create tracker struct for bool→address mapping
         Trackers memory tracker;
-        tracker.pType = ParamTypes.ADDR;
-        tracker.trackerKeyType = ParamTypes.BOOL;
+        tracker.pType = ParamTypes.ADDR; // tracker stores address values
+        tracker.trackerKeyType = ParamTypes.BOOL; // keys are booleans
 
-        /// create tracker key arrays
+        /// create tracker key arrays (bool keys)
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(true); // key 1
         trackerKeys[1] = abi.encode(false); // key 2
 
-        /// create tracker value arrays
+        /// create tracker value arrays (address values)
         bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(address(0x7654321)); // value 1
-        trackerValues[1] = abi.encode(address(0x1234567)); // value 2
+        trackerValues[0] = abi.encode(address(0x7654321)); // value for true
+        trackerValues[1] = abi.encode(address(0x1234567)); // value for false
 
         /// create tracker name
         string memory trackerName = "tracker1";
@@ -923,11 +582,11 @@ abstract contract trackers is RulesEngineCommon {
         uint256 trackerIndex = _setupRuleWithMappedTracker(
             policyId,
             tracker,
-            ParamTypes.UINT, // key type
-            ParamTypes.BOOL, // value type
-            ParamTypes.BOOL, // tracker type
-            0, // key type specific index
-            1, // value type specific index
+            ParamTypes.BOOL, // key type (bool)
+            ParamTypes.ADDR, // value type (address)
+            ParamTypes.ADDR, // tracker type (address)
+            2, // key type specific index (bool parameter index)
+            0, // value type specific index (address parameter index)
             trackerKeys,
             trackerValues,
             trackerName
@@ -936,91 +595,46 @@ abstract contract trackers is RulesEngineCommon {
         Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
         assertTrue(returnedTracker.mapped);
 
+        // Verify mapping: true → 0x7654321
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(true));
         assertEq(value, abi.encode(address(0x7654321)));
+
+        // Verify mapping: false → 0x1234567
+        value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(false));
+        assertEq(value, abi.encode(address(0x1234567)));
+
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
+        /// positive path: bool key true maps to address 0x7654321, condition should pass
         vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000, false);
-        vm.expectRevert(abi.encodePacked(revert_text));
-        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
-    }
-
-    /// Bool To Address
-    function testRulesEngine_Unit_MappedTrackerAsConditional_BoolToAddress_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.ADDR;
-        tracker.trackerKeyType = ParamTypes.ADDR;
-
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
-        trackerKeys[1] = abi.encode(address(0x1234567)); // key 2
-
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(true); // value 1
-        trackerValues[1] = abi.encode(false); // value 2
-
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTracker(
-            policyId,
-            tracker,
-            ParamTypes.UINT, // key type
-            ParamTypes.BOOL, // value type
-            ParamTypes.BOOL, // tracker type
-            0, // key type specific index
-            1, // value type specific index
-            trackerKeys,
-            trackerValues,
-            trackerName
-        );
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(true));
-        assertEq(trackerIndex, 1);
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1, true);
-        vm.startSnapshotGas("MappedTrackerAsConditional_BoolToAddress");
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1000000000, true);
+        vm.startSnapshotGas("MappedTrackerAsConditional_BoolToAddress_Positive");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
+
+        /// negative path: bool key false maps to address 0x1234567, but we pass 0x7654321, should revert
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 2000000000, false);
+        vm.expectRevert(abi.encodePacked(revert_text));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
     // Address to String
-    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToString_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToString() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
+        /// create tracker struct for address→string mapping
         Trackers memory tracker;
-        tracker.pType = ParamTypes.STR;
-        tracker.trackerKeyType = ParamTypes.ADDR;
+        tracker.pType = ParamTypes.STR; // tracker stores string values
+        tracker.trackerKeyType = ParamTypes.ADDR; // keys are addresses
 
-        /// create tracker key arrays
+        /// create tracker key arrays (address keys)
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
         trackerKeys[1] = abi.encode(address(0x1234567)); // key 2
 
-        /// create tracker value arrays
+        /// create tracker value arrays (string values)
         bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode("trackerValue1"); // value 1
-        trackerValues[1] = abi.encode("trackerValue2"); // value 2
+        trackerValues[0] = abi.encode("trackerValue1"); // value for 0x7654321
+        trackerValues[1] = abi.encode("trackerValue2"); // value for 0x1234567
 
         /// create tracker name
         string memory trackerName = "tracker1";
@@ -1029,11 +643,11 @@ abstract contract trackers is RulesEngineCommon {
         uint256 trackerIndex = _setupRuleWithMappedTracker(
             policyId,
             tracker,
-            ParamTypes.ADDR, // key type
-            ParamTypes.STR, // value type
-            ParamTypes.STR, // tracker type
-            0, // key type specific index
-            2, // value type specific index
+            ParamTypes.ADDR, // key type (address)
+            ParamTypes.STR, // value type (string)
+            ParamTypes.STR, // tracker type (string)
+            0, // key type specific index (address parameter index)
+            2, // value type specific index (string parameter index)
             trackerKeys,
             trackerValues,
             trackerName
@@ -1042,98 +656,46 @@ abstract contract trackers is RulesEngineCommon {
         Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
         assertTrue(returnedTracker.mapped);
 
+        // Verify mapping: 0x7654321 → "trackerValue1"
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
         assertEq(value, abi.encode("trackerValue1"));
+
+        // Verify mapping: 0x1234567 → "trackerValue2"
+        value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x1234567)));
+        assertEq(value, abi.encode("trackerValue2"));
+
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
+        /// positive path: address 0x7654321 maps to "trackerValue1", condition should pass
         vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(
-            bytes4(keccak256(bytes(callingFunction))),
-            address(0x1234567),
-            2000000000,
-            "trackerValue1"
-        );
-        vm.expectRevert(abi.encodePacked(revert_text));
-        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
-    }
-
-    /// Address to String
-    function testRulesEngine_Unit_MappedTrackerAsConditional_AddressToString_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.STR;
-        tracker.trackerKeyType = ParamTypes.ADDR;
-
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
-        trackerKeys[1] = abi.encode(address(0x1234567)); // key 2
-
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode("trackerValue1"); // value 1
-        trackerValues[1] = abi.encode("trackerValue2"); // value 2
-
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTracker(
-            policyId,
-            tracker,
-            ParamTypes.ADDR, // key type
-            ParamTypes.STR, // value type
-            ParamTypes.STR, // tracker type
-            0, // key type specific index
-            2, // value type specific index
-            trackerKeys,
-            trackerValues,
-            trackerName
-        );
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode("trackerValue1"));
-        assertEq(trackerIndex, 1);
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1, "trackerValue1");
-        vm.startSnapshotGas("MappedTrackerAsConditional_AddressToString");
+        vm.startSnapshotGas("MappedTrackerAsConditional_AddressToString_Positive");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
+
+        /// negative path: address 0x1234567 maps to "trackerValue2", but we pass "trackerValue1", should revert
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000, "trackerValue1");
+        vm.expectRevert(abi.encodePacked(revert_text));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
     // string to address
-    // Address to String
-    function testRulesEngine_Unit_MappedTrackerAsConditional_StringToAddress_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    function testRulesEngine_Unit_MappedTrackerAsConditional_StringToAddress() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
+        /// create tracker struct for string→address mapping
         Trackers memory tracker;
-        tracker.pType = ParamTypes.ADDR;
-        tracker.trackerKeyType = ParamTypes.STR;
+        tracker.pType = ParamTypes.ADDR; // tracker stores address values
+        tracker.trackerKeyType = ParamTypes.STR; // keys are strings
 
-        /// create tracker key arrays
+        /// create tracker key arrays (string keys)
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(string("trackerValue1")); // key 1
         trackerKeys[1] = abi.encode(string("trackerValue2")); // key 2
 
-        /// create tracker value arrays
+        /// create tracker value arrays (address values)
         bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(address(0x7654321)); // value 1
-        trackerValues[1] = abi.encode(address(0x1234567)); // value 2
+        trackerValues[0] = abi.encode(address(0x7654321)); // value for "trackerValue1"
+        trackerValues[1] = abi.encode(address(0x1234567)); // value for "trackerValue2"
 
         /// create tracker name
         string memory trackerName = "tracker1";
@@ -1142,11 +704,11 @@ abstract contract trackers is RulesEngineCommon {
         uint256 trackerIndex = _setupRuleWithMappedTracker(
             policyId,
             tracker,
-            ParamTypes.STR, // key type
-            ParamTypes.ADDR, // value type
-            ParamTypes.ADDR, // tracker type
-            2, // key type specific index
-            0, // value type specific index
+            ParamTypes.STR, // key type (string)
+            ParamTypes.ADDR, // value type (address)
+            ParamTypes.ADDR, // tracker type (address)
+            2, // key type specific index (string parameter index)
+            0, // value type specific index (address parameter index)
             trackerKeys,
             trackerValues,
             trackerName
@@ -1155,87 +717,36 @@ abstract contract trackers is RulesEngineCommon {
         Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
         assertTrue(returnedTracker.mapped);
 
+        // Verify mapping: "trackerValue1" → 0x7654321
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
             policyId,
             1,
             abi.encode(string("trackerValue1"))
         );
         assertEq(value, abi.encode(address(0x7654321)));
+
+        // Verify mapping: "trackerValue2" → 0x1234567
+        value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(string("trackerValue2")));
+        assertEq(value, abi.encode(address(0x1234567)));
+
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
+        /// positive path: string "trackerValue1" maps to address 0x7654321, condition should pass
         vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(
-            bytes4(keccak256(bytes(callingFunction))),
-            address(0x1234567),
-            2000000000,
-            "trackerValue1"
-        );
-        vm.expectRevert(abi.encodePacked(revert_text));
-        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
-    }
-
-    /// String to Address
-    function testRulesEngine_Unit_MappedTrackerAsConditional_StringToAddress_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.ADDR;
-        tracker.trackerKeyType = ParamTypes.STR;
-
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(string("trackerValue1")); // key 1
-        trackerKeys[1] = abi.encode(string("trackerValue2")); // key 2
-
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(address(0x7654321)); // value 1
-        trackerValues[1] = abi.encode(address(0x1234567)); // value 2
-
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTracker(
-            policyId,
-            tracker,
-            ParamTypes.STR, // key type
-            ParamTypes.ADDR, // value type
-            ParamTypes.ADDR, // tracker type
-            2, // key type specific index
-            0, // value type specific index
-            trackerKeys,
-            trackerValues,
-            trackerName
-        );
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
-            policyId,
-            1,
-            abi.encode(string("trackerValue1"))
-        );
-        assertEq(value, abi.encode(address(0x7654321)));
-        assertEq(trackerIndex, 1);
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-
         bytes memory arguments = abi.encodeWithSelector(
             bytes4(keccak256(bytes(callingFunction))),
             address(0x7654321),
             1,
             string("trackerValue1")
         );
-        vm.startSnapshotGas("MappedTrackerAsConditional_StringToAddress");
+        vm.startSnapshotGas("MappedTrackerAsConditional_StringToAddress_Positive");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
+
+        /// negative path: string "trackerValue1" maps to address 0x7654321, but we pass 0x1234567, should revert
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000, "trackerValue1");
+        vm.expectRevert(abi.encodePacked(revert_text));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
     // String to Uint
@@ -2219,11 +1730,7 @@ abstract contract trackers is RulesEngineCommon {
 
     /// tracker updated from effects
     // uint to uint tracker updates
-    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_UintToUint_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_UintToUint() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
@@ -2260,94 +1767,42 @@ abstract contract trackers is RulesEngineCommon {
         assertEq(value, abi.encode(1000000000));
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
+        /// Test positive path: tracker should be updated from effect
         vm.startPrank(userContractAddress);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1000000000, 100);
-        vm.startSnapshotGas("MappedTrackerUpdatedFromEffects_UintToUint");
+        vm.startSnapshotGas("MappedTrackerUpdatedFromEffects_UintToUint_Positive");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
 
-        // check that the tracker was updated from the effect
+        // check that the tracker was updated from the effect to expected value
         bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
         assertEq(updatedValue, abi.encode(100));
     }
 
-    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_UintToUint_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.UINT;
-        tracker.trackerKeyType = ParamTypes.UINT;
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(1); // key 1
-        trackerKeys[1] = abi.encode(2); // key 2
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(1000000000); // value 1
-        trackerValues[1] = abi.encode(2000000000); // value 2
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        ParamTypes trackerKeyTypes = ParamTypes.UINT;
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTrackerUpdatedFromEffect(
-            policyId,
-            tracker,
-            trackerKeys,
-            trackerValues,
-            trackerKeyTypes,
-            trackerName
-        );
-
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertEq(value, abi.encode(1000000000));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1000000000, 100);
-        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
-
-        // check that the tracker was updated from the effect
-        bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertNotEq(updatedValue, abi.encode(200));
-    }
-
     // uint to address tracker updates
-    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_UintToAddress_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_UintToAddress() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
+        /// create tracker struct for uint→address mapping
         Trackers memory tracker;
-        tracker.pType = ParamTypes.ADDR;
-        tracker.trackerKeyType = ParamTypes.UINT;
-        /// create tracker key arrays
+        tracker.pType = ParamTypes.ADDR; // tracker stores address values
+        tracker.trackerKeyType = ParamTypes.UINT; // keys are uints
+
+        /// create tracker key arrays (uint keys)
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(1); // key 1
         trackerKeys[1] = abi.encode(2); // key 2
-        /// create tracker value arrays
+
+        /// create tracker value arrays (address values)
         bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(address(0x1234567)); // value 1
-        trackerValues[1] = abi.encode(address(0x7654321)); // value 2
+        trackerValues[0] = abi.encode(address(0x1234567)); // initial value for key 1
+        trackerValues[1] = abi.encode(address(0x7654321)); // value for key 2
+
         /// create tracker name
         string memory trackerName = "tracker1";
 
         ParamTypes trackerKeyTypes = ParamTypes.UINT;
 
-        /// set up rule
+        /// set up rule that will update tracker from effect
         uint256 trackerIndex = _setupRuleWithMappedTrackerUpdatedFromEffect(
             policyId,
             tracker,
@@ -2357,15 +1812,16 @@ abstract contract trackers is RulesEngineCommon {
             trackerName
         );
 
-        // validate tracker
+        // validate tracker setup
         Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
         assertTrue(returnedTracker.mapped);
 
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertEq(value, abi.encode(address(0x1234567)));
+        // verify initial mapping: key 1 → 0x1234567
+        bytes memory initialValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
+        assertEq(initialValue, abi.encode(address(0x1234567)));
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
+        /// Test positive path: execute rule which should succeed and update tracker via effect
         vm.startPrank(userContractAddress);
         bytes memory arguments = abi.encodeWithSelector(
             bytes4(keccak256(bytes(callingFunction))),
@@ -2375,92 +1831,43 @@ abstract contract trackers is RulesEngineCommon {
         );
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
 
-        // check that the tracker was updated from the effect
+        // verify tracker was updated to expected value
         bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
         assertEq(updatedValue, abi.encode(address(0x7654321)));
-    }
 
-    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_UintToAddress_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.ADDR;
-        tracker.trackerKeyType = ParamTypes.UINT;
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(1); // key 1
-        trackerKeys[1] = abi.encode(2); // key 2
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(address(0x1234567)); // value 1
-        trackerValues[1] = abi.encode(address(0x7654321)); // value 2
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        ParamTypes trackerKeyTypes = ParamTypes.UINT;
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTrackerUpdatedFromEffect(
-            policyId,
-            tracker,
-            trackerKeys,
-            trackerValues,
-            trackerKeyTypes,
-            trackerName
-        );
-
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertEq(value, abi.encode(address(0x1234567)));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(
-            bytes4(keccak256(bytes(callingFunction))),
-            address(0x7654321),
-            1000000000,
-            address(0x7654321)
-        );
+        /// Test second execution: execute rule again with different parameters
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000, address(0x1234567));
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
 
-        // check that the tracker was updated from the effect
-        bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertNotEq(updatedValue, abi.encode(address(0x1234567)));
+        // verify tracker was updated again (since rule always passes due to 1==1 logic)
+        bytes memory secondUpdatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
+        assertEq(secondUpdatedValue, abi.encode(address(0x1234567))); // should now be the new address
     }
 
     // address to Uint tracker updates
-    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_AddressToUint_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_AddressToUint() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
+        /// create tracker struct for address→uint mapping
         Trackers memory tracker;
-        tracker.pType = ParamTypes.UINT;
-        tracker.trackerKeyType = ParamTypes.ADDR;
-        /// create tracker key arrays
+        tracker.pType = ParamTypes.UINT; // tracker stores uint values
+        tracker.trackerKeyType = ParamTypes.ADDR; // keys are addresses
+
+        /// create tracker key arrays (address keys)
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
         trackerKeys[1] = abi.encode(address(0x1234567)); // key 2
-        /// create tracker value arrays
+
+        /// create tracker value arrays (uint values)
         bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(1000); // value 1
-        trackerValues[1] = abi.encode(2000); // value 2
+        trackerValues[0] = abi.encode(1000); // initial value for 0x7654321
+        trackerValues[1] = abi.encode(2000); // value for 0x1234567
+
         /// create tracker name
         string memory trackerName = "tracker1";
-        /// set up rule
+
         ParamTypes trackerKeyTypes = ParamTypes.ADDR;
 
-        /// set up rule
+        /// set up rule that will update tracker from effect
         uint256 trackerIndex = _setupRuleWithMappedTrackerUpdatedFromEffect(
             policyId,
             tracker,
@@ -2470,111 +1877,71 @@ abstract contract trackers is RulesEngineCommon {
             trackerName
         );
 
-        // validate tracker
+        // validate tracker setup
         Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
         assertTrue(returnedTracker.mapped);
 
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(1000));
+        // verify initial mapping: 0x7654321 → 1000
+        bytes memory initialValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+            policyId,
+            1,
+            abi.encode(address(0x7654321))
+        );
+        assertEq(initialValue, abi.encode(1000));
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
+        /// Test first execution: execute rule which should update tracker via effect
         vm.startPrank(userContractAddress);
-
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1000000000, 20000);
-        vm.startSnapshotGas("MappedTrackerUpdatedFromEffects_AddressToUint");
+        vm.startSnapshotGas("MappedTrackerUpdatedFromEffects_AddressToUint_First");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
 
-        // check that the tracker was updated from the effect
+        // verify tracker was updated to expected value
         bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
             policyId,
             1,
             abi.encode(address(0x7654321))
         );
         assertEq(updatedValue, abi.encode(20000));
-    }
 
-    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_AddressToUint_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.UINT;
-        tracker.trackerKeyType = ParamTypes.ADDR;
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
-        trackerKeys[1] = abi.encode(address(0x1234567)); // key 2
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(1000); // value 1
-        trackerValues[1] = abi.encode(2000); // value 2
-        /// create tracker name
-        string memory trackerName = "tracker1";
-        /// set up rule
-        ParamTypes trackerKeyTypes = ParamTypes.ADDR;
-
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTrackerUpdatedFromEffect(
-            policyId,
-            tracker,
-            trackerKeys,
-            trackerValues,
-            trackerKeyTypes,
-            trackerName
-        );
-
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(1000));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1000000000, 20000);
+        /// Test second execution: execute rule again with different parameters
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 2000000000, 30000);
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
 
-        // check that the tracker was updated from the effect
-        bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+        // verify tracker was updated again for the second key
+        bytes memory secondUpdatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
             policyId,
             1,
-            abi.encode(address(0x7654321))
+            abi.encode(address(0x1234567))
         );
-        assertNotEq(updatedValue, abi.encode(1000));
+        assertEq(secondUpdatedValue, abi.encode(30000)); // should now be the new value
     }
 
     // address to Address tracker updates
-    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_AddressToAddress_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_AddressToAddress() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
+        /// create tracker struct for address→address mapping
         Trackers memory tracker;
-        tracker.pType = ParamTypes.ADDR;
-        tracker.trackerKeyType = ParamTypes.ADDR;
-        /// create tracker key arrays
+        tracker.pType = ParamTypes.ADDR; // tracker stores address values
+        tracker.trackerKeyType = ParamTypes.ADDR; // keys are addresses
+
+        /// create tracker key arrays (address keys)
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(address(0x1234567)); // key 1
         trackerKeys[1] = abi.encode(address(0x7654321)); // key 2
-        /// create tracker value arrays
+
+        /// create tracker value arrays (address values)
         bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(address(0x9999999)); // value 1
-        trackerValues[1] = abi.encode(address(0x8888888)); // value 2
+        trackerValues[0] = abi.encode(address(0x9999999)); // initial value for 0x1234567
+        trackerValues[1] = abi.encode(address(0x8888888)); // initial value for 0x7654321
+
         /// create tracker name
         string memory trackerName = "tracker1";
 
         ParamTypes trackerKeyTypes = ParamTypes.ADDR;
 
-        /// set up rule
+        /// set up rule that will update tracker from effect
         uint256 trackerIndex = _setupRuleWithMappedTrackerUpdatedFromEffect(
             policyId,
             tracker,
@@ -2584,120 +1951,82 @@ abstract contract trackers is RulesEngineCommon {
             trackerName
         );
 
-        // validate tracker
+        // validate tracker setup
         Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
         assertTrue(returnedTracker.mapped);
         assertEq(uint256(returnedTracker.trackerKeyType), uint256(ParamTypes.ADDR));
 
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(address(0x8888888)));
+        // verify initial mapping: 0x7654321 → 0x8888888
+        bytes memory initialValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+            policyId,
+            1,
+            abi.encode(address(0x7654321))
+        );
+        assertEq(initialValue, abi.encode(address(0x8888888)));
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
+        /// Test first execution: execute rule which should update tracker via effect
         vm.startPrank(userContractAddress);
-
         bytes memory arguments = abi.encodeWithSelector(
             bytes4(keccak256(bytes(callingFunction))),
             address(0x7654321),
             1000000000,
             address(0x7777)
         );
-        vm.startSnapshotGas("MappedTrackerUpdatedFromEffects_AddressToAddress");
+        vm.startSnapshotGas("MappedTrackerUpdatedFromEffects_AddressToAddress_First");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
 
-        // check that the tracker was updated from the effect
+        // verify tracker was updated to expected value
         bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
             policyId,
             1,
             abi.encode(address(0x7654321))
         );
         assertEq(updatedValue, abi.encode(address(0x7777)));
-    }
 
-    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_AddressToAddress_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.ADDR;
-        tracker.trackerKeyType = ParamTypes.ADDR;
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(address(0x1234567)); // key 1
-        trackerKeys[1] = abi.encode(address(0x7654321)); // key 2
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(address(0x9999999)); // value 1
-        trackerValues[1] = abi.encode(address(0x8888888)); // value 2
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        ParamTypes trackerKeyTypes = ParamTypes.ADDR;
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTrackerUpdatedFromEffect(
-            policyId,
-            tracker,
-            trackerKeys,
-            trackerValues,
-            trackerKeyTypes,
-            trackerName
-        );
-
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(address(0x8888888)));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(
+        /// Test second execution: execute rule again with same key but different effect value
+        arguments = abi.encodeWithSelector(
             bytes4(keccak256(bytes(callingFunction))),
-            address(0x7654321),
-            1000000000,
-            address(0x7777)
+            address(0x7654321), // same key as first execution
+            2000000000,
+            address(0x6666) // different effect value
         );
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
 
-        // check that the tracker was updated from the effect
-        bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+        // verify tracker was updated again with the new value
+        bytes memory secondUpdatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
             policyId,
             1,
             abi.encode(address(0x7654321))
         );
-        assertNotEq(updatedValue, abi.encode(address(0x8888888)));
+        assertEq(secondUpdatedValue, abi.encode(address(0x6666))); // should now be the newest value
     }
 
     // address to bool tracker updates
-    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_AddressToBool_Positive()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
+    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_AddressToBool() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
+        /// create tracker struct for address→bool mapping
         Trackers memory tracker;
-        tracker.pType = ParamTypes.BOOL;
-        tracker.trackerKeyType = ParamTypes.ADDR;
-        /// create tracker key arrays
+        tracker.pType = ParamTypes.BOOL; // tracker stores bool values
+        tracker.trackerKeyType = ParamTypes.ADDR; // keys are addresses
+
+        /// create tracker key arrays (address keys)
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(address(0x1234567)); // key 1
         trackerKeys[1] = abi.encode(address(0x7654321)); // key 2
-        /// create tracker value arrays
+
+        /// create tracker value arrays (bool values)
         bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(false); // value 1
-        trackerValues[1] = abi.encode(false); // value 2
+        trackerValues[0] = abi.encode(false); // initial value for 0x1234567
+        trackerValues[1] = abi.encode(false); // initial value for 0x7654321
+
         /// create tracker name
         string memory trackerName = "tracker1";
 
         ParamTypes trackerKeyTypes = ParamTypes.ADDR;
-        /// set up rule
+
+        /// set up rule that will update tracker from effect
         uint256 trackerIndex = _setupRuleWithMappedTrackerUpdatedFromEffect(
             policyId,
             tracker,
@@ -2707,85 +2036,54 @@ abstract contract trackers is RulesEngineCommon {
             trackerName
         );
 
-        // validate tracker
+        // validate tracker setup
         Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
         assertTrue(returnedTracker.mapped);
         assertEq(uint256(returnedTracker.trackerKeyType), uint256(ParamTypes.ADDR));
 
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(false));
+        // verify initial mapping: 0x7654321 → false
+        bytes memory initialValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+            policyId,
+            1,
+            abi.encode(address(0x7654321))
+        );
+        assertEq(initialValue, abi.encode(false));
         assertEq(trackerIndex, 1);
 
-        /// validate tracker is checked as conditional
+        /// Test first execution: execute rule which should update tracker via effect
         vm.startPrank(userContractAddress);
-
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1000000000, true);
-        vm.startSnapshotGas("MappedTrackerUpdatedFromEffects_AddressToBool");
+        vm.startSnapshotGas("MappedTrackerUpdatedFromEffects_AddressToBool_First");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         vm.stopSnapshotGas();
 
-        // check that the tracker was updated from the effect
+        // verify tracker was updated to expected value
         bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
             policyId,
             1,
             abi.encode(address(0x7654321))
         );
         assertEq(updatedValue, abi.encode(true));
-    }
 
-    function testRulesEngine_Unit_MappedTrackerUpdatedFromEffects_AddressToBool_Negative()
-        public
-        ifDeploymentTestsEnabled
-        resetsGlobalVariables
-    {
-        uint256 policyId = _createBlankPolicy();
-        /// create tracker struct
-        Trackers memory tracker;
-        tracker.pType = ParamTypes.BOOL;
-        tracker.trackerKeyType = ParamTypes.ADDR;
-        /// create tracker key arrays
-        bytes[] memory trackerKeys = new bytes[](2);
-        trackerKeys[0] = abi.encode(address(0x1234567)); // key 1
-        trackerKeys[1] = abi.encode(address(0x7654321)); // key 2
-        /// create tracker value arrays
-        bytes[] memory trackerValues = new bytes[](2);
-        trackerValues[0] = abi.encode(false); // value 1
-        trackerValues[1] = abi.encode(false); // value 2
-        /// create tracker name
-        string memory trackerName = "tracker1";
-
-        ParamTypes trackerKeyTypes = ParamTypes.ADDR;
-        /// set up rule
-        uint256 trackerIndex = _setupRuleWithMappedTrackerUpdatedFromEffect(
-            policyId,
-            tracker,
-            trackerKeys,
-            trackerValues,
-            trackerKeyTypes,
-            trackerName
+        /// Test second execution: execute rule again with same key but different effect value
+        arguments = abi.encodeWithSelector(
+            bytes4(keccak256(bytes(callingFunction))),
+            address(0x7654321), // same key as first execution
+            2000000000,
+            false // different effect value
         );
-
-        // validate tracker
-        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
-        assertTrue(returnedTracker.mapped);
-        assertEq(uint256(returnedTracker.trackerKeyType), uint256(ParamTypes.ADDR));
-
-        bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(false));
-        assertEq(trackerIndex, 1);
-
-        /// validate tracker is checked as conditional
-        vm.startPrank(userContractAddress);
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1000000000, true);
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
 
-        // check that the tracker was updated from the effect
-        bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+        // verify tracker was updated again with the new value
+        bytes memory secondUpdatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
             policyId,
             1,
             abi.encode(address(0x7654321))
         );
-        assertNotEq(updatedValue, abi.encode(false));
+        assertEq(secondUpdatedValue, abi.encode(false)); // should now be false again
+
+        // verify we can toggle the boolean value through effects
+        assertTrue(abi.decode(updatedValue, (bool)) != abi.decode(secondUpdatedValue, (bool)));
     }
 
     function testRulesEngine_Unit_MappedTrackerInstructionSetCompare_AddressToUint() public ifDeploymentTestsEnabled resetsGlobalVariables {
@@ -3672,16 +2970,158 @@ abstract contract trackers is RulesEngineCommon {
         assertEq(emptyBytesResultArray[1].length, 0);
     }
 
-    // tracker update from malicious actor
+    function testRulesEngine_Unit_StaticArrayTracker_MaliciousActor() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256 policyId = _createBlankPolicy();
+        {
+            Trackers memory tracker;
+            tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+            tracker.set = true;
+            uint256[] memory emptyArray = new uint256[](0);
+            tracker.trackerValue = abi.encode(emptyArray);
+            setupRuleWithTracker2(policyId, tracker);
+        }
 
-    // setup policy tracker
+        // Normal operation: Update tracker legitimately
+        {
+            uint256[] memory updatedArray = new uint256[](2);
+            updatedArray[0] = 1;
+            updatedArray[1] = 2;
+            bytes memory arguments = abi.encodeWithSelector(
+                bytes4(keccak256(bytes(callingFunction))),
+                address(0x7654321),
+                5,
+                abi.encode(updatedArray)
+            );
+            vm.startPrank(address(userContract));
+            RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+            vm.stopPrank();
+        }
 
-    /* 
-    Contract A
-    Contract B
-    Policy A
+        // Verify normal operation worked
+        {
+            Trackers memory normalTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, 1);
+            uint256[] memory resultArray = abi.decode(abi.decode(normalTracker.trackerValue, (bytes)), (uint256[]));
+            assertEq(resultArray.length, 2);
+            assertEq(resultArray[0], 1);
+            assertEq(resultArray[1], 2);
+        }
 
-    CA -> PA
-    CB -> PA
-    */
+        // Direct tracker manipulation
+        address maliciousActor = address(0xBAD);
+        {
+            vm.startPrank(maliciousActor);
+            Trackers memory maliciousTracker;
+            maliciousTracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+            maliciousTracker.set = true;
+            uint256[] memory maliciousArray = new uint256[](1);
+            maliciousArray[0] = 999;
+            maliciousTracker.trackerValue = abi.encode(maliciousArray);
+
+            vm.expectRevert("Not Authorized To Policy");
+            RulesEngineComponentFacet(address(red)).updateTracker(policyId, 1, maliciousTracker);
+            vm.stopPrank();
+        }
+
+        // Indirect manipulation via evaluateForeignCalls
+        {
+            vm.startPrank(maliciousActor);
+            bytes memory maliciousArguments = abi.encodeWithSelector(
+                bytes4(keccak256(bytes(callingFunction))),
+                address(0xDEAD),
+                999,
+                abi.encode(new uint256[](0))
+            );
+            bytes[] memory emptyRetVals = new bytes[](0);
+            ForeignCallEncodedIndex[] memory emptyMetadata = new ForeignCallEncodedIndex[](0);
+
+            RulesEngineProcessorFacet(address(red)).evaluateForeignCalls(policyId, maliciousArguments, 0, emptyRetVals, emptyMetadata);
+        }
+
+        // Tracker values should remain unchanged
+        {
+            Trackers memory finalTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, 1);
+            uint256[] memory finalArray = abi.decode(abi.decode(finalTracker.trackerValue, (bytes)), (uint256[]));
+            assertEq(finalArray.length, 2);
+            assertEq(finalArray[0], 1);
+            assertEq(finalArray[1], 2);
+        }
+    }
+
+    function testRulesEngine_Unit_StaticArrayTracker_MaliciousContract() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256 policyId = _createBlankPolicy();
+
+        // Build tracker for static uint array
+        Trackers memory tracker;
+        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.set = true;
+        uint256[] memory emptyArray = new uint256[](0);
+        tracker.trackerValue = abi.encode(emptyArray);
+
+        // Set up rule with tracker
+        setupRuleWithTracker2(policyId, tracker);
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+
+        // Legitimate contract performs normal operation to populate tracker
+        {
+            uint256[] memory normalArray = new uint256[](2);
+            normalArray[0] = 100;
+            normalArray[1] = 200;
+
+            bytes memory legitimateArguments = abi.encodeWithSelector(
+                bytes4(keccak256(bytes(callingFunction))),
+                address(0x1234567),
+                10,
+                abi.encode(normalArray)
+            );
+
+            vm.startPrank(address(userContract));
+            RulesEngineProcessorFacet(address(red)).checkPolicies(legitimateArguments);
+            vm.stopPrank();
+        }
+
+        // Verify tracker was set correctly by legitimate contract
+        {
+            Trackers memory currentTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, 1);
+            uint256[] memory currentArray = abi.decode(abi.decode(currentTracker.trackerValue, (bytes)), (uint256[]));
+            assertEq(currentArray.length, 2);
+            assertEq(currentArray[0], 100);
+            assertEq(currentArray[1], 200);
+        }
+
+        // Deploy a second contract to act as potential malicious contract
+        ExampleUserContract maliciousContract = new ExampleUserContract();
+        maliciousContract.setRulesEngineAddress(address(red));
+        maliciousContract.setCallingContractAdmin(address(maliciousContract));
+
+        // malicious actor tries to directly update tracker
+        vm.startPrank(address(maliciousContract));
+        {
+            Trackers memory maliciousTracker;
+            maliciousTracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+            maliciousTracker.set = true;
+            uint256[] memory maliciousArray = new uint256[](1);
+            maliciousArray[0] = 999;
+            maliciousTracker.trackerValue = abi.encode(maliciousArray);
+
+            vm.expectRevert("Not Authorized To Policy");
+            RulesEngineComponentFacet(address(red)).updateTracker(policyId, 1, maliciousTracker);
+        }
+        vm.stopPrank();
+
+        //  Malicious contract tries to apply policy to itself
+        vm.startPrank(address(maliciousContract));
+        vm.expectRevert("Only verified policy subscriber can apply closed policies");
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(maliciousContract), policyIds);
+        vm.stopPrank();
+
+        // tracker values should remain completely unchanged
+        {
+            Trackers memory finalTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, 1);
+            uint256[] memory finalArray = abi.decode(abi.decode(finalTracker.trackerValue, (bytes)), (uint256[]));
+            assertEq(finalArray.length, 2, "Tracker length should remain unchanged");
+            assertEq(finalArray[0], 100, "First tracker value should remain unchanged");
+            assertEq(finalArray[1], 200, "Second tracker value should remain unchanged");
+        }
+    }
 }
