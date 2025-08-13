@@ -40,6 +40,7 @@
   "MappedTrackerUpdatedFromEffects_AddressToUint": "37485",
   "MappedTrackerUpdatedFromEffects_UintToUint": "37296",
   "PauseRuleRecreation": "54986",
+  "checkRule_Effect_Positive_ForeignCallMint": "133206",
   "checkRule_ForeignCall": "57463",
   "checkRule_ForeignCall_ForeignCallReferenced": "57559",
   "checkRule_ForeignCall_TrackerValuesUsed": "30953",

@@ -1117,7 +1117,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         bool statusBefore = testContract2.getNaughty(user1);
         assertFalse(statusBefore);
         vm.startPrank(user1);
-        vm.startSnapshotGas("checkRule_Effect_ForeignCall");
+        vm.startSnapshotGas("checkRule_Effect_Positive_ForeignCallMint");
         // the transfer should trigger the mint effect since we are transferring above the rule's amount
         userContract.transfer(address(0x7654321), ruleAmount + 1);
         vm.stopSnapshotGas();
@@ -1136,6 +1136,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         bool statusBefore = testContract2.getNaughty(user1);
         assertFalse(statusBefore);
         vm.startPrank(user1);
+        vm.startSnapshotGas("checkRule_Effect_Negative_ForeignCallBan");
         // the transfer should trigger the mint effect since we are transferring above the rule's amount
         userContract.transfer(address(0x7654321), ruleAmount - 1);
         // we check that the nft balance didn't increased, and that user got banned
