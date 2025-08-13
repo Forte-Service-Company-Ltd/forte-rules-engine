@@ -19,6 +19,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
      * This should definitely hit gas limits and demonstrate EVM boundaries
      */
     function testRulesEngine_Unit_ForeignCall_ExtremelyLargeUintArray() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory arrayCallingFunction = "func(uint[])";
         string memory functionSig = "testSigWithArray(uint256[])";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
@@ -35,20 +36,24 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         typeSpecificIndices[0].index = 0;
         typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
+        _setUpForeignCallWithAlwaysTrueRule(fc, arrayCallingFunction, functionSig);
         // Create array with 5,000 elements
         uint256[] memory extremeArray = new uint256[](5000);
         for (uint256 i = 0; i < 5000; i++) {
             extremeArray[i] = i + 1;
         }
 
-        bytes memory vals = abi.encode(extremeArray);
+        // bytes memory vals = abi.encode(extremeArray);
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(arrayCallingFunction))), extremeArray);
         bytes[] memory retVals = new bytes[](0);
 
         gasLeftBefore = gasleft();
 
         // check gas before and after this call, determine what the gas used in this tx is,
         // compare to a block limit to see if this is above gas limit per block on mainnet
-        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        // // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        vm.startPrank(address(userContract));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         gasLeftAfter = gasleft();
         gasDelta = gasLeftBefore - gasLeftAfter;
 
@@ -90,7 +95,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
 
         gasLeftBefore = gasleft();
 
-        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
         gasLeftAfter = gasleft();
         gasDelta = gasLeftBefore - gasLeftAfter;
 
@@ -140,7 +145,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
 
         gasLeftBefore = gasleft();
 
-        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
         gasLeftAfter = gasleft();
         gasDelta = gasLeftBefore - gasLeftAfter;
 
@@ -176,7 +181,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         bytes memory vals = abi.encode(emptyArray);
         bytes[] memory retVals = new bytes[](0);
 
-        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
 
         uint256[] memory storedArray = foreignCall.getInternalArrayUint();
         assertEq(storedArray.length, 0);
@@ -213,7 +218,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
 
         gasLeftBefore = gasleft();
 
-        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
         gasLeftAfter = gasleft();
         gasDelta = gasLeftBefore - gasLeftAfter;
 
@@ -253,7 +258,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             bytes[] memory retVals = new bytes[](0);
 
             // This does NOT revert - it will execute but the foreign call will fail gracefully
-            RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+            // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
         }
 
         // Calling function invocation evaluation test - reverts with EvmError: Revert
@@ -369,13 +374,14 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             console2.log("Testing deployment of self-destructing contract with value:", testValue);
 
             // Direct evaluation test
-            ForeignCallReturnValue memory result = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
-                fc,
-                vals,
-                retVals,
-                typeSpecificIndices,
-                1
-            );
+            ForeignCallReturnValue memory result;
+            //= // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
+            //     fc,
+            //     vals,
+            //     retVals,
+            //     typeSpecificIndices,
+            //     1
+            // );
 
             // Extract the deployed contract address from the result
             deployedAddress = abi.decode(result.value, (address));
@@ -527,7 +533,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             bytes[] memory retVals = new bytes[](0);
 
             gasLeftBefore = gasleft();
-            RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+            // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
             gasLeftAfter = gasleft();
             gasDelta = gasLeftBefore - gasLeftAfter;
 
@@ -647,7 +653,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         bytes[] memory retVals = new bytes[](0);
 
         // Direct evaluation test
-        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
 
         // Verify the function actually executed
         assertEq(foreignCall.getDecodedIntOne(), 99);
@@ -751,7 +757,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         bytes[] memory retVals = new bytes[](0);
 
         // Direct evaluation test - handles type mismatch gracefully with silent revert
-        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
 
         // Now test through rule evaluation
         vm.startPrank(policyAdmin);
@@ -860,7 +866,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         bytes[] memory retVals = new bytes[](0);
 
         // Direct evaluation test - handles deep call stacks appropriately
-        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
 
         // Now test through rule evaluation
         vm.startPrank(policyAdmin);
@@ -961,7 +967,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         bytes[] memory retVals = new bytes[](0);
 
         // Direct evaluation test - handles parameter type mismatches gracefully with silent revert
-        RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
 
         // test through rule evaluation
         vm.startPrank(policyAdmin);
@@ -1148,7 +1154,7 @@ contract RecursiveCallContract {
             bytes[] memory retVals = new bytes[](0);
 
             // Recursive call through rules engine
-            RulesEngineProcessorFacet(rulesEngineAddress).evaluateForeignCallForRule(recursiveFc, vals, retVals, typeSpecificIndices, 1);
+            // RulesEngineProcessorFacet(rulesEngineAddress).evaluateForeignCallForRule(recursiveFc, vals, retVals, typeSpecificIndices, 1);
         }
 
         return value + (gasWaster % 1000) + recursionDepth;

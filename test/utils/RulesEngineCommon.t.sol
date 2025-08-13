@@ -799,6 +799,72 @@ contract RulesEngineCommon is DiamondMine, Test {
         return policyIds[0];
     }
 
+    function _setUpForeignCallWithAlwaysTrueRule(ForeignCall memory fc, string memory callingSignature, string memory fcSignature) public {
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        vm.startPrank(policyAdmin);
+        ParamTypes[] memory pTypes = new ParamTypes[](1);
+        pTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        // Save the calling function
+        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyIds[0],
+            bytes4(bytes4(keccak256(bytes(callingSignature)))),
+            pTypes,
+            callingSignature,
+            ""
+        );
+        // Save the Policy
+        callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
+        callingFunctionIds.push(callingFunctionId);
+
+        uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, fcSignature);
+
+        Rule memory rule;
+        rule.instructionSet = _createInstructionSet();
+        rule.effectPlaceHolders = new Placeholder[](1);
+        rule.effectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
+        rule.effectPlaceHolders[0].typeSpecificIndex = uint128(foreignCallId);
+
+        // positive effect
+        uint256[] memory effectBytecode = new uint256[](0);
+        // effectBytecode[0] = uint(LogicalOp.PLH);
+        // effectBytecode[1] = 0; // we flag that we will be using placeholder 0
+        Effect memory positiveEffect = Effect({
+            valid: true,
+            dynamicParam: false,
+            effectType: EffectTypes.EXPRESSION,
+            pType: ParamTypes.ADDR,
+            param: "",
+            text: EVENTTEXT,
+            errorMessage: "foreign call failed",
+            instructionSet: effectBytecode
+        });
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0] = positiveEffect;
+
+        // negative effect
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = ruleId;
+        // _addRuleIdsToPolicy(policyIds[0], ruleIds);
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyIds[0],
+            callingFunctions,
+            callingFunctionIds,
+            ruleIds,
+            PolicyType.CLOSED_POLICY,
+            "policyName",
+            "policyDescription"
+        );
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract), policyIds);
+    }
+
     function _setUpEffect(Rule memory rule, EffectTypes _effectType, bool isPositive) public view returns (Rule memory _rule) {
         if (isPositive) {
             rule.posEffects = new Effect[](1);
@@ -2657,9 +2723,9 @@ contract RulesEngineCommon is DiamondMine, Test {
     function _createInstructionSet() public pure returns (uint256[] memory instructionSet) {
         instructionSet = new uint256[](7);
         instructionSet[0] = uint(LogicalOp.NUM);
-        instructionSet[1] = 0;
+        instructionSet[1] = 1;
         instructionSet[2] = uint(LogicalOp.NUM);
-        instructionSet[3] = 1;
+        instructionSet[3] = 0;
         instructionSet[4] = uint(LogicalOp.GT);
         instructionSet[5] = 0;
         instructionSet[6] = 1;
