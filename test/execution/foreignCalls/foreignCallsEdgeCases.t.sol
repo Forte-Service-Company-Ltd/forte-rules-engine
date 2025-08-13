@@ -252,6 +252,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
      * This reverts the entire transaction when triggered through a calling function showing proper error handling for non-existent functions
      */
     function testRulesEngine_Unit_ForeignCall_NonExistentFunction() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory arrayCallingFunction = "func(uint256)";
         string memory nonExistentFunctionSig = "dummyFunction(uint256)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
@@ -272,11 +273,14 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
             uint256 testValue = 1337;
-            bytes memory vals = abi.encode(testValue);
+            _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, arrayCallingFunction, nonExistentFunctionSig, ParamTypes.UINT);
             bytes[] memory retVals = new bytes[](0);
+            bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(arrayCallingFunction))), testValue);
 
             // This does NOT revert - it will execute but the foreign call will fail gracefully
-            // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+            vm.startPrank(address(userContract));
+            gasLeftBefore = gasleft();
+            RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         }
 
         // Calling function invocation evaluation test - reverts with EvmError: Revert
