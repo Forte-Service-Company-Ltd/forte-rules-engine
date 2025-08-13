@@ -38,7 +38,7 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
         uint256 foreignCallIndex = _incrementForeignCallIndex(_policyId);
 
         // Step 2: Store the foreign call
-        _storeForeignCall(_policyId, _foreignCall, foreignCallIndex);
+        _storeForeignCallData(_policyId, _foreignCall, foreignCallIndex);
 
         // Step 3: Store metadata
         _storeForeignCallMetadata(_policyId, foreignCallIndex, foreignCallName);
@@ -160,6 +160,19 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
     function _incrementForeignCallIndex(uint256 _policyId) private returns (uint256) {
         ForeignCallStorage storage data = lib._getForeignCallStorage();
         return ++data.foreignCallIdxCounter[_policyId];
+    }
+
+    /**
+     * @dev Helper function to store the foreign call data
+     * @dev Ensures the foreign call is properly set before storing it.
+     * @param _policyId The policy ID the foreign call is associated with.
+     * @param _foreignCall The foreign call to store.
+     * @param _foreignCallIndex The index of the foreign call.
+     */
+    function _storeForeignCallData(uint256 _policyId, ForeignCall calldata _foreignCall, uint256 _foreignCallIndex) private {
+        ForeignCallStorage storage data = lib._getForeignCallStorage();
+        _storeForeignCall(_policyId, _foreignCall, _foreignCallIndex);
+        data.foreignCallIdxCounter[_policyId] = _foreignCallIndex;
     }
 
     /**
