@@ -203,10 +203,8 @@ contract DiamondMine is Script {
             selectors[0] = RulesEngineInitialFacet.initialize.selector;
             return selectors;
         } else if (keccak256(abi.encodePacked(facet)) == keccak256(abi.encodePacked("RulesEngineProcessorFacet"))) {
-            bytes4[] memory selectors = new bytes4[](3);
+            bytes4[] memory selectors = new bytes4[](1);
             selectors[0] = RulesEngineProcessorFacet.checkPolicies.selector;
-            selectors[1] = RulesEngineProcessorFacet.evaluateForeignCalls.selector;
-            selectors[2] = RulesEngineProcessorFacet.evaluateForeignCallForRule.selector;
             return selectors;
         } else if (keccak256(abi.encodePacked(facet)) == keccak256(abi.encodePacked("RulesEngineRuleFacet"))) {
             bytes4[] memory selectors = new bytes4[](5);
