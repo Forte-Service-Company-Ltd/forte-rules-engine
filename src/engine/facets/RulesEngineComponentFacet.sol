@@ -98,7 +98,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
     function _validateCallingFunctionPType(ParamTypes[] memory types) internal pure {
         for (uint256 i = 0; i < types.length; i++) {
             // Ensure tracker value pType is a valid type
-            require(uint(types[i]) < MAX_PTYPES,INVALID_TYPE);
+            require(uint(types[i]) < MAX_PTYPES, INVALID_TYPE);
         }
     }
 
@@ -404,10 +404,11 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         delete data.policy.callingFunctions;
         // delete calling function to id map
         delete data.policy.callingFunctionIdMap[signature];
+        uint256[] memory ruleIds = data.policy.callingFunctionsToRuleIds[signature];
         // delete rule structures associated to calling function
-        for (uint256 i; i < data.policy.callingFunctionsToRuleIds[signature].length; i++) {
+        for (uint256 i; i < ruleIds.length; i++) {
             // delete rules from storage
-            delete lib._getRuleStorage().ruleStorageSets[policyId][i];
+            delete lib._getRuleStorage().ruleStorageSets[policyId][ruleIds[i]];
             emit AssociatedRuleDeleted(policyId, callingFunctionId);
         }
         // delete calling function to rule Ids mapping
@@ -489,7 +490,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         bytes4 _functionSignature,
         ParamTypes[] memory _pTypes
     ) private {
-        if (EMPTY_SIG == _functionSignature) revert (SIG_REQ);
+        if (EMPTY_SIG == _functionSignature) revert(SIG_REQ);
         _validateCallingFunctionPType(_pTypes);
         CallingFunctionStruct storage data = lib._getCallingFunctionStorage();
         data.callingFunctionStorageSets[_policyId][_functionId].set = true;
@@ -512,7 +513,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         string memory _callingFunctionName,
         string memory _encodedValues
     ) private {
-        if (keccak256(bytes(_callingFunctionName)) == EMPTY_STRING_HASH) revert (NAME_REQ);
+        if (keccak256(bytes(_callingFunctionName)) == EMPTY_STRING_HASH) revert(NAME_REQ);
         CallingFunctionMetadataStruct storage metaData = lib._getCallingFunctioneMetadataStorage();
         metaData.callingFunctionMetadata[_policyId][_functionId].callingFunction = _callingFunctionName;
         metaData.callingFunctionMetadata[_policyId][_functionId].signature = _functionSignature;
