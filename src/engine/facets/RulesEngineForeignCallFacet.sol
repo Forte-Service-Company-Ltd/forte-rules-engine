@@ -129,14 +129,20 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
     function _storeForeignCall(uint256 _policyId, ForeignCall calldata _foreignCall, uint256 _foreignCallIndex) internal {
         assert(_foreignCall.parameterTypes.length == _foreignCall.encodedIndices.length);
         if (_foreignCall.foreignCallAddress == address(0)) revert(ZERO_ADDRESS_NOT_ALLOWED);
-        if (_foreignCall.signature == EMPTY_SIG) revert (SIG_REQ);
+        if (_foreignCall.signature == EMPTY_SIG) revert(SIG_REQ);
         require(_foreignCall.foreignCallIndex < MAX_LOOP, MAX_FC);
         require(_foreignCall.parameterTypes.length < MAX_LOOP, MAX_FC_PT);
         uint mappedTrackerKeyIndexCounter = 0;
         for (uint256 i = 0; i < _foreignCall.encodedIndices.length; i++) {
             if (_foreignCall.encodedIndices[i].eType == EncodedIndexType.MAPPED_TRACKER_KEY) {
-                require(mappedTrackerKeyIndexCounter < _foreignCall.mappedTrackerKeyIndices.length, MAPPED_TRACKER_KEY_INDICES_LENGTH_MISMATCH);
-                require(_foreignCall.mappedTrackerKeyIndices[mappedTrackerKeyIndexCounter].eType != EncodedIndexType.MAPPED_TRACKER_KEY, MAPPED_TRACKER_KEY_CANNOT_BE_DOUBLE_NESTED);
+                require(
+                    mappedTrackerKeyIndexCounter < _foreignCall.mappedTrackerKeyIndices.length,
+                    MAPPED_TRACKER_KEY_INDICES_LENGTH_MISMATCH
+                );
+                require(
+                    _foreignCall.mappedTrackerKeyIndices[mappedTrackerKeyIndexCounter].eType != EncodedIndexType.MAPPED_TRACKER_KEY,
+                    MAPPED_TRACKER_KEY_CANNOT_BE_DOUBLE_NESTED
+                );
                 mappedTrackerKeyIndexCounter++;
             }
         }
@@ -219,10 +225,10 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
      */
     function updatePermissionList(address foriegnCallAddress, bytes4 selector, address[] memory policyAdminsToAdd) external {
         _foreignCallAdminOnly(foriegnCallAddress, msg.sender, selector);
-        // reset mappings and arrays to empty
-        delete lib._getForeignCallStorage().permissionedForeignCallAdminsList[foriegnCallAddress][selector];
         // retreive current list and set all addresses in the current list to false (remove them from the permission list)
         address[] memory oldAdminList = getForeignCallPermissionList(foriegnCallAddress, selector);
+        // reset mappings and arrays to empty
+        delete lib._getForeignCallStorage().permissionedForeignCallAdminsList[foriegnCallAddress][selector];
         for (uint256 i = 0; i < oldAdminList.length; i++) {
             lib._getForeignCallStorage().permissionedForeignCallAdmins[foriegnCallAddress][selector][oldAdminList[i]] = false;
         }
@@ -258,9 +264,10 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
      */
     function removeAllFromPermissionList(address foriegnCallAddress, bytes4 selector) external {
         _foreignCallAdminOnly(foriegnCallAddress, msg.sender, selector);
+        // retreive current list and set all addresses in the current list to false (remove them from the permission list)
+        address[] memory oldAdminList = getForeignCallPermissionList(foriegnCallAddress, selector);
         // reset mappings and arrays to empty
         delete lib._getForeignCallStorage().permissionedForeignCallAdminsList[foriegnCallAddress][selector];
-        address[] memory oldAdminList = getForeignCallPermissionList(foriegnCallAddress, selector);
         for (uint256 i = 1; i < oldAdminList.length; i++) {
             // index starts at one to skip the foreign call admin address
             lib._getForeignCallStorage().permissionedForeignCallAdmins[foriegnCallAddress][selector][oldAdminList[i]] = false;
@@ -303,10 +310,10 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
      */
     function removeForeignCallPermissions(address _foriegnCallAddress, bytes4 _selector) external {
         _foreignCallAdminOnly(_foriegnCallAddress, msg.sender, _selector);
-        // reset mappings and arrays to empty
-        delete lib._getForeignCallStorage().permissionedForeignCallAdminsList[_foriegnCallAddress][_selector];
         // retreive current list and set all addresses in the current list to false (remove them from the permission list)
         address[] memory oldAdminList = getForeignCallPermissionList(_foriegnCallAddress, _selector);
+        // reset mappings and arrays to empty
+        delete lib._getForeignCallStorage().permissionedForeignCallAdminsList[_foriegnCallAddress][_selector];
         for (uint256 i = 0; i < oldAdminList.length; i++) {
             lib._getForeignCallStorage().permissionedForeignCallAdmins[_foriegnCallAddress][_selector][oldAdminList[i]] = false;
         }

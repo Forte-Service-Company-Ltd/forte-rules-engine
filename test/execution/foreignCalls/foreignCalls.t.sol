@@ -702,11 +702,13 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         RulesEngineForeignCallFacet(address(red)).addAdminToPermissionList(pfcContractAddress, address(0x66666666), foreignCallSelector);
         RulesEngineForeignCallFacet(address(red)).addAdminToPermissionList(pfcContractAddress, address(0x77777777), foreignCallSelector);
         RulesEngineForeignCallFacet(address(red)).addAdminToPermissionList(pfcContractAddress, address(0x88888888), foreignCallSelector);
-        RulesEngineForeignCallFacet(address(red)).removeAllFromPermissionList(pfcContractAddress, foreignCallSelector);
         address[] memory pfcStorage = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(
             pfcContractAddress,
             foreignCallSelector
         );
+        assertTrue(pfcStorage.length == 4, "There should be four permissioned foreign call admins");
+        RulesEngineForeignCallFacet(address(red)).removeAllFromPermissionList(pfcContractAddress, foreignCallSelector);
+        pfcStorage = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(pfcContractAddress, foreignCallSelector);
         assertTrue(pfcStorage.length == 1, "There should be only be the original foreign call admin");
     }
 
@@ -758,11 +760,19 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         assertEq(pfcStorage.permissionedForeignCallAddresses.length, 3, "There should be three permissioned foreign calls");
         assertEq(pfcStorage.permissionedForeignCallSignatures.length, 3, "There should be three permissioned foreign call signatures");
 
+        address[] memory pfcAdmins = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(
+            pfcContractAddress,
+            foreignCallSelector2
+        );
+        assertTrue(pfcAdmins.length == 1, "There should be three permissioned foreign call admins");
+
         // remove the foreign call from the master list
         RulesEngineForeignCallFacet(address(red)).removeForeignCallPermissions(pfcContractAddress, foreignCallSelector2);
         pfcStorage = RulesEngineForeignCallFacet(address(red)).getAllPermissionedFCs();
         assertEq(pfcStorage.permissionedForeignCallAddresses.length, 2, "There should be two permissioned foreign calls");
         assertEq(pfcStorage.permissionedForeignCallSignatures.length, 2, "There should be two permissioned foreign call signatures");
+        pfcAdmins = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(pfcContractAddress, foreignCallSelector2);
+        assertTrue(pfcAdmins.length == 0, "There should be no permissioned foreign call admins");
         // check that the foreign call is no longer in the master list
         assertEq(
             pfcStorage.permissionedForeignCallSignatures[0],
@@ -792,6 +802,47 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "square(uint256)");
+    }
+
+    function testRulesEngine_Unit_PermissionedForeignCall_updatePermissionList_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
+        // start test as address 0x55556666
+        vm.startPrank(address(0x55556666));
+        // set the selector from the permissioned foreign call contract
+        bytes4 foreignCallSelector = PermissionedForeignCallTestContract.simpleCheck.selector;
+        permissionedForeignCallContract.setForeignCallAdmin(address(0x55556666), foreignCallSelector);
+        assertTrue(
+            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
+                address(permissionedForeignCallContract),
+                address(0x55556666),
+                foreignCallSelector
+            )
+        );
+
+        address[] memory initialAdmins = new address[](3);
+        initialAdmins[0] = address(0x66666666);
+        initialAdmins[1] = address(0x77777777);
+        initialAdmins[2] = address(0x88888888);
+
+        RulesEngineForeignCallFacet(address(red)).updatePermissionList(pfcContractAddress, foreignCallSelector, initialAdmins);
+
+        address[] memory pfcStorage = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(
+            pfcContractAddress,
+            foreignCallSelector
+        );
+        assertTrue(pfcStorage.length == 3, "There should be three permissioned foreign call admins");
+
+        address[] memory secondAdmins = new address[](2);
+        secondAdmins[0] = address(0x1337);
+        secondAdmins[1] = address(0x1338);
+
+        RulesEngineForeignCallFacet(address(red)).updatePermissionList(pfcContractAddress, foreignCallSelector, secondAdmins);
+        pfcStorage = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(pfcContractAddress, foreignCallSelector);
+        assertTrue(pfcStorage.length == 2, "There should be two permissioned foreign call admins");
+
+        address[] memory thirdAdmins = new address[](0);
+        RulesEngineForeignCallFacet(address(red)).updatePermissionList(pfcContractAddress, foreignCallSelector, thirdAdmins);
+        pfcStorage = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(pfcContractAddress, foreignCallSelector);
+        assertTrue(pfcStorage.length == 0, "There should be no permissioned foreign call admins");
     }
 
     function testRulesEngine_Unit_ForeignCall_MappedTrackerAsParam_UintToUintMappedTracker_Positive()
