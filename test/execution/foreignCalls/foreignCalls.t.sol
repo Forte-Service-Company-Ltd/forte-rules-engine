@@ -764,7 +764,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
             pfcContractAddress,
             foreignCallSelector2
         );
-        assertTrue(pfcAdmins.length == 1, "There should be three permissioned foreign call admins");
+        assertTrue(pfcAdmins.length == 1, "There should be one permissioned foreign call admin");
 
         // remove the foreign call from the master list
         RulesEngineForeignCallFacet(address(red)).removeForeignCallPermissions(pfcContractAddress, foreignCallSelector2);
