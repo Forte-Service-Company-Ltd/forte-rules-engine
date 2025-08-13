@@ -36,7 +36,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         typeSpecificIndices[0].index = 0;
         typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig);
+        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig, 1);
         // Create array with 5,000 elements
         uint256[] memory extremeArray = new uint256[](5000);
         for (uint256 i = 0; i < 5000; i++) {
@@ -88,7 +88,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             largeStringArray[i] = string(abi.encodePacked("Element_", vm.toString(i)));
         }
 
-        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig);
+        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig, 1);
         bytes[] memory retVals = new bytes[](0);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(arrayCallingFunction))), largeStringArray);
 
@@ -98,7 +98,6 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         gasLeftBefore = gasleft();
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
 
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
         gasLeftAfter = gasleft();
         gasDelta = gasLeftBefore - gasLeftAfter;
 
@@ -113,6 +112,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
      * Test multiple arrays
      */
     function testRulesEngine_Unit_ForeignCall_MultipleArrayParameters() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory arrayCallingFunction = "func(uint256[],uint256[])";
         string memory functionSig = "testSigWithArray(uint256[],uint256[])";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
@@ -143,12 +143,16 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             array2[i] = i + 5000;
         }
 
-        bytes memory vals = abi.encode(array1, array2);
+        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig, 2);
         bytes[] memory retVals = new bytes[](0);
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(arrayCallingFunction))), array1, array2);
 
+        // check gas before and after this call, determine what the gas used in this tx is,
+        // compare to a block limit to see if this is above gas limit per block on mainnet
+        vm.startPrank(address(userContract));
         gasLeftBefore = gasleft();
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
 
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
         gasLeftAfter = gasleft();
         gasDelta = gasLeftBefore - gasLeftAfter;
 

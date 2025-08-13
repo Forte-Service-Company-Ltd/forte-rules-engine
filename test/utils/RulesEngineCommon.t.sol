@@ -802,13 +802,15 @@ contract RulesEngineCommon is DiamondMine, Test {
     function _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(
         ForeignCall memory fc,
         string memory callingSignature,
-        string memory fcSignature
+        string memory fcSignature,
+        uint arrayAmount
     ) public {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
         vm.startPrank(policyAdmin);
-        ParamTypes[] memory pTypes = new ParamTypes[](1);
-        pTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        ParamTypes[] memory pTypes = new ParamTypes[](arrayAmount);
+        for (uint array; array < arrayAmount; array++) pTypes[array] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+
         // Save the calling function
         uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
