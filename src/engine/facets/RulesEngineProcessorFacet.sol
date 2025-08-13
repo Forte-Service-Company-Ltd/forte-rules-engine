@@ -19,13 +19,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     uint8 constant GLOBAL_MSG_DATA = 3;
     uint8 constant GLOBAL_BLOCK_NUMBER = 4;
     uint8 constant GLOBAL_TX_ORIGIN = 5;
-    uint8 constant FOREIGN_CALL = 1; // 0X01 = 1
-    uint8 constant TRACKER_VALUE = 2; // 0x02 = 2
-    enum PlaceholderType {
-        CONDITION,
-        POS_EFFECT,
-        NEG_EFFECT
-    }
 
     string public constant version = "v0.3.1";
 
@@ -63,12 +56,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes calldata callingFunctionArgs,
         uint256 foreignCallIndex,
         bytes[] memory retVals,
-        ForeignCallEncodedIndex[] memory metadata,
-        bool isNegativeEffect
+        ForeignCallEncodedIndex[] memory metadata
     ) public returns (ForeignCallReturnValue memory) {
         // Load the Foreign Call data from storage
         ForeignCall memory foreignCall = lib._getForeignCallStorage().foreignCalls[policyId][foreignCallIndex];
-        if (foreignCall.set && foreignCall.isNegativeEffect == isNegativeEffect) {
+        if (foreignCall.set) {
             return evaluateForeignCallForRule(foreignCall, callingFunctionArgs, retVals, metadata, policyId);
         }
     }
@@ -157,7 +149,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes memory dynamicData,
         ForeignCallEncodedIndex memory mappedTrackerKeyEI,
         uint256 parameterTypesLength
-    ) internal returns (bytes memory, uint256, bytes memory) {
+    ) public returns (bytes memory, uint256, bytes memory) {
         bytes memory mappedTrackerValue;
         ParamTypes typ = lib._getTrackerStorage().trackers[policyId][trackerIndex].trackerKeyType;
 
@@ -229,7 +221,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 lengthToAppend,
         bytes memory dynamicData,
         uint256 i
-    ) internal pure returns (bytes memory, uint256, bytes memory) {
+    ) public pure returns (bytes memory, uint256, bytes memory) {
         uint256 typeSpecificIndex = fc.encodedIndices[i].index;
         bytes32 value = bytes32(functionArguments[typeSpecificIndex * 32:(typeSpecificIndex + 1) * 32]);
         if (argType == ParamTypes.STR || argType == ParamTypes.BYTES) {
@@ -296,7 +288,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 lengthToAppend,
         uint256 i,
         bytes memory dynamicData
-    ) internal view returns (bytes memory, uint256, bytes memory) {
+    ) public view returns (bytes memory, uint256, bytes memory) {
         ParamTypes argType = fc.parameterTypes[i];
         uint256 index = fc.encodedIndices[i].index;
         // Handle global variables separately
@@ -337,7 +329,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes memory value,
         ParamTypes argType,
         uint256 parameterTypesLength
-    ) internal pure returns (bytes memory, uint256, bytes memory) {
+    ) public pure returns (bytes memory, uint256, bytes memory) {
         if (argType == ParamTypes.STR || argType == ParamTypes.BYTES) {
             encodedCall = bytes.concat(encodedCall, bytes32(32 * (parameterTypesLength) + lengthToAppend));
             bytes memory stringData = ProcessorLib._extractStringData(value);
@@ -484,9 +476,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             Rule storage rule = _ruleData[_applicableRules[i]].rule;
             if (!_evaluateIndividualRule(rule, _policyId, _callingFunctionArgs)) {
                 _retVal = false;
-                _doEffects(rule, _policyId, rule.negEffects, _callingFunctionArgs, _retVal);
+                _doEffects(rule, _policyId, rule.negEffects, _callingFunctionArgs);
             } else {
-                _doEffects(rule, _policyId, rule.posEffects, _callingFunctionArgs, _retVal);
+                _doEffects(rule, _policyId, rule.posEffects, _callingFunctionArgs);
             }
         }
     }
@@ -503,12 +495,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 _policyId,
         bytes calldata _callingFunctionArgs
     ) internal returns (bool response) {
-        (bytes[] memory ruleArgs, Placeholder[] memory placeholders) = _buildArguments(
-            _rule,
-            _policyId,
-            _callingFunctionArgs,
-            PlaceholderType.CONDITION
-        );
+        (bytes[] memory ruleArgs, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, false);
         response = _run(_rule.instructionSet, placeholders, _policyId, ruleArgs);
     }
 
@@ -517,7 +504,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _rule The storage reference to the Rule struct containing the rule's details.
      * @param _policyId The unique identifier of the policy associated with the rule.
      * @param _callingFunctionArgs The calldata containing the arguments for the calling function.
-     * @param placeholderType can be either condition, positive effect, or negative effect.
+     * @param _effect A boolean indicating whether the rule has an effect or not.
      * @return A tuple containing:
      *         - An array of bytes representing the constructed arguments.
      *         - An array of Placeholder structs used for argument substitution.
@@ -526,12 +513,14 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         Rule storage _rule,
         uint256 _policyId,
         bytes calldata _callingFunctionArgs,
-        PlaceholderType placeholderType
+        bool _effect
     ) internal returns (bytes[] memory, Placeholder[] memory) {
         Placeholder[] memory placeHolders;
-        if (placeholderType == PlaceholderType.CONDITION) placeHolders = _rule.placeHolders;
-        else placeHolders = _rule.effectPlaceHolders;
-
+        if (_effect) {
+            placeHolders = _rule.effectPlaceHolders;
+        } else {
+            placeHolders = _rule.placeHolders;
+        }
         bytes[] memory retVals = new bytes[](placeHolders.length);
         // Data validation will alway ensure ruleCount will be less than MAX_LOOP
         ForeignCallEncodedIndex[] memory metadata = new ForeignCallEncodedIndex[](placeHolders.length);
@@ -539,11 +528,14 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             // Determine if the placeholder represents the return value of a foreign call or a function parameter from the calling function
             Placeholder memory placeholder = placeHolders[placeholderIndex];
 
-            if (placeholder.flags > TRACKER_VALUE) {
+            // Extract flags using helper function
+            (bool isTrackerValue, bool isForeignCall, uint8 globalVarType) = _extractFlags(placeholder);
+
+            if (globalVarType != GLOBAL_NONE) {
                 metadata[placeholderIndex].eType = EncodedIndexType.GLOBAL_VAR;
-                metadata[placeholderIndex].index = placeholder.flags >> 2;
-                (retVals[placeholderIndex], placeHolders[placeholderIndex].pType) = _handleGlobalVar(placeholder.flags >> 2);
-            } else if (placeholder.flags == FOREIGN_CALL) {
+                metadata[placeholderIndex].index = globalVarType;
+                (retVals[placeholderIndex], placeHolders[placeholderIndex].pType) = _handleGlobalVar(globalVarType);
+            } else if (isForeignCall) {
                 metadata[placeholderIndex].eType = EncodedIndexType.FOREIGN_CALL;
                 metadata[placeholderIndex].index = placeholder.typeSpecificIndex;
                 (retVals[placeholderIndex], placeHolders[placeholderIndex].pType) = _handleForeignCall(
@@ -551,10 +543,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     _callingFunctionArgs,
                     placeholder.typeSpecificIndex,
                     retVals,
-                    metadata,
-                    placeholderType == PlaceholderType.NEG_EFFECT ? true : false
+                    metadata
                 );
-            } else if (placeholder.flags == TRACKER_VALUE) {
+            } else if (isTrackerValue) {
                 metadata[placeholderIndex].eType = EncodedIndexType.TRACKER;
                 metadata[placeholderIndex].index = placeholder.typeSpecificIndex;
                 retVals[placeholderIndex] = _handleTrackerValue(_policyId, placeholder);
@@ -584,6 +575,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256[90] memory mem;
         uint256 idx = 0;
         uint256 opi = 0;
+
         while (idx < _prog.length) {
             uint256 v = 0;
             LogicalOp op = LogicalOp(_prog[idx]);
@@ -842,17 +834,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes calldata _callingFunctionArgs,
         uint256 typeSpecificIndex,
         bytes[] memory retVals,
-        ForeignCallEncodedIndex[] memory metadata,
-        bool isNegativeEffect
+        ForeignCallEncodedIndex[] memory metadata
     ) internal returns (bytes memory, ParamTypes) {
-        ForeignCallReturnValue memory retVal = evaluateForeignCalls(
-            _policyId,
-            _callingFunctionArgs,
-            typeSpecificIndex,
-            retVals,
-            metadata,
-            isNegativeEffect
-        );
+        ForeignCallReturnValue memory retVal = evaluateForeignCalls(_policyId, _callingFunctionArgs, typeSpecificIndex, retVals, metadata);
         return (retVal.value, retVal.pType);
     }
 
@@ -951,15 +935,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _policyId The ID of the policy associated with the rule.
      * @param _effects An array of effects to be applied as part of the rule execution.
      * @param _callingFunctionArgs Encoded calldata containing arguments for the calling function.
-     * @param isPosEffect flag that indicates if we are processing positive or negative effects
      */
-    function _doEffects(
-        Rule storage _rule,
-        uint256 _policyId,
-        Effect[] memory _effects,
-        bytes calldata _callingFunctionArgs,
-        bool isPosEffect
-    ) internal {
+    function _doEffects(Rule storage _rule, uint256 _policyId, Effect[] memory _effects, bytes calldata _callingFunctionArgs) internal {
         // Load the Effect data from storage
         // Data validation will always ensure _effects.length will be less than MAX_LOOP
         for (uint256 i = 0; i < _effects.length; i++) {
@@ -970,7 +947,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 } else if (effect.effectType == EffectTypes.EVENT) {
                     _buildEvent(_rule, _effects[i].dynamicParam, _policyId, _effects[i].text, _effects[i], _callingFunctionArgs);
                 } else {
-                    _evaluateExpression(_rule, _policyId, _callingFunctionArgs, effect.instructionSet, isPosEffect);
+                    _evaluateExpression(_rule, _policyId, _callingFunctionArgs, effect.instructionSet);
                 }
             }
         }
@@ -1011,12 +988,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      */
     function _fireDynamicEvent(Rule storage _rule, uint256 _policyId, bytes32 _message, bytes calldata _callingFunctionArgs) internal {
         // Build the effect arguments struct for event parameters:
-        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(
-            _rule,
-            _policyId,
-            _callingFunctionArgs,
-            PlaceholderType.POS_EFFECT
-        );
+        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, true);
         // Data validation will always ensure effectArguments.length will be less than MAX_LOOP
         for (uint256 i = 0; i < effectArguments.length; i++) {
             // loop through parameter types and set eventParam
@@ -1075,15 +1047,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         Rule storage _rule,
         uint256 _policyId,
         bytes calldata _callingFunctionArgs,
-        uint256[] memory _instructionSet,
-        bool isPosEffect
+        uint256[] memory _instructionSet
     ) internal {
-        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(
-            _rule,
-            _policyId,
-            _callingFunctionArgs,
-            isPosEffect ? PlaceholderType.POS_EFFECT : PlaceholderType.NEG_EFFECT
-        );
+        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, true);
         if (_instructionSet.length > 1) {
             _run(_instructionSet, placeholders, _policyId, effectArguments);
         }

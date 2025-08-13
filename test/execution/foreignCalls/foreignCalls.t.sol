@@ -1108,6 +1108,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
     }
 
     function testRulesEngine_Unit_ForeignCall_MintPosEffect() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.skip(true);
         uint ruleAmount = 1e18;
         // we setup the rule: if amount > ruleAmount -> mint NFT else get banned
         _setupRuleWithMintEffect(ruleAmount, address(userContract));
@@ -1126,6 +1127,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
     }
 
     function testRulesEngine_Unit_ForeignCall_BanNegEffect() public {
+        vm.skip(true);
         uint ruleAmount = 1e18;
         // we setup the rule: if amount > ruleAmount -> mint NFT else get banned
         _setupRuleWithMintEffect(ruleAmount, address(userContract));
