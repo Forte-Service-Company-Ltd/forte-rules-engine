@@ -57,7 +57,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 foreignCallIndex,
         bytes[] memory retVals,
         ForeignCallEncodedIndex[] memory metadata
-    ) public returns (ForeignCallReturnValue memory retVal) {
+    ) internal returns (ForeignCallReturnValue memory retVal) {
         // Load the Foreign Call data from storage
         ForeignCall memory foreignCall = lib._getForeignCallStorage().foreignCalls[policyId][foreignCallIndex];
         if (foreignCall.set) {
@@ -77,7 +77,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes[] memory retVals,
         ForeignCallEncodedIndex[] memory metadata,
         uint256 policyId
-    ) public returns (ForeignCallReturnValue memory retVal) {
+    ) internal returns (ForeignCallReturnValue memory retVal) {
         // First, calculate total size needed and positions of dynamic data
         bytes memory encodedCall = bytes.concat(bytes4(fc.signature));
         bytes memory dynamicData = "";
