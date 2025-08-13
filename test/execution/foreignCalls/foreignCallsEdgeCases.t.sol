@@ -167,6 +167,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
      * Test empty array edge case
      */
     function testRulesEngine_Unit_ForeignCall_EmptyArray() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory arrayCallingFunction = "func(uint256[])";
         string memory functionSig = "testSigWithEmptyArray(uint256[])";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
@@ -185,10 +186,16 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
 
         // Create empty array
         uint256[] memory emptyArray = new uint256[](0);
-        bytes memory vals = abi.encode(emptyArray);
-        bytes[] memory retVals = new bytes[](0);
 
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig, 1);
+        bytes[] memory retVals = new bytes[](0);
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(arrayCallingFunction))), emptyArray);
+
+        // check gas before and after this call, determine what the gas used in this tx is,
+        // compare to a block limit to see if this is above gas limit per block on mainnet
+        vm.startPrank(address(userContract));
+        gasLeftBefore = gasleft();
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
 
         uint256[] memory storedArray = foreignCall.getInternalArrayUint();
         assertEq(storedArray.length, 0);
@@ -198,6 +205,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
      * Test maximum uint256 values in array to test value bounds
      */
     function testRulesEngine_Unit_ForeignCall_MaxUintValues() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory arrayCallingFunction = "func(uint256[])";
         string memory functionSig = "testSigWithArray(uint256[])";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
@@ -220,12 +228,15 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             maxValueArray[i] = type(uint256).max;
         }
 
-        bytes memory vals = abi.encode(maxValueArray);
+        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig, 1);
         bytes[] memory retVals = new bytes[](0);
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(arrayCallingFunction))), maxValueArray);
 
+        // check gas before and after this call, determine what the gas used in this tx is,
+        // compare to a block limit to see if this is above gas limit per block on mainnet
+        vm.startPrank(address(userContract));
         gasLeftBefore = gasleft();
-
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         gasLeftAfter = gasleft();
         gasDelta = gasLeftBefore - gasLeftAfter;
 
