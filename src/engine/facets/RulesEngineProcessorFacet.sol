@@ -968,15 +968,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 if (effect.effectType == EffectTypes.REVERT) {
                     _doRevert(effect.errorMessage);
                 } else if (effect.effectType == EffectTypes.EVENT) {
-                    _buildEvent(
-                        _rule,
-                        _effects[i].dynamicParam,
-                        _policyId,
-                        _effects[i].text,
-                        _effects[i],
-                        _callingFunctionArgs,
-                        isPosEffect
-                    );
+                    _buildEvent(_rule, _effects[i].dynamicParam, _policyId, _effects[i].text, _effects[i], _callingFunctionArgs);
                 } else {
                     _evaluateExpression(_rule, _policyId, _callingFunctionArgs, effect.instructionSet, isPosEffect);
                 }
@@ -999,13 +991,12 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 _policyId,
         bytes32 _message,
         Effect memory _effectStruct,
-        bytes calldata _callingFunctionArgs,
-        bool isPosEffect
+        bytes calldata _callingFunctionArgs
     ) internal {
         // determine if we need to dynamically build event key
         if (_isDynamicParam) {
             // fire event by param type based on return value
-            _fireDynamicEvent(_rule, _policyId, _message, _callingFunctionArgs, isPosEffect);
+            _fireDynamicEvent(_rule, _policyId, _message, _callingFunctionArgs);
         } else {
             _fireEvent(_policyId, _message, _effectStruct);
         }
@@ -1018,19 +1009,13 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _message Event Message String
      * @param _callingFunctionArgs calling function arguments
      */
-    function _fireDynamicEvent(
-        Rule storage _rule,
-        uint256 _policyId,
-        bytes32 _message,
-        bytes calldata _callingFunctionArgs,
-        bool isPosEffect
-    ) internal {
+    function _fireDynamicEvent(Rule storage _rule, uint256 _policyId, bytes32 _message, bytes calldata _callingFunctionArgs) internal {
         // Build the effect arguments struct for event parameters:
         (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(
             _rule,
             _policyId,
             _callingFunctionArgs,
-            isPosEffect ? PlaceholderType.POS_EFFECT : PlaceholderType.NEG_EFFECT
+            PlaceholderType.POS_EFFECT
         );
         // Data validation will always ensure effectArguments.length will be less than MAX_LOOP
         for (uint256 i = 0; i < effectArguments.length; i++) {
