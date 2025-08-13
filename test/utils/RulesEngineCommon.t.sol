@@ -799,7 +799,11 @@ contract RulesEngineCommon is DiamondMine, Test {
         return policyIds[0];
     }
 
-    function _setUpForeignCallWithAlwaysTrueRule(ForeignCall memory fc, string memory callingSignature, string memory fcSignature) public {
+    function _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(
+        ForeignCall memory fc,
+        string memory callingSignature,
+        string memory fcSignature
+    ) public {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
         vm.startPrank(policyAdmin);
