@@ -149,7 +149,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes memory dynamicData,
         ForeignCallEncodedIndex memory mappedTrackerKeyEI,
         uint256 parameterTypesLength
-    ) public returns (bytes memory, uint256, bytes memory) {
+    ) internal returns (bytes memory, uint256, bytes memory) {
         bytes memory mappedTrackerValue;
         ParamTypes typ = lib._getTrackerStorage().trackers[policyId][trackerIndex].trackerKeyType;
 
@@ -221,7 +221,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 lengthToAppend,
         bytes memory dynamicData,
         uint256 i
-    ) public pure returns (bytes memory, uint256, bytes memory) {
+    ) internal pure returns (bytes memory, uint256, bytes memory) {
         uint256 typeSpecificIndex = fc.encodedIndices[i].index;
         bytes32 value = bytes32(functionArguments[typeSpecificIndex * 32:(typeSpecificIndex + 1) * 32]);
         if (argType == ParamTypes.STR || argType == ParamTypes.BYTES) {
@@ -288,7 +288,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 lengthToAppend,
         uint256 i,
         bytes memory dynamicData
-    ) public view returns (bytes memory, uint256, bytes memory) {
+    ) internal view returns (bytes memory, uint256, bytes memory) {
         ParamTypes argType = fc.parameterTypes[i];
         uint256 index = fc.encodedIndices[i].index;
         // Handle global variables separately
@@ -329,7 +329,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes memory value,
         ParamTypes argType,
         uint256 parameterTypesLength
-    ) public pure returns (bytes memory, uint256, bytes memory) {
+    ) internal pure returns (bytes memory, uint256, bytes memory) {
         if (argType == ParamTypes.STR || argType == ParamTypes.BYTES) {
             encodedCall = bytes.concat(encodedCall, bytes32(32 * (parameterTypesLength) + lengthToAppend));
             bytes memory stringData = ProcessorLib._extractStringData(value);
