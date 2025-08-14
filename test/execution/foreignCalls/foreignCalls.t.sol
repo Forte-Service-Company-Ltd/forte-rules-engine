@@ -632,7 +632,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
     }
 
-    function testRulesEngine_Unit_PermissionedForeignCall_UpdatePermissionedFC_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_PermissionedForeignCall_UpdatePermissionedFC() public ifDeploymentTestsEnabled endWithStopPrank {
         // start test as address 0x55556666
         vm.startPrank(address(0x55556666));
         // set the selector from the permissioned foreign call contract
@@ -666,11 +666,11 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         fc.foreignCallIndex = 0;
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
 
-        ForeignCall[] memory foreignCalls = RulesEngineForeignCallFacet(address(red)).getAllForeignCalls(policyId);
-        assertEq(foreignCalls.length, 1, "There should be one foreign call in the policy");
-        assertEq(foreignCalls[0].signature, bytes4(keccak256(bytes("simpleCheck(uint256)"))), "The foreign call signature should match");
-        assertEq(foreignCalls[0].foreignCallAddress, address(pfcContractAddress), "The foreign call address should match");
-        assertEq(foreignCalls[0].foreignCallIndex, 1, "The foreign call index should be 0");
+        ForeignCall[] memory fcs = RulesEngineForeignCallFacet(address(red)).getAllForeignCalls(policyId);
+        assertEq(fcs.length, 1, "There should be one foreign call in the policy");
+        assertEq(fcs[0].signature, bytes4(keccak256(bytes("simpleCheck(uint256)"))), "The foreign call signature should match");
+        assertEq(fcs[0].foreignCallAddress, address(pfcContractAddress), "The foreign call address should match");
+        assertEq(fcs[0].foreignCallIndex, 1, "The foreign call index should be 0");
 
         ForeignCall memory fc2;
         fc2.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -684,15 +684,11 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         fc2.foreignCallIndex = 2;
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc2, "anotherSimpleCheck(uint256)");
 
-        foreignCalls = RulesEngineForeignCallFacet(address(red)).getAllForeignCalls(policyId);
-        assertEq(foreignCalls.length, 2, "There should be two foreign calls in the policy");
-        assertEq(
-            foreignCalls[1].signature,
-            bytes4(keccak256(bytes("anotherSimpleCheck(uint256)"))),
-            "The foreign call signature should match"
-        );
-        assertEq(foreignCalls[1].foreignCallAddress, address(pfcContractAddress), "The foreign call address should match");
-        assertEq(foreignCalls[1].foreignCallIndex, 2, "The foreign call index should be 1");
+        fcs = RulesEngineForeignCallFacet(address(red)).getAllForeignCalls(policyId);
+        assertEq(fcs.length, 2, "There should be two foreign calls in the policy");
+        assertEq(fcs[1].signature, bytes4(keccak256(bytes("anotherSimpleCheck(uint256)"))), "The foreign call signature should match");
+        assertEq(fcs[1].foreignCallAddress, address(pfcContractAddress), "The foreign call address should match");
+        assertEq(fcs[1].foreignCallIndex, 2, "The foreign call index should be 1");
 
         ForeignCall memory fc3;
         fc3.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -711,22 +707,26 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
             fc3
         );
 
-        foreignCalls = RulesEngineForeignCallFacet(address(red)).getAllForeignCalls(policyId);
-        assertEq(foreignCalls.length, 2, "There should still be two foreign calls in the policy after update");
+        fcs = RulesEngineForeignCallFacet(address(red)).getAllForeignCalls(policyId);
+        assertEq(fcs.length, 2, "There should still be two foreign calls in the policy after update");
         assertEq(
-            foreignCalls[0].signature,
+            fcs[0].signature,
             bytes4(keccak256(bytes("aThirdSimpleCheck(uint256)"))),
             "The foreign call signature should match the third call"
         );
-        assertEq(foreignCalls[0].foreignCallAddress, address(0x1234), "The foreign call address should match the third call");
-        assertEq(foreignCalls[0].foreignCallIndex, 1, "The foreign call index should be 1");
-        assertEq(
-            foreignCalls[1].signature,
-            bytes4(keccak256(bytes("anotherSimpleCheck(uint256)"))),
-            "The foreign call signature should match"
+        assertEq(fcs[0].foreignCallAddress, address(0x1234), "The foreign call address should match the third call");
+        assertEq(fcs[0].foreignCallIndex, 1, "The foreign call index should be 1");
+        assertEq(fcs[1].signature, bytes4(keccak256(bytes("anotherSimpleCheck(uint256)"))), "The foreign call signature should match");
+        assertEq(fcs[1].foreignCallAddress, address(pfcContractAddress), "The foreign call address should match");
+        assertEq(fcs[1].foreignCallIndex, 2, "The foreign call index should be 2");
+
+        // Negative path - hit MAX_LOOP require statement
+        vm.expectRevert("Max foreign calls reached");
+        RulesEngineForeignCallFacet(address(red)).updateForeignCall(
+            policyId,
+            10_000, // foreign call index - MAX_LOOP is 10,000
+            fc3
         );
-        assertEq(foreignCalls[1].foreignCallAddress, address(pfcContractAddress), "The foreign call address should match");
-        assertEq(foreignCalls[1].foreignCallIndex, 2, "The foreign call index should be 2");
     }
 
     function testRulesEngine_Unit_PermissionedForeignCall_UpdatePermissionedFC_NewPolicyAdmin_Negative()
