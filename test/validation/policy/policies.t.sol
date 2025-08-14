@@ -512,6 +512,68 @@ abstract contract policies is RulesEngineCommon {
         assertEq(RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(userContractAddress).length, 0);
     }
 
+    function testRulesEngine_Unit_UnapplyPolicyMultipleApplied_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256[] memory policyIds = new uint256[](2);
+        // Create a second and third user contract for the test
+        newUserContract = new ExampleUserContract();
+        newUserContractAddress = address(newUserContract);
+        newUserContract.setRulesEngineAddress(address(red));
+        newUserContract.setCallingContractAdmin(callingContractAdmin);
+        ExampleUserContract userContractC = new ExampleUserContract();
+        address userContractCAddress = address(userContractC);
+        userContractC.setRulesEngineAddress(address(red));
+        userContractC.setCallingContractAdmin(callingContractAdmin);
+
+        uint256 policyId = _createBlankPolicy();
+        bytes4[] memory blankSignatures = new bytes4[](0);
+        uint256[] memory blankFunctionSignatureIds = new uint256[](0);
+        uint256[][] memory blankRuleIds = new uint256[][](0);
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            blankSignatures,
+            blankFunctionSignatureIds,
+            blankRuleIds,
+            PolicyType.OPEN_POLICY,
+            policyName,
+            policyDescription
+        );
+
+        uint256 policyId2 = _createBlankPolicy();
+        bytes4[] memory blankSignatures2 = new bytes4[](0);
+        uint256[] memory blankFunctionSignatureIds2 = new uint256[](0);
+        uint256[][] memory blankRuleIds2 = new uint256[][](0);
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId2,
+            blankSignatures2,
+            blankFunctionSignatureIds2,
+            blankRuleIds2,
+            PolicyType.OPEN_POLICY,
+            policyName,
+            policyDescription
+        );
+        policyIds[0] = policyId;
+        policyIds[1] = policyId2;
+        vm.startPrank(callingContractAdmin);
+        // Apply policies to the user contract A
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds); 
+        policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        // Apply only one policy to a user contract B. 
+        RulesEnginePolicyFacet(address(red)).applyPolicy(newUserContractAddress, policyIds);
+        // Unapply both policies from the user contract A
+        policyIds = new uint256[](2);
+        policyIds[0] = policyId;
+        policyIds[1] = policyId2;
+        RulesEnginePolicyFacet(address(red)).unapplyPolicy(userContractAddress, policyIds);
+        // make sure that all policies were unapplied from user contract A
+        assertEq(RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(userContractAddress).length, 0);
+        // make sure that user contract B's applied policies were not affected.
+        assertEq(RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(newUserContractAddress).length, 1);
+        assertEq(RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(newUserContractAddress)[0],policyId);
+         // make sure that no policies are applied to user contract C
+        assertEq(RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(userContractCAddress).length, 0); 
+    }
+
     function testRulesEngine_Unit_UnapplyPolicy_Multiple_OnlyRemoveOne_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankSignatures = new bytes4[](0);

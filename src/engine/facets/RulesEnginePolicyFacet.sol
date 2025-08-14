@@ -196,10 +196,11 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
             if (!found) data.contractPolicyIdMap[_contractAddress].push(allPolicyIds[i]);
         }
 
-        // Get the currently applied policyIds
-        address[] memory allContracts = data.policyIdContractMap[_policyIds[0]];
         // Loop through the policyId to contract arrays, clear them and add back only the correct addresses
         for (uint256 i = 0; i < _policyIds.length; i++) {
+            // Get the currently applied policyIds
+            address[] memory allContracts = data.policyIdContractMap[_policyIds[i]];
+
             // Blow away the policyId to contract association data in order to keep the associated id's array length in line with the amount of contracts associated.
             delete data.policyIdContractMap[_policyIds[i]];
             for (uint256 j = 0; j < allContracts.length; j++) {
