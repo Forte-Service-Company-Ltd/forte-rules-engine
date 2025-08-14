@@ -34,7 +34,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         // Step 2: Store tracker data without mapping
         _storeTrackerData(policyId, trackerIndex, tracker);
         // Step 3: Store tracker metadata
-        _storeTrackerMetadata(policyId, trackerIndex, trackerName);
+        _storeTrackerMetadata(policyId, trackerIndex, trackerName, tracker.trackerValue);
         // Emit event
         emit TrackerCreated(policyId, trackerIndex);
 
@@ -67,7 +67,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
             _storeTrackerData(policyId, trackerIndex, tracker, trackerKeys[i], trackerValues[i]);
         }
         // Step 3: Store tracker metadata
-        _storeTrackerMetadata(policyId, trackerIndex, trackerName);
+        _storeMappedTrackerMetadata(policyId, trackerIndex, trackerName, trackerKeys, trackerValues);
         // return the final tracker index and the created tracker array
         return trackerIndex;
     }
@@ -138,9 +138,32 @@ contract RulesEngineComponentFacet is FacetCommonImports {
      * @param _trackerIndex The index of the tracker
      * @param _trackerName Name of the tracker
      */
-    function _storeTrackerMetadata(uint256 _policyId, uint256 _trackerIndex, string calldata _trackerName) internal {
+    function _storeTrackerMetadata(
+        uint256 _policyId,
+        uint256 _trackerIndex,
+        string calldata _trackerName,
+        bytes calldata initialValue
+    ) internal {
         require(keccak256(bytes(_trackerName)) != EMPTY_STRING_HASH, NAME_REQ);
-        lib._getTrackerMetadataStorage().trackerMetadata[_policyId][_trackerIndex] = _trackerName;
+        TrackerMetadataStruct memory struc;
+        struc.trackerName = _trackerName;
+        struc.initialValue = initialValue;
+        lib._getTrackerMetadataStorage().trackerMetadata[_policyId][_trackerIndex] = struc;
+    }
+
+    function _storeMappedTrackerMetadata(
+        uint256 _policyId,
+        uint256 _trackerIndex,
+        string calldata _trackerName,
+        bytes[] calldata initialKeys,
+        bytes[] calldata initialValues
+    ) internal {
+        require(keccak256(bytes(_trackerName)) != EMPTY_STRING_HASH, NAME_REQ);
+        TrackerMetadataStruct memory struc;
+        struc.trackerName = _trackerName;
+        struc.initialKeys = initialKeys;
+        struc.initialValues = initialValues;
+        lib._getTrackerMetadataStorage().trackerMetadata[_policyId][_trackerIndex] = struc;
     }
 
     /**
@@ -204,7 +227,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
      * @param trackerId The identifier for the tracker
      * @return the metadata for the tracker
      */
-    function getTrackerMetadata(uint256 policyId, uint256 trackerId) public view returns (string memory) {
+    function getTrackerMetadata(uint256 policyId, uint256 trackerId) public view returns (TrackerMetadataStruct memory) {
         return lib._getTrackerMetadataStorage().trackerMetadata[policyId][trackerId];
     }
 

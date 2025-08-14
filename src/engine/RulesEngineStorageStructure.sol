@@ -151,8 +151,15 @@ struct ForeignCallMetadataStruct {
 /**
  * Structure used to hold the metadata for trackers
  */
+struct TrackerMetadataMappingStruct {
+    mapping(uint256 policyId => mapping(uint256 trackerIndex => TrackerMetadataStruct)) trackerMetadata;
+}
+
 struct TrackerMetadataStruct {
-    mapping(uint256 policyId => mapping(uint256 trackerIndex => string)) trackerMetadata;
+    string trackerName;
+    bytes initialValue;
+    bytes[] initialKeys;
+    bytes[] initialValues;
 }
 
 /**
@@ -212,6 +219,8 @@ struct ForeignCall {
     ForeignCallEncodedIndex[] encodedIndices;
     // Tracks the index of the arguments that are mapped to a tracker
     ForeignCallEncodedIndex[] mappedTrackerKeyIndices;
+    // Index of the Calling Function this foreign call is tied to
+    uint256 callingFunctionIndex;
 }
 
 /**

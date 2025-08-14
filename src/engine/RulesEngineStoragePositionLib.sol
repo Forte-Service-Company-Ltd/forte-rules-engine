@@ -92,7 +92,7 @@ library RulesEngineStoragePositionLib {
      * @dev Uses a fixed storage slot to avoid conflicts with other contracts.
      * @return _ds The storage structure for the tracker metadata map.
      */
-    function _getTrackerMetadataStorage() internal pure returns (TrackerMetadataStruct storage _ds) {
+    function _getTrackerMetadataStorage() internal pure returns (TrackerMetadataMappingStruct storage _ds) {
         bytes32 position = TRACKER_METADATA_POSITION;
         assembly {
             _ds.slot := position
