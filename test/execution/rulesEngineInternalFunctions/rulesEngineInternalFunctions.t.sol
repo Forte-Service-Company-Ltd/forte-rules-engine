@@ -1251,7 +1251,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         assertEq(resultArray.length, 0, "Internal array should be empty");
     }
 
-    function testRulesEngine_Unit_EncodingForeignCallReturningAddress() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_EncodingForeignCallReturningAddressSingle() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory callingFuncSig = "func()";
         string memory functionSig = "getDecodedAddr()";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
@@ -1266,26 +1267,18 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.parameterTypes = new ParamTypes[](0); // No parameters
         fc.returnType = ParamTypes.ADDR; // Returning address
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))));
 
-        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
-
-        bytes memory vals = abi.encode(); // No parameters
-        bytes[] memory retVals = new bytes[](0);
-
-        ForeignCallReturnValue memory result;
-        // = // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
-        //     fc,
-        //     vals,
-        //     retVals,
-        //     typeSpecificIndices,
-        //     1
-        // );
-
-        assertEq(uint256(result.pType), uint256(ParamTypes.ADDR));
-
-        // Decode the returned address and verify it matches expected
-        address returnedAddress = abi.decode(result.value, (address));
-        assertEq(returnedAddress, testAddress);
+        _setUpForeignCallAndCompareAgainstExpected(fc, callingFuncSig, functionSig, ParamTypes.ADDR, uint(uint160(testAddress)));
+        // This does NOT revert - it will execute but the foreign call will fail gracefully
+        vm.startPrank(address(userContract));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+        // we make sure that the check is being executed correctly by checking that it reverts if the expected address is different to what's received
+        // so we change what the foreign call returns to provoke the rule's failure
+        foreignCall.testSig(address(0xbad));
+        vm.startPrank(address(userContract));
+        vm.expectRevert("Rules Engine Revert");
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
     function testRulesEngine_Unit_EncodingForeignCallReturningString() public ifDeploymentTestsEnabled endWithStopPrank {
