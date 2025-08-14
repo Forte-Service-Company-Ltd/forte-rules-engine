@@ -899,7 +899,6 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, fcSignature);
 
-        rule.instructionSet = _createInstructionSet();
         rule.placeHolders = new Placeholder[](1);
         rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
         rule.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);

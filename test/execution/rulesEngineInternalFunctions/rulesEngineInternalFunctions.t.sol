@@ -1281,7 +1281,17 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
-    function testRulesEngine_Unit_EncodingForeignCallReturningString() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Fuzz_EncodingForeignCallReturningString(uint param) public ifDeploymentTestsEnabled endWithStopPrank {
+        param = bound(param, 0, 5);
+        param *= 11; // param can be either 0, 11, 22, 33, 44, and 55
+        bytes memory expectedReturnedValue;
+        string memory rawReturnedValue; // the internal representation of a string in Solidity forces us to store it as a string, then encode it
+        if (param == 44) rawReturnedValue = "forty-four";
+        else if (param == 0) rawReturnedValue = "zero";
+        else rawReturnedValue = "other";
+        expectedReturnedValue = abi.encode(rawReturnedValue); // encode the string to match the expected byte array format so the hashed values match
+
+        string memory callingFuncSig = "func(uint256)";
         string memory functionSig = "testSigReturningString(uint256)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         ForeignCall memory fc;
@@ -1298,46 +1308,26 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         typeSpecificIndices[0].index = 0;
         typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        bytes[] memory retVals = new bytes[](0);
-
-        bytes memory vals1 = abi.encode(44);
-        ForeignCallReturnValue memory result1;
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
-        //     fc,
-        //     vals1,
-        //     retVals,
-        //     typeSpecificIndices,
-        //     1
-        // );
-        assertEq(uint256(result1.pType), uint256(ParamTypes.STR));
-        string memory returnedString1 = abi.decode(result1.value, (string));
-        assertEq(returnedString1, "forty-four");
-
-        bytes memory vals2 = abi.encode(0);
-        ForeignCallReturnValue memory result2;
-        // = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
-        //     fc,
-        //     vals2,
-        //     retVals,
-        //     typeSpecificIndices,
-        //     1
-        // );
-        assertEq(uint256(result2.pType), uint256(ParamTypes.STR));
-        string memory returnedString2 = abi.decode(result2.value, (string));
-        assertEq(returnedString2, "zero");
-
-        bytes memory vals3 = abi.encode(1337);
-        ForeignCallReturnValue memory result3;
-        // = RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
-        //     fc,
-        //     vals3,
-        //     retVals,
-        //     typeSpecificIndices,
-        //     1
-        // );
-        assertEq(uint256(result3.pType), uint256(ParamTypes.STR));
-        string memory returnedString3 = abi.decode(result3.value, (string));
-        assertEq(returnedString3, "other");
+        _setUpForeignCallAndCompareAgainstExpected(
+            fc,
+            callingFuncSig,
+            functionSig,
+            ParamTypes.UINT,
+            uint(keccak256(expectedReturnedValue))
+        );
+        // we make sure that the bad argument is different from the expected one (the "other" case makes this a bit complicated)
+        bytes memory badArguments = abi.encodeWithSelector(
+            bytes4(keccak256(bytes(callingFuncSig))), // the function selector
+            (param != 0 && param != 44) ? 44 : param + 1 // this makes sure that the returned value is always different from the expected
+        );
+        // the good argument is just the param
+        bytes memory goodArguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))), param);
+        vm.startPrank(address(userContract));
+        // negative case
+        vm.expectRevert("Rules Engine Revert");
+        RulesEngineProcessorFacet(address(red)).checkPolicies(badArguments);
+        // positive case
+        RulesEngineProcessorFacet(address(red)).checkPolicies(goodArguments);
     }
 
     function testRulesEngine_Unit_EncodingForeignCallReturningUintArray() public ifDeploymentTestsEnabled endWithStopPrank {
