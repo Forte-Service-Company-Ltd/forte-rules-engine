@@ -308,7 +308,7 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
      * @param newForeignCallContractAdmin address of new admin.
      */
     function proposeNewForeignCallAdmin(address foreignCallContract, address newForeignCallContractAdmin, bytes4 functionSignature) public {
-        if (!isCallingContractAdmin(foreignCallContract, msg.sender)) revert(NOT_FOREIGN_CALL_ADMIN);
+        if (!isForeignCallAdmin(foreignCallContract, msg.sender, functionSignature)) revert(NOT_FOREIGN_CALL_ADMIN);
         if (newForeignCallContractAdmin == address(0)) revert(ZERO_ADDRESS);
         // grant proposed role to new admin address
         _grantRole(

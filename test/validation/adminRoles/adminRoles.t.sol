@@ -468,6 +468,53 @@ abstract contract adminRoles is RulesEngineCommon {
         RulesEngineAdminRolesFacet(address(red)).grantForeignCallAdminRole(pfcContractAddress, address(0x00), foreignCallSelector);
     }
 
+    function testRulesEngine_Uint_ProposeNewForeignCallAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
+        // start test as address 0x55556666
+        vm.startPrank(address(0x55556666));
+        // set the selector from the permissioned foreign call contract
+        bytes4 foreignCallSelector = PermissionedForeignCallTestContract.simpleCheck.selector;
+        permissionedForeignCallContract.setForeignCallAdmin(address(0x55556666), foreignCallSelector);
+        assertTrue(
+            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
+                address(permissionedForeignCallContract),
+                address(0x55556666),
+                foreignCallSelector
+            )
+        );
+
+        // propose a new foreign call admin
+        vm.expectEmit(true, true, true, true);
+        emit ForeignCallAdminRoleProposed(address(permissionedForeignCallContract), address(0x66667777));
+        RulesEngineAdminRolesFacet(address(red)).proposeNewForeignCallAdmin(
+            address(permissionedForeignCallContract),
+            address(0x66667777),
+            foreignCallSelector
+        );
+
+        // confirm the new foreign call admin
+        vm.stopPrank();
+        vm.startPrank(address(0x66667777));
+        RulesEngineAdminRolesFacet(address(red)).confirmNewForeignCallAdmin(address(permissionedForeignCallContract), foreignCallSelector);
+
+        // confirm the old foreign call admin no longer has admin rights
+        assertFalse(
+            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
+                address(permissionedForeignCallContract),
+                address(0x55556666),
+                foreignCallSelector
+            )
+        );
+
+        // confirm the new foreign call admin has admin rights
+        assertTrue(
+            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
+                address(permissionedForeignCallContract),
+                address(0x66667777),
+                foreignCallSelector
+            )
+        );
+    }
+
     function testRulesEngine_Unit_ForeignCallAdmin_ListMagangement() public ifDeploymentTestsEnabled {
         /**
         // For a given Foreign contract and selector pair, the Foreign Call Admin 
