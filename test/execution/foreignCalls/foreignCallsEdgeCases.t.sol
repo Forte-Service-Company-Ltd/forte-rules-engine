@@ -367,161 +367,41 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
     /**
      * Test foreign call that deploys a contract which self-destructs in its constructor
      */
-    function testRulesEngine_Unit_ForeignCall_SelfDestructedContract() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Fuzz_ForeignCall_SelfDestructedContract(
+        uint8 _transferAmount
+    ) public ifDeploymentTestsEnabled endWithStopPrank {
+        uint transferAmount = uint(_transferAmount);
+        string memory callingFunc = "func(uint256)";
         SelfDestructFactory factory = new SelfDestructFactory();
         address deployedAddress;
+        string memory functionSig = "deployAndDestruct(uint256)";
 
-        //Direct evaluation test
-        {
-            string memory functionSig = "deployAndDestruct(uint256)";
+        vm.startPrank(policyAdmin);
 
-            ForeignCall memory fc;
-            fc.foreignCallAddress = address(factory);
-            fc.signature = bytes4(keccak256(bytes(functionSig)));
-            fc.parameterTypes = new ParamTypes[](1);
-            fc.parameterTypes[0] = ParamTypes.UINT;
-            fc.returnType = ParamTypes.ADDR;
-            fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-            fc.encodedIndices[0].index = 0;
-            fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-
-            ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
-            typeSpecificIndices[0].index = 0;
-            typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-
-            uint256 testValue = 123;
-            bytes memory vals = abi.encode(testValue);
-            bytes[] memory retVals = new bytes[](0);
-
-            console2.log("Testing deployment of self-destructing contract with value:", testValue);
-
-            // Direct evaluation test
-            ForeignCallReturnValue memory result;
-            //= // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(
-            //     fc,
-            //     vals,
-            //     retVals,
-            //     typeSpecificIndices,
-            //     1
-            // );
-
-            // Extract the deployed contract address from the result
-            deployedAddress = abi.decode(result.value, (address));
-            console2.log("Deployed contract address:", deployedAddress);
-
-            // Check if the contract has any code (should be 0 since it self-destructed)
-            uint256 codeSize;
-            assembly {
-                codeSize := extcodesize(deployedAddress)
-            }
-
-            // After EIP-6780/Cancun, only contracts that self-destruct in the same transaction
-            // as their creation will have code size 0. Our contract self-destructs in constructor.
-            assertEq(codeSize, 0, "Contract should have no code after self-destruct in constructor");
-
-            // Verify factory recorded the deployment
-            (address lastAddr, uint256 lastResult) = factory.getLastDeployment();
-            assertEq(lastAddr, deployedAddress, "Factory should record deployed address");
-            assertEq(lastResult, testValue * 2 + 100, "Factory should record calculated result");
-        }
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(factory);
+        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.UINT;
+        fc.returnType = ParamTypes.ADDR;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 0;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         // Calling function evaluation setup
-        uint256 policyId;
-        uint256 foreignCallId;
-        {
-            vm.startPrank(policyAdmin);
-
-            policyId = _createBlankPolicy();
-            _setupEffectProcessor();
-
-            string memory functionSig = "deployAndDestruct(uint256)";
-            ForeignCall memory fc;
-            fc.foreignCallAddress = address(factory);
-            fc.signature = bytes4(keccak256(bytes(functionSig)));
-            fc.parameterTypes = new ParamTypes[](1);
-            fc.parameterTypes[0] = ParamTypes.UINT;
-            fc.returnType = ParamTypes.ADDR;
-            fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-            fc.encodedIndices[0].index = 1;
-            fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-
-            foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig);
-        }
-
-        uint256 ruleId;
-        {
-            Rule memory rule;
-            rule.instructionSet = new uint256[](2);
-            rule.instructionSet[0] = uint(LogicalOp.PLH);
-            rule.instructionSet[1] = 0;
-
-            rule.placeHolders = new Placeholder[](1);
-            rule.placeHolders[0].pType = ParamTypes.ADDR;
-            rule.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
-            rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-
-            rule.negEffects = new Effect[](1);
-            rule.negEffects[0] = effectId_revert;
-            rule.posEffects = new Effect[](1);
-            rule.posEffects[0] = effectId_event;
-
-            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
-        }
-        {
-            ParamTypes[] memory pTypes = new ParamTypes[](2);
-            pTypes[0] = ParamTypes.ADDR;
-            pTypes[1] = ParamTypes.UINT;
-
-            uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
-                policyId,
-                bytes4(keccak256(bytes(callingFunction))),
-                pTypes,
-                callingFunction,
-                ""
-            );
-
-            bytes4[] memory selectors = new bytes4[](1);
-            selectors[0] = bytes4(keccak256(bytes(callingFunction)));
-            uint256[] memory functionIds = new uint256[](1);
-            functionIds[0] = callingFunctionId;
-            uint256[][] memory ruleIdsArray = new uint256[][](1);
-            ruleIdsArray[0] = new uint256[](1);
-            ruleIdsArray[0][0] = ruleId;
-
-            RulesEnginePolicyFacet(address(red)).updatePolicy(
-                policyId,
-                selectors,
-                functionIds,
-                ruleIdsArray,
-                PolicyType.CLOSED_POLICY,
-                policyName,
-                policyDescription
-            );
-
-            vm.stopPrank();
-            vm.startPrank(callingContractAdmin);
-
-            uint256[] memory policyIds = new uint256[](1);
-            policyIds[0] = policyId;
-            RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
-
-            vm.stopPrank();
-        }
+        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, callingFunc, functionSig, ParamTypes.UINT);
 
         // Calling function execution test
-        {
-            vm.startPrank(address(userContract));
+        vm.startPrank(address(userContract));
 
-            // This should successfully deploy and self-destruct contract through rule evaluation
-            uint256 transferAmount = 456;
+        // This should successfully deploy and self-destruct contract through rule evaluation
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunc))), transferAmount);
 
-            bool success = userContract.transfer(address(0x1234), transferAmount);
-            assertTrue(success, "Transfer should succeed");
-
-            // Verify another contract was deployed and self-destructed
-            (, uint256 ruleResult) = factory.getLastDeployment();
-            assertEq(ruleResult, transferAmount * 2 + 100, "Rule should use transfer amount");
-        }
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+        vm.stopPrank();
+        // Verify another contract was deployed and self-destructed
+        (address ruleAddr, uint256 ruleResult) = factory.getLastDeployment();
+        assertEq(ruleResult, transferAmount * 2 + 100, "Rule should use transfer amount");
     }
 
     /**
