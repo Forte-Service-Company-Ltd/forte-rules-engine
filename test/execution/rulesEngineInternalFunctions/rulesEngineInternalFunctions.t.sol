@@ -10,7 +10,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
     ////////Encoding tests
 
-    function testRulesEngine_Unit_EncodingForeignCallUint() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_EncodingForeignCallUintSimple() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory callingFuncSig = "func(uint256)";
         string memory functionSig = "testSig(uint256)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
@@ -22,16 +23,20 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
-        typeSpecificIndices[0].index = 0;
-        typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, callingFuncSig, functionSig, ParamTypes.UINT);
         bytes memory vals = abi.encode(1);
         bytes[] memory retVals = new bytes[](0);
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))), 1);
+
+        vm.startPrank(address(userContract));
+
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         assertEq(foreignCall.getDecodedIntOne(), 1);
     }
 
     function testRulesEngine_Unit_EncodingForeignCallUintWithRetVals() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory callingFuncSig = "func(uint256)";
         string memory functionSig = "testSig(uint256)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
@@ -41,16 +46,17 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-        fc.encodedIndices[0].index = 1;
-        fc.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
-        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
-        typeSpecificIndices[0].index = 1;
-        typeSpecificIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
-        bytes memory vals = abi.encode(1);
-        bytes[] memory retVals = new bytes[](1);
-        retVals[0] = abi.encode(4);
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
-        assertEq(foreignCall.getDecodedIntOne(), 4);
+        fc.encodedIndices[0].index = 0;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        uint testValue = 4;
+        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, callingFuncSig, functionSig, ParamTypes.UINT);
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))), testValue);
+
+        vm.startPrank(address(userContract));
+
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+        assertEq(foreignCall.getDecodedIntOne(), testValue);
     }
 
     function testRulesEngine_Unit_EncodingForeignCallTwoUint() public ifDeploymentTestsEnabled endWithStopPrank {
