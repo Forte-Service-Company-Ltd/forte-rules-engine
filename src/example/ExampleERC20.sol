@@ -83,7 +83,7 @@ contract ExampleERC20 is ERC20, ERC20Burnable, ReentrancyGuard, RulesEngineClien
         virtual
         override
         nonReentrant
-        checksPoliciesERC20TransferFromBefore(from, to, amount, balanceOf(msg.sender), balanceOf(to), block.timestamp)
+        checksPoliciesERC20TransferFromBefore(from, to, amount, balanceOf(from), balanceOf(to), block.timestamp)
         returns (bool)
     {
         address spender = _msgSender();

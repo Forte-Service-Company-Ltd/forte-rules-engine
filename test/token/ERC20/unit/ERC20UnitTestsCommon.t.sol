@@ -87,6 +87,32 @@ abstract contract ERC20UnitTestsCommon is RulesEngineCommon {
         assertTrue(response);
     }
 
+    function testERC20_TransferFrom_Unit_BalanceFromLessThan100() public ifDeploymentTestsEnabled endWithStopPrank {
+        // set up the ERC20 with a balance that will test both positive and negative paths
+        userContractERC20.mint(USER_ADDRESS, 110);
+        ParamTypes[] memory pTypes = new ParamTypes[](7);
+        pTypes[0] = ParamTypes.ADDR; // _from
+        pTypes[1] = ParamTypes.ADDR; // _to
+        pTypes[2] = ParamTypes.UINT; // _value (amount)
+        pTypes[3] = ParamTypes.ADDR; // msg.sender
+        pTypes[4] = ParamTypes.UINT; // _balanceFrom - THIS is what we want to check
+        pTypes[5] = ParamTypes.UINT; // _balanceTo
+        pTypes[6] = ParamTypes.UINT; // _blockTime
+        _setupRuleWithRevertTransferFromBalanceCheck(ERC20_TRANSFER_FROM_SIGNATURE, pTypes);
+        vm.startPrank(USER_ADDRESS);
+        userContractERC20.approve(USER_ADDRESS, 50);
+
+        // Positive path: First transferFrom should succeed (balanceFrom 110 >= 100)
+        vm.expectEmit(true, true, false, false);
+        emit RulesEngineEvent(1, EVENTTEXT, event_text);
+        bool response = userContractERC20.transferFrom(USER_ADDRESS, address(0x7654321), 20);
+        assertTrue(response);
+
+        // Negative path: Second transferFrom should revert (balanceFrom 90 < 100)
+        vm.expectRevert(abi.encodePacked(revert_text));
+        userContractERC20.transferFrom(USER_ADDRESS, address(0x7654321), 10);
+    }
+
     function testERC20_Mint_Unit_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
         ParamTypes[] memory pTypes = new ParamTypes[](3);
         pTypes[0] = ParamTypes.ADDR;
@@ -180,6 +206,31 @@ abstract contract ERC20UnitTestsCommon is RulesEngineCommon {
         return _policyId;
     }
 
+    function _setupRuleWithRevertTransferFromBalanceCheck(
+        string memory _callingFunction,
+        ParamTypes[] memory pTypes
+    ) public ifDeploymentTestsEnabled endWithStopPrank resetsGlobalVariables {
+        uint256[] memory policyIds = new uint256[](1);
+
+        policyIds[0] = _createBlankPolicyOpen();
+
+        _addCallingFunctionToPolicyOpen(policyIds[0], bytes4(keccak256(bytes(_callingFunction))), pTypes, _callingFunction);
+
+        // Rule: balanceFrom >= 100 -> allow (positive), balanceFrom < 100 -> revert (negative)
+        Rule memory rule = _createGTEQRuleTransferFromBalanceCheck(100);
+        rule.posEffects[0] = effectId_event; // TRUE condition (balance >= 100) → allow with event
+        rule.negEffects[0] = effectId_revert; // FALSE condition (balance < 100) → revert
+        // Save the rule
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyIds[0], 0, rule, ruleName, ruleDescription);
+
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = ruleId;
+        _addRuleIdsToPolicyOpen(policyIds[0], ruleIds);
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractERC20Address, policyIds);
+    }
+
     function _createGTRuleTransferFrom(uint256 _amount) public returns (Rule memory) {
         // Rule: amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule;
@@ -198,6 +249,30 @@ abstract contract ERC20UnitTestsCommon is RulesEngineCommon {
         rule.placeHolders = new Placeholder[](1);
         rule.placeHolders[0].pType = ParamTypes.UINT;
         rule.placeHolders[0].typeSpecificIndex = 2;
+        // Add a negative/positive effects
+        rule.negEffects = new Effect[](1);
+        rule.posEffects = new Effect[](1);
+        return rule;
+    }
+
+    function _createGTEQRuleTransferFromBalanceCheck(uint256 _balanceThreshold) public returns (Rule memory) {
+        // Rule: balanceFrom >= _balanceThreshold -> allow (positive effect), else revert (negative effect)
+        Rule memory rule;
+        // Set up some effects.
+        _setupEffectProcessor();
+        // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, _balanceThreshold, LogicalOp.GTEQL, 0, 1
+        uint256[] memory instructionSet = new uint256[](7);
+        instructionSet[0] = uint(LogicalOp.PLH);
+        instructionSet[1] = 0;
+        instructionSet[2] = uint(LogicalOp.NUM);
+        instructionSet[3] = _balanceThreshold;
+        instructionSet[4] = uint(LogicalOp.GTEQL);
+        instructionSet[5] = 0;
+        instructionSet[6] = 1;
+        rule.instructionSet = instructionSet;
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].pType = ParamTypes.UINT;
+        rule.placeHolders[0].typeSpecificIndex = 4; // balanceFrom is the second UINT parameter
         // Add a negative/positive effects
         rule.negEffects = new Effect[](1);
         rule.posEffects = new Effect[](1);
