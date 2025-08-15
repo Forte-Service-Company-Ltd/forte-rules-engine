@@ -200,6 +200,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         bytes memory _trackerKey,
         bytes calldata _trackerValue
     ) internal {
+        require(_trackerIndex < MAX_LOOP, MAX_TRACKERS);
         _tracker.mapped = true;
         _tracker.set = true;
         _tracker.trackerIndex = _trackerIndex;
