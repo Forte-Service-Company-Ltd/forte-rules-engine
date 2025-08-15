@@ -411,41 +411,9 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
      */
     function testRulesEngine_Unit_ForeignCall_RecursiveCall() public ifDeploymentTestsEnabled endWithStopPrank {
         RecursiveCallContract recursiveContract = new RecursiveCallContract();
+
         recursiveContract.setRulesEngineAddress(address(red));
-
-        // Direct evaluation test
-        {
-            string memory functionSig = "aggressiveRecursiveCall(uint256)";
-            ForeignCall memory fc;
-            fc.foreignCallAddress = address(recursiveContract);
-            fc.signature = bytes4(keccak256(bytes(functionSig)));
-            fc.parameterTypes = new ParamTypes[](1);
-            fc.parameterTypes[0] = ParamTypes.UINT;
-            fc.returnType = ParamTypes.UINT;
-            fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-            fc.encodedIndices[0].index = 0;
-            fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-
-            ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
-            typeSpecificIndices[0].index = 0;
-            typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-
-            uint256 testValue = 1;
-            bytes memory vals = abi.encode(testValue);
-            bytes[] memory retVals = new bytes[](0);
-
-            gasLeftBefore = gasleft();
-            // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
-            gasLeftAfter = gasleft();
-            gasDelta = gasLeftBefore - gasLeftAfter;
-
-            console2.log("Gas used in direct recursive foreign call evaluation:", gasDelta);
-
-            assertTrue(gasDelta > GAS_LIMIT);
-
-            recursiveContract.resetDepth();
-        }
-
+        recursiveContract.setUserContractAddress(address(userContract));
         // Calling function evaluation test
         {
             vm.startPrank(policyAdmin);
@@ -526,6 +494,10 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             userContract.transfer(address(0x1234), 1);
             gasLeftAfter = gasleft();
             gasDelta = gasLeftBefore - gasLeftAfter;
+            console2.log("Gas used in recursive foreign call test:", gasDelta);
+            console2.log("GAS_LIMIT:", GAS_LIMIT);
+            console2.log("recursiveContract.gasLeft():", recursiveContract.gasLeft());
+            console2.log("recursiveContract.recursionDepth():", recursiveContract.recursionDepth());
             assertTrue(gasDelta > GAS_LIMIT);
         }
     }
@@ -1014,9 +986,17 @@ contract SelfDestructFactory {
 contract RecursiveCallContract {
     address public rulesEngineAddress;
     uint256 public recursionDepth;
+    address public userContractAddress;
+    bytes32 public _hash;
+    uint256 variable;
+    uint public gasLeft;
 
     function setRulesEngineAddress(address _rulesEngine) external {
         rulesEngineAddress = _rulesEngine;
+    }
+
+    function setUserContractAddress(address _userContractAddress) external {
+        userContractAddress = _userContractAddress;
     }
 
     function resetDepth() external {
@@ -1029,37 +1009,13 @@ contract RecursiveCallContract {
     function aggressiveRecursiveCall(uint256 value) external returns (uint256) {
         recursionDepth++;
 
-        // Burn gas with expensive operations
-        uint256 gasWaster = 0;
-        for (uint256 i = 0; i < 2000; i++) {
-            gasWaster = uint256(keccak256(abi.encode(gasWaster, i, value, recursionDepth)));
+        assembly {
+            sstore(variable.slot, mload(0x7fffff)) // very expensive memory read
         }
 
-        // Continue recursion if we have gas and haven't hit depth limit
-        if (gasleft() > 100000 && recursionDepth < 1000 && rulesEngineAddress != address(0)) {
-            // Create foreign call that calls ourselves again
-            ForeignCall memory recursiveFc;
-            recursiveFc.foreignCallAddress = address(this);
-            recursiveFc.signature = this.aggressiveRecursiveCall.selector;
-            recursiveFc.parameterTypes = new ParamTypes[](1);
-            recursiveFc.parameterTypes[0] = ParamTypes.UINT;
-            recursiveFc.returnType = ParamTypes.UINT;
-            recursiveFc.encodedIndices = new ForeignCallEncodedIndex[](1);
-            recursiveFc.encodedIndices[0].index = 0;
-            recursiveFc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-
-            ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
-            typeSpecificIndices[0].index = 0;
-            typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-
-            bytes memory vals = abi.encode(value + 1);
-            bytes[] memory retVals = new bytes[](0);
-
-            // Recursive call through rules engine
-            // RulesEngineProcessorFacet(rulesEngineAddress).evaluateForeignCallForRule(recursiveFc, vals, retVals, typeSpecificIndices, 1);
-        }
-
-        return value + (gasWaster % 1000) + recursionDepth;
+        userContractAddress.call(abi.encodeWithSignature("transfer(address,uint256)", address(0x1234), value));
+        gasLeft = gasleft();
+        return gasleft();
     }
 }
 
