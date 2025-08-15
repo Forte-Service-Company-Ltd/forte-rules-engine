@@ -518,21 +518,6 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
-        typeSpecificIndices[0].index = 0;
-        typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-
-        uint256 testValue = 99;
-        bytes memory vals = abi.encode(testValue);
-        bytes[] memory retVals = new bytes[](0);
-
-        // Direct evaluation test
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
-
-        // Verify the function actually executed
-        assertEq(foreignCall.getDecodedIntOne(), 99);
-
-        // Now test through rule evaluation
         vm.startPrank(policyAdmin);
 
         uint256 policyId = _createBlankPolicy();
@@ -622,16 +607,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
-        typeSpecificIndices[0].index = 0;
-        typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-
         string memory testString = "malformed_test";
-        bytes memory vals = abi.encode(testString);
-        bytes[] memory retVals = new bytes[](0);
-
-        // Direct evaluation test - handles type mismatch gracefully with silent revert
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
 
         // Now test through rule evaluation
         vm.startPrank(policyAdmin);
@@ -730,17 +706,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
-        typeSpecificIndices[0].index = 0;
-        typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-
         // Use a depth that approaches but doesn't exceed EVM limits
         uint256 depth = 500; // Should be safe but deep
-        bytes memory vals = abi.encode(depth);
-        bytes[] memory retVals = new bytes[](0);
-
-        // Direct evaluation test - handles deep call stacks appropriately
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
 
         // Now test through rule evaluation
         vm.startPrank(policyAdmin);
@@ -810,7 +777,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         vm.startPrank(address(userContract));
 
         // handles deep call stacks through rule evaluation
-        userContract.transfer(address(0x1234), 500);
+        userContract.transfer(address(0x1234), depth);
     }
 
     /**
@@ -831,17 +798,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
-        typeSpecificIndices[0].index = 0;
-        typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-
         // Pass string data
         string memory wrongTypeData = "this_should_be_uint256";
-        bytes memory vals = abi.encode(wrongTypeData);
-        bytes[] memory retVals = new bytes[](0);
-
-        // Direct evaluation test - handles parameter type mismatches gracefully with silent revert
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
 
         // test through rule evaluation
         vm.startPrank(policyAdmin);
