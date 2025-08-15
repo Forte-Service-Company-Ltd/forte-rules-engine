@@ -88,6 +88,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
     }
 
     function testRulesEngine_Unit_EncodingForeignCallTwoUintWithRetVals() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory callingFuncSig = "func(uint256,uint256)";
         string memory functionSig = "testSig(uint256,uint256)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
@@ -98,20 +99,18 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.parameterTypes[1] = ParamTypes.UINT;
         fc.encodedIndices = new ForeignCallEncodedIndex[](2);
-        fc.encodedIndices[0].index = 1;
-        fc.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
-        fc.encodedIndices[1].index = 2;
-        fc.encodedIndices[1].eType = EncodedIndexType.FOREIGN_CALL;
-        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](2);
-        typeSpecificIndices[0].index = 1;
-        typeSpecificIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
-        typeSpecificIndices[1].index = 2;
-        typeSpecificIndices[1].eType = EncodedIndexType.FOREIGN_CALL;
-        bytes memory vals = abi.encode(1, 2);
-        bytes[] memory retVals = new bytes[](2);
-        retVals[0] = abi.encode(4);
-        retVals[1] = abi.encode(3);
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
+        fc.encodedIndices[0].index = 0;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+        fc.encodedIndices[1].index = 1;
+        fc.encodedIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
+
+        uint testValue = 4;
+        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, callingFuncSig, functionSig, ParamTypes.UINT);
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))), testValue, testValue - 1);
+
+        vm.startPrank(address(userContract));
+
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         assertEq(foreignCall.getDecodedIntOne(), 4);
         assertEq(foreignCall.getDecodedIntTwo(), 3);
     }
