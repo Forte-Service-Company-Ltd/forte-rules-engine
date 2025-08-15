@@ -59,7 +59,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         assertEq(foreignCall.getDecodedIntOne(), testValue);
     }
 
-    function testRulesEngine_Unit_EncodingForeignCallTwoUint() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_EncodingForeignCallTwoUintSimple() public ifDeploymentTestsEnabled endWithStopPrank {
+        string memory callingFuncSig = "func(uint256,uint256)";
         string memory functionSig = "testSig(uint256,uint256)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
@@ -74,16 +75,16 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.encodedIndices[1].index = 1;
         fc.encodedIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
-        ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](2);
-        typeSpecificIndices[0].index = 0;
-        typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-        typeSpecificIndices[1].index = 1;
-        typeSpecificIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
-        bytes memory vals = abi.encode(1, 2);
-        bytes[] memory retVals = new bytes[](0);
-        // RulesEngineProcessorFacet(address(red)).evaluateForeignCallForRule(fc, vals, retVals, typeSpecificIndices, 1);
-        assertEq(foreignCall.getDecodedIntOne(), 1);
-        assertEq(foreignCall.getDecodedIntTwo(), 2);
+
+        uint testValue = 4;
+        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, callingFuncSig, functionSig, ParamTypes.UINT);
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))), testValue, testValue + 1);
+
+        vm.startPrank(address(userContract));
+
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+        assertEq(foreignCall.getDecodedIntOne(), testValue);
+        assertEq(foreignCall.getDecodedIntTwo(), testValue + 1);
     }
 
     function testRulesEngine_Unit_EncodingForeignCallTwoUintWithRetVals() public ifDeploymentTestsEnabled endWithStopPrank {
