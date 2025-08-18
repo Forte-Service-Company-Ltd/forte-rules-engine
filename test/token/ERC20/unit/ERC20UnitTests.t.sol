@@ -25,10 +25,17 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
         vm.stopPrank();
     }
 
+    function _doSomeMinting(address to, uint256 amount) internal {
+        vm.startPrank(callingContractAdmin);
+        userContractERC20.mint(to, amount);
+        vm.stopPrank();
+    }
+
     function testERC20_Transfer_Before_Unit_checkRule_ForeignCall_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
         // set up the ERC20
-        userContractERC20.mint(USER_ADDRESS, 1_000_000 * ATTO);
+        
+        _doSomeMinting(USER_ADDRESS, 1_000_000 * ATTO);
         _setup_checkRule_ForeignCall_Positive(ruleValue, userContractERC20Address);
 
         // test that rule ( amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)" ) processes correctly
@@ -40,7 +47,7 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
     function testERC20_Transfer_Before_Unit_checkRule_ForeignCall_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
         // set up the ERC20
-        userContractERC20.mint(USER_ADDRESS, 1_000_000 * ATTO);
+       _doSomeMinting(USER_ADDRESS, 1_000_000 * ATTO);
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
@@ -56,7 +63,7 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
     function testERC20_TransferFrom_Before_Unit_checkRule_ForeignCall_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
         // set up the ERC20
-        userContractERC20.mint(USER_ADDRESS, 1_000_000 * ATTO);
+        _doSomeMinting(USER_ADDRESS, 1_000_000 * ATTO);
         _setup_checkRule_TransferFrom_ForeignCall_Positive(ruleValue, userContractERC20Address);
 
         // test that rule ( amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)" ) processes correctly
@@ -69,9 +76,9 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
     function testERC20_Transfer_Unit_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
         // set up the ERC20
-        userContractERC20.mint(USER_ADDRESS, 1_000_000 * ATTO);
+        _doSomeMinting(USER_ADDRESS, 1_000_000 * ATTO);
         _setupRuleWithRevert(address(userContractERC20));
-        vm.startPrank(USER_ADDRESS);
+        vm.startPrank(callingContractAdmin);
         vm.expectRevert(abi.encodePacked(revert_text));
         userContractERC20.transfer(address(0x7654321), 5);
     }
@@ -79,7 +86,7 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
     function testERC20_TransferFrom_Unit_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
         // set up the ERC20
-        userContractERC20.mint(USER_ADDRESS, 1_000_000 * ATTO);
+        _doSomeMinting(USER_ADDRESS, 1_000_000 * ATTO);
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.ADDR;
@@ -95,7 +102,7 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
     function testERC20_TransferFrom_Unit_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
         // set up the ERC20
-        userContractERC20.mint(USER_ADDRESS, 1_000_000 * ATTO);
+        _doSomeMinting(USER_ADDRESS, 1_000_000 * ATTO);
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.ADDR;
@@ -113,7 +120,7 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
     function testERC20_TransferFrom_Unit_BalanceFromLessThan100() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
         // set up the ERC20 with a balance that will test both positive and negative paths
-        userContractERC20.mint(USER_ADDRESS, 110);
+        _doSomeMinting(USER_ADDRESS, 110);
         ParamTypes[] memory pTypes = new ParamTypes[](7);
         pTypes[0] = ParamTypes.ADDR; // _from
         pTypes[1] = ParamTypes.ADDR; // _to
@@ -145,7 +152,7 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
         pTypes[1] = ParamTypes.UINT;
         pTypes[2] = ParamTypes.ADDR;
         _setupRuleWithRevertMint(ERC20_MINT_SIGNATURE, pTypes);
-        vm.startPrank(USER_ADDRESS);
+        vm.startPrank(callingContractAdmin);
         vm.expectRevert(abi.encodePacked(revert_text));
         userContractERC20.mint(USER_ADDRESS, 3);
     }
@@ -158,7 +165,7 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
         pTypes[1] = ParamTypes.UINT;
         pTypes[2] = ParamTypes.ADDR;
         _setupRuleWithRevertMint(ERC20_MINT_SIGNATURE, pTypes);
-        vm.startPrank(USER_ADDRESS);
+        vm.startPrank(callingContractAdmin);
         vm.expectEmit(true, true, false, false);
         emit RulesEngineEvent(1, EVENTTEXT, event_text);
         userContractERC20.mint(USER_ADDRESS, 5);
@@ -172,16 +179,15 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
         pTypes[2] = ParamTypes.ADDR;
         // Expect revert while rule is enabled
         uint256 _policyId = _setupRuleWithRevertMint(ERC20_MINT_SIGNATURE, pTypes);
-        vm.startPrank(USER_ADDRESS);
+        
         vm.expectRevert(abi.encodePacked(revert_text));
-        userContractERC20.mint(USER_ADDRESS, 3);
+        _doSomeMinting(USER_ADDRESS, 3);
 
         // Disable the policy and expect it to go through
         vm.startPrank(policyAdmin);
         RulesEnginePolicyFacet(address(red)).disablePolicy(_policyId);
         assertTrue(RulesEnginePolicyFacet(address(red)).isDisabledPolicy(_policyId));
-        vm.startPrank(USER_ADDRESS);
-        userContractERC20.mint(USER_ADDRESS, 3);
+        _doSomeMinting(USER_ADDRESS, 3);
     }
 
     function testERC20_setCallingContractAdmin_FailsForNonOwner() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -206,7 +212,7 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
         // Transfer it to the contract owner
         userContractERC20.setCallingContractAdmin(address(callingContractAdmin));
         assertEq(rearf.isCallingContractAdmin(address(userContractERC20), address(callingContractAdmin)), true, "Calling contract admin role not given to new address");
-        assertEq(rearf.isCallingContractAdmin(address(userContractERC20), address(USER_ADDRESS_2)), false, "Calling contract admin role not removed on new set");
+        assertEq(rearf.isCallingContractAdmin(address(userContractERC20), address(USER_ADDRESS_2)), false, "Previous calling contract admin role not removed on new set");
         vm.stopPrank();
     }
 }

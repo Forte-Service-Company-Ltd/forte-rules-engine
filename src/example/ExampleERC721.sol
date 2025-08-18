@@ -43,7 +43,7 @@ contract ExampleERC721 is ERC721, ReentrancyGuard, ERC721Burnable, RulesEngineCl
      *      contracts to override it with a priced mint function.
      * @param to The address of the recipient.
      */
-    function safeMint(address to) public payable virtual checksPoliciesERC721SafeMintAfter(to) {
+    function safeMint(address to) public payable virtual onlyOwner checksPoliciesERC721SafeMintAfter(to) {
         uint256 tokenId = counter;
         ++counter;
         _safeMint(to, tokenId);

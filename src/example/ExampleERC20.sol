@@ -41,7 +41,7 @@ contract ExampleERC20 is ERC20, ERC20Burnable, ReentrancyGuard, RulesEngineClien
     function mint(
         address to,
         uint256 amount
-    ) public virtual checksPoliciesERC20MintBefore(to, amount, balanceOf(msg.sender), balanceOf(to), block.timestamp) {
+    ) public virtual onlyOwner checksPoliciesERC20MintBefore(to, amount, balanceOf(msg.sender), balanceOf(to), block.timestamp) {
         _mint(to, amount);
     }
 

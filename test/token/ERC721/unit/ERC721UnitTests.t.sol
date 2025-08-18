@@ -25,6 +25,12 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
         vm.stopPrank();
     }
 
+    function _doSomeMinting(address to) internal {
+        vm.startPrank(callingContractAdmin);
+        userContract721.safeMint(to);
+        vm.stopPrank();
+    }
+
     function testERC721_SafeMint_Unit_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
         ParamTypes[] memory pTypes = new ParamTypes[](2);
@@ -32,7 +38,7 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
         pTypes[1] = ParamTypes.ADDR;
         _setupRuleWithRevertSafeMint(ERC721_SAFEMINT_SIGNATURE, pTypes);
         vm.expectRevert(abi.encodePacked(revert_text));
-        userContract721.safeMint(address(55));
+        _doSomeMinting(address(55));
     }
 
     function testERC721_SafeMint_Unit_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -41,7 +47,7 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.ADDR;
         _setupRuleWithRevertSafeMint(ERC721_SAFEMINT_SIGNATURE, pTypes);
-        vm.startPrank(USER_ADDRESS);
+        vm.startPrank(callingContractAdmin);
         vm.expectEmit(true, true, false, false);
         emit RulesEngineEvent(1, EVENTTEXT, event_text);
         userContract721.safeMint(USER_ADDRESS);
@@ -49,7 +55,7 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
 
     function testERC721_SafeTransferFrom_Unit_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
-        userContract721.safeMint(USER_ADDRESS);
+        _doSomeMinting(USER_ADDRESS);
         ParamTypes[] memory pTypes = new ParamTypes[](5);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.ADDR;
@@ -64,7 +70,7 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
 
     function testERC721_SafeTransferFrom_Unit_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
-        userContract721.safeMint(USER_ADDRESS_2);
+        _doSomeMinting(USER_ADDRESS_2);
         ParamTypes[] memory pTypes = new ParamTypes[](5);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.ADDR;
@@ -80,7 +86,7 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
 
     function testERC721_TransferFrom_Unit_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
-        userContract721.safeMint(USER_ADDRESS_2);
+        _doSomeMinting(USER_ADDRESS_2);
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.ADDR;
@@ -95,7 +101,7 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
 
     function testERC721_TransferFrom_Unit_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
-        userContract721.safeMint(USER_ADDRESS);
+        _doSomeMinting(USER_ADDRESS);
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.ADDR;
@@ -109,7 +115,7 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
 
     function testERC721_Unit_Disabled_Policy() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
-        userContract721.safeMint(USER_ADDRESS);
+        _doSomeMinting(USER_ADDRESS);
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.ADDR;
@@ -178,7 +184,7 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
         // Transfer it to the contract owner
         userContract721.setCallingContractAdmin(address(callingContractAdmin));
         assertEq(rearf.isCallingContractAdmin(address(userContract721), address(callingContractAdmin)), true, "Calling contract admin role not given to new address");
-        assertEq(rearf.isCallingContractAdmin(address(userContract721), address(USER_ADDRESS_2)), false, "Calling contract admin role not removed on new set");
+        assertEq(rearf.isCallingContractAdmin(address(userContract721), address(USER_ADDRESS_2)), false, "Previous calling contract admin role not removed on new set");
         vm.stopPrank();
     }
 }
