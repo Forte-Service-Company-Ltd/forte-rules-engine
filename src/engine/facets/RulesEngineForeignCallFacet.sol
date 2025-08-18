@@ -129,6 +129,7 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
     function _storeForeignCall(uint256 _policyId, ForeignCall calldata _foreignCall, uint256 _foreignCallIndex) internal {
         assert(_foreignCall.parameterTypes.length == _foreignCall.encodedIndices.length);
         if (_foreignCall.foreignCallAddress == address(0)) revert(ZERO_ADDRESS_NOT_ALLOWED);
+        if (_foreignCall.foreignCallAddress == address(this)) revert(ADDRESS_NOT_ALLOWED);
         if (_foreignCall.signature == EMPTY_SIG) revert(SIG_REQ);
         require(_foreignCall.foreignCallIndex < MAX_LOOP && _foreignCallIndex < MAX_LOOP, MAX_FC);
         require(_foreignCall.parameterTypes.length < MAX_LOOP, MAX_FC_PT);

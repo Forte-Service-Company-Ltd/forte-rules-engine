@@ -28,6 +28,7 @@ string constant NOT_ALLOWED_CEMENTED_POLICY = "Not allowed for cemented policy";
 string constant SIG_REQ = "Function signature is required";
 string constant NAME_REQ = "Name is required";
 string constant INVALID_RULE_LENGTH = "Invalid rule array length";
+string constant ADDRESS_NOT_ALLOWED = "Address not allowed to be a foreign call";
 
 string constant MAX_FC = "Max foreign calls reached";
 string constant MAX_FC_PT = "Max foreign parameter types reached.";
@@ -74,3 +75,4 @@ string constant FOREIGN_CALL_SELECTOR_NOT_SET = "Foreign Call Not Set";
 string constant NOT_PERMISSIONED_FOR_FOREIGN_CALL = "Not Permissioned For Foreign Call";
 string constant NOT_AUTH_FC = "Not An Authorized Foreign Call Admin";
 string constant NOT_AUTH_POLICY = "Not Authorized To Policy";
+string constant FOREIGN_CALL_ADMIN_NOT_GRANTED = "Foreign call admin has not been granted";

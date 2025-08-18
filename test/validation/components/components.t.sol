@@ -590,6 +590,50 @@ abstract contract components is RulesEngineCommon {
         }
     }
 
+    function testRulesEngine_unit_CreateForeignCall_Negative_FRE_Address() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(red);
+        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.UINT;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+        fc.returnType = ParamTypes.UINT;
+        fc.foreignCallIndex = 0;
+        vm.expectRevert("Address not allowed to be a foreign call");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
+    }
+
+        function testRulesEngine_Unit_PermissionedForeignCall_SetGeneratePolicyAdminRole_Negative()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        vm.startPrank(policyAdmin);
+        uint256 policyId = _createBlankPolicy();
+        ParamTypes[] memory fcArgs = new ParamTypes[](2);
+        fcArgs[0] = ParamTypes.UINT;
+        fcArgs[1] = ParamTypes.ADDR;
+        ForeignCall memory fc;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](2);
+        fc.encodedIndices[0].index = 0;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+        fc.encodedIndices[1].index = 1;
+        fc.encodedIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
+
+        fc.parameterTypes = fcArgs;
+        fc.foreignCallAddress = address(red);
+        fc.signature = bytes4(keccak256(bytes("generatePolicyAdminRole(uint256,address)")));
+        fc.returnType = ParamTypes.UINT;
+        fc.foreignCallIndex = 0;
+        vm.expectRevert("Address not allowed to be a foreign call");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "generatePolicyAdminRole(uint256,address)");
+        vm.stopPrank();
+    }
+
     // CRUD: Trackers
     // Create Trackers
     function testRulesEngine_unit_CreateTracker_Negative_CementedPolicy() public ifDeploymentTestsEnabled endWithStopPrank {
