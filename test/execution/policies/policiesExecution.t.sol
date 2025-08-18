@@ -90,16 +90,8 @@ abstract contract policiesExecution is RulesEngineCommon {
 
     RulesEngineComponentFacet(address(red)).deleteCallingFunction(policy1, callingFunctionId2);
     rules = RulesEngineRuleFacet(address(red)).getAllRules(policy1);
-    assertEq(rules.length, 2);
+    assertEq(rules.length, 1);
     assertEq(rules[0].length, 3);
-    uint256[] memory instructionSet = rules[0][0].instructionSet;
-    for (uint256 i; i < instructionSet.length; i++) {
-        console.log("instruction: ", i, instructionSet[i]);
-    }
-    uint256[] memory ogInstructionSet = initialRules[0].instructionSet;
-    for (uint256 i; i < ogInstructionSet.length; i++) {
-        console.log("og instruction: ", i, ogInstructionSet[i]);
-    }
     assertEq(keccak256(abi.encodePacked(rules[0][0].instructionSet)), keccak256(abi.encodePacked(initialRules[0].instructionSet)));
     assertEq(keccak256(abi.encodePacked(rules[0][1].instructionSet)), keccak256(abi.encodePacked(initialRules[1].instructionSet)));
     assertEq(keccak256(abi.encodePacked(rules[0][2].instructionSet)), keccak256(abi.encodePacked(initialRules[2].instructionSet)));

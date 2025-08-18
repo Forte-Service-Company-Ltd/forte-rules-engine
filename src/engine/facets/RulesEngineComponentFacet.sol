@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import "src/engine/facets/FacetCommonImports.sol";
-import {console} from "forge-std/src/console.sol";
 
 /**
  * @title Rules Engine Component Facet
@@ -462,7 +461,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         // After this, you can clear the mapping for this function's ruleIds
         delete data.policy.callingFunctionsToRuleIds[signature];
 
-        
+
         for (uint256 i = 0; i < data.policy.callingFunctions.length; i++) {
             if (data.policy.callingFunctions[i] == signature) {
                 data.policy.callingFunctions[i] = data.policy.callingFunctions[data.policy.callingFunctions.length - 1];

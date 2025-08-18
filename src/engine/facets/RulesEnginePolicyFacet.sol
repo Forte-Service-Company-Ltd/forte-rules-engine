@@ -4,7 +4,6 @@ pragma solidity ^0.8.24;
 import "src/engine/facets/FacetCommonImports.sol";
 import "src/engine/facets/RulesEngineAdminRolesFacet.sol";
 import {RulesEngineStorageLib as StorageLib} from "src/engine/facets/RulesEngineStorageLib.sol";
-import {console} from "forge-std/src/console.sol";
 
 /**
  * @title Rules Engine Policy Facet
@@ -304,9 +303,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         // Load the policy data from storage
         Policy storage policy = lib._getPolicyStorage().policyStorageSets[policyId].policy;
         // Initialize the return arrays if necessary
-        console.log("we don't have calling functions");
         if (policy.callingFunctions.length > 0) {
-            console.log("we have calling functions");
             callingFunctions = new bytes4[](policy.callingFunctions.length);
             callingFunctionIds = new uint256[](policy.callingFunctions.length);
             ruleIds = new uint256[][](policy.callingFunctions.length);
