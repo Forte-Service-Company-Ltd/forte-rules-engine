@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/access/Ownable.sol";
 import "@openzeppelin/token/ERC20/ERC20.sol";
 import "@openzeppelin/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/utils/ReentrancyGuard.sol";
@@ -15,14 +16,21 @@ import "src/client/RulesEngineClientERC20.sol";
  * @notice This contract demonstrates how to integrate the Rules Engine with an ERC20 token for policy enforcement.
  * @author @mpetersoCode55, @ShaneDuncan602, @TJ-Everett, @VoR0220
  */
-contract ExampleERC20 is ERC20, ERC20Burnable, ReentrancyGuard, RulesEngineClientERC20 {
+contract ExampleERC20 is ERC20, ERC20Burnable, ReentrancyGuard, RulesEngineClientERC20, Ownable {
     /**
      * @notice Constructor for the Example ERC20 token.
      * @dev Initializes the token with a name and symbol.
      * @param _name The name of the token.
      * @param _symbol The symbol of the token.
      */
-    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
+    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) Ownable(msg.sender) {}
+
+    /**
+     * @notice Override the default setCallingContractAdmin and add onlyOwner modifier to prevent unauthorized access
+     */
+    function setCallingContractAdmin(address callingContractAdmin) public override onlyOwner {
+        super.setCallingContractAdmin(callingContractAdmin);
+    }
 
     /**
      * @notice Mints new tokens to a specified address.

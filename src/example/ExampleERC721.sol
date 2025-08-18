@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/access/Ownable.sol";
 import "@openzeppelin/token/ERC721/ERC721.sol";
 import "@openzeppelin/utils/ReentrancyGuard.sol";
 import "@openzeppelin/token/ERC721/extensions/ERC721Burnable.sol";
@@ -15,7 +16,7 @@ import "src/client/RulesEngineClientERC721.sol";
  * @notice This contract demonstrates how to integrate the Rules Engine with an ERC721 token for policy enforcement.
  * @author @mpetersoCode55, @ShaneDuncan602, @TJ-Everett, @VoR0220
  */
-contract ExampleERC721 is ERC721, ReentrancyGuard, ERC721Burnable, RulesEngineClientERC721 {
+contract ExampleERC721 is ERC721, ReentrancyGuard, ERC721Burnable, RulesEngineClientERC721, Ownable {
     /// Base Contract URI
     string public baseUri;
     uint256 public counter;
@@ -27,7 +28,14 @@ contract ExampleERC721 is ERC721, ReentrancyGuard, ERC721Burnable, RulesEngineCl
      * @param _symbol The symbol of the token.
      */
     // slither-disable-next-line shadowing-local
-    constructor(string memory _name, string memory _symbol) ERC721(_name, _symbol) {}
+    constructor(string memory _name, string memory _symbol) ERC721(_name, _symbol) Ownable(msg.sender) {}
+
+    /**
+     * @notice Override the default setCallingContractAdmin and add onlyOwner modifier to prevent unauthorized access
+     */
+    function setCallingContractAdmin(address callingContractAdmin) public override onlyOwner {
+        super.setCallingContractAdmin(callingContractAdmin);
+    }
 
     /**
      * @notice Mints a new token to the specified address.
