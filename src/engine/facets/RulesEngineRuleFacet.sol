@@ -121,7 +121,22 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         if (!lib._getRuleStorage().ruleStorageSets[policyId][ruleId].set) revert(INVALID_RULE);
         _policyAdminOnly(policyId, msg.sender);
         StorageLib._notCemented(policyId);
+        bytes4[] memory callingFunctions = lib._getPolicyStorage().policyStorageSets[policyId].policy.callingFunctions;
+        for (uint256 i = 0; i < callingFunctions.length; i++) {
+            uint256[] memory ruleIds = lib._getPolicyStorage().policyStorageSets[policyId].policy.callingFunctionsToRuleIds[callingFunctions[i]];
+            uint256[] memory newRuleIds = new uint256[](ruleIds.length - 1);
+            uint256 k = 0;
+            for (uint256 j = 0; j < ruleIds.length; j++) {
+                if (ruleIds[j] == ruleId) {
+                    continue;
+                }
+                newRuleIds[k] = ruleIds[j];
+                k++;
+            }
+            lib._getPolicyStorage().policyStorageSets[policyId].policy.callingFunctionsToRuleIds[callingFunctions[i]] = newRuleIds;
+        }
         delete lib._getRuleStorage().ruleStorageSets[policyId][ruleId];
+
         emit RuleDeleted(policyId, ruleId);
     }
 

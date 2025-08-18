@@ -373,6 +373,31 @@ abstract contract components is RulesEngineCommon {
         );
         assertEq(matchingCallingFunction2.signature, bytes4(keccak256(bytes(callingFunction2))));
 
+        _callingFunctions = new bytes4[](2);
+        _callingFunctions[0] = bytes4(keccak256(bytes(callingFunction)));
+        _callingFunctions[1] = bytes4(keccak256(bytes(callingFunction2)));
+        _callingFunctionIds = new uint256[](2);
+        _callingFunctionIds[0] = callingFunctionId;
+        _callingFunctionIds[1] = callingFunctionId2;
+        _ruleIds = new uint256[][](2);
+        _ruleIds[0] = new uint256[](0);
+        _ruleIds[1] = new uint256[](0);
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            _callingFunctions,
+            _callingFunctionIds,
+            _ruleIds,
+            PolicyType.OPEN_POLICY,
+            "policyName",
+            "policyDescription"
+        );
+
+        (_callingFunctions, _callingFunctionIds, _ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
+        assertEq(_callingFunctions.length, 2);
+        assertEq(_callingFunctions[0], bytes4(keccak256(bytes(callingFunction))));
+        assertEq(_callingFunctions[1], bytes4(keccak256(bytes(callingFunction2))));
+
         RulesEngineComponentFacet(address(red)).deleteCallingFunction(policyId, callingFunctionId);
         CallingFunctionStorageSet memory cf = RulesEngineComponentFacet(address(red)).getCallingFunction(policyId, callingFunctionId);
         assertEq(cf.set, false);

@@ -19,6 +19,7 @@ import "test/execution/instructionSet/instructionSet.t.sol";
 import "test/execution/foreignCalls/foreignCalls.t.sol";
 import "test/execution/trackers/trackers.t.sol";
 import "test/execution/storage/storage.t.sol";
+import "test/execution/policies/policiesExecution.t.sol";
 
 contract RulesEngineUnitTests is
     adminRoles,
@@ -27,6 +28,7 @@ contract RulesEngineUnitTests is
     rules,
     rulesFuzz,
     policies,
+    policiesExecution,
     diamondInternalFunctions,
     rulesEngineInternalFunctions,
     effects,

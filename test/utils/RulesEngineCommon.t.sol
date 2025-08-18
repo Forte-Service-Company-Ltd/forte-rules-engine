@@ -556,6 +556,65 @@ contract RulesEngineCommon is DiamondMine, Test {
         return policyIds[0];
     }
 
+    function createArrayOfRules() public view returns (Rule[] memory rules) {
+        rules = new Rule[](3);
+        Rule memory rule1;
+        rule1.instructionSet = new uint256[](7);
+        rule1.instructionSet[0] = uint(LogicalOp.NUM);
+        rule1.instructionSet[1] = 1;
+        rule1.instructionSet[2] = uint(LogicalOp.NUM);
+        rule1.instructionSet[3] = 1;
+        rule1.instructionSet[4] = uint(LogicalOp.EQ);
+        rule1.instructionSet[5] = 0;
+        rule1.instructionSet[6] = 1;
+        rule1.effectPlaceHolders = new Placeholder[](1);
+        rule1.effectPlaceHolders[0].pType = ParamTypes.UINT;
+        rule1.effectPlaceHolders[0].typeSpecificIndex = 1;
+        rule1.posEffects = new Effect[](1);
+        rule1.posEffects[0] = effectId_revert;
+        rule1.negEffects = new Effect[](1);
+        rule1.negEffects[0] = effectId_revert;
+
+        Rule memory rule2;
+        rule2.instructionSet = new uint256[](7);
+        rule2.instructionSet[0] = uint(LogicalOp.NUM);
+        rule2.instructionSet[1] = 1;
+        rule2.instructionSet[2] = uint(LogicalOp.NUM);
+        rule2.instructionSet[3] = 1;
+        rule2.instructionSet[4] = uint(LogicalOp.GT);
+        rule2.instructionSet[5] = 0;
+        rule2.instructionSet[6] = 1;
+        rule2.effectPlaceHolders = new Placeholder[](1);
+        rule2.effectPlaceHolders[0].pType = ParamTypes.UINT;
+        rule2.effectPlaceHolders[0].typeSpecificIndex = 1;
+        rule2.posEffects = new Effect[](1);
+        rule2.posEffects[0] = effectId_event;
+        rule2.negEffects = new Effect[](1);
+        rule2.negEffects[0] = effectId_revert;
+
+        Rule memory rule3;
+        rule3.instructionSet = new uint256[](7);
+        rule3.instructionSet[0] = uint(LogicalOp.PLH);
+        rule3.instructionSet[1] = 0;
+        rule3.instructionSet[2] = uint(LogicalOp.NUM);
+        rule3.instructionSet[3] = 1;
+        rule3.instructionSet[4] = uint(LogicalOp.GT);
+        rule3.instructionSet[5] = 0;
+        rule3.instructionSet[6] = 1;
+        rule3.effectPlaceHolders = new Placeholder[](1);
+        rule3.effectPlaceHolders[0].pType = ParamTypes.UINT;
+        rule3.effectPlaceHolders[0].typeSpecificIndex = 1;
+        rule3.posEffects = new Effect[](1);
+        rule3.posEffects[0] = effectId_revert;
+        rule3.negEffects = new Effect[](1);
+        rule3.negEffects[0] = effectId_revert;
+
+        rules[0] = rule1;
+        rules[1] = rule2;
+        rules[2] = rule3;
+        return rules;
+    }
+
     function setupRuleWithForeignCall(
         uint256 _amount,
         EffectTypes _effectType,

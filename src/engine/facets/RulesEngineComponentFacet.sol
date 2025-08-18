@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "src/engine/facets/FacetCommonImports.sol";
+import {console} from "forge-std/src/console.sol";
 
 /**
  * @title Rules Engine Component Facet
@@ -426,27 +427,50 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         bytes4 signature = lib._getCallingFunctionStorage().callingFunctionStorageSets[policyId][callingFunctionId].signature;
         // delete the calling function storage set struct
         delete lib._getCallingFunctionStorage().callingFunctionStorageSets[policyId][callingFunctionId];
-        // delete calling function array from policy
-        delete data.policy.callingFunctions;
         // delete calling function to id map
         delete data.policy.callingFunctionIdMap[signature];
-        uint256[] memory ruleIds = data.policy.callingFunctionsToRuleIds[signature];
-        // delete rule structures associated to calling function
-        for (uint256 i; i < ruleIds.length; i++) {
-            // delete rules from storage
-            delete lib._getRuleStorage().ruleStorageSets[policyId][ruleIds[i]];
-            emit AssociatedRuleDeleted(policyId, callingFunctionId);
-        }
-        // delete calling function to rule Ids mapping
-        delete data.policy.callingFunctionsToRuleIds[signature];
-        // retrieve remaining calling function structs from storage that were not removed
-        CallingFunctionStorageSet[] memory callingFunctionStructs = getAllCallingFunctions(policyId);
-        // reset calling function array for policy
-        for (uint256 j; j < callingFunctionStructs.length; j++) {
-            if (callingFunctionStructs[j].set) {
-                data.policy.callingFunctions.push(callingFunctionStructs[j].signature);
+        // Capture the rules tied to the function being deleted
+        uint256[] memory toCheckRuleIds = data.policy.callingFunctionsToRuleIds[signature];
+
+        // For each rule, see if it appears under any other calling function
+        for (uint256 i = 0; i < toCheckRuleIds.length; i++) {
+            uint256 rid = toCheckRuleIds[i];
+            bool presentElsewhere = false;
+
+            // Iterate every calling function signature
+            bytes4[] memory allSigs = data.policy.callingFunctions;
+            for (uint256 s = 0; s < allSigs.length && !presentElsewhere; s++) {
+                bytes4 otherSig = allSigs[s];
+                if (otherSig == signature) continue;
+
+                uint256[] storage otherRuleIds = data.policy.callingFunctionsToRuleIds[otherSig];
+                for (uint256 k = 0; k < otherRuleIds.length; k++) {
+                    if (otherRuleIds[k] == rid) {
+                        presentElsewhere = true;
+                        break;
+                    }
+                }
+            }
+
+            // Only delete the rule if it isn't used by any other calling function
+            if (!presentElsewhere) {
+                delete lib._getRuleStorage().ruleStorageSets[policyId][rid];
+                emit AssociatedRuleDeleted(policyId, callingFunctionId);
             }
         }
+
+        // After this, you can clear the mapping for this function's ruleIds
+        delete data.policy.callingFunctionsToRuleIds[signature];
+
+        
+        for (uint256 i = 0; i < data.policy.callingFunctions.length; i++) {
+            if (data.policy.callingFunctions[i] == signature) {
+                data.policy.callingFunctions[i] = data.policy.callingFunctions[data.policy.callingFunctions.length - 1];
+                data.policy.callingFunctions.pop();
+                break;
+            }
+        }
+
         emit CallingFunctionDeleted(policyId, callingFunctionId);
     }
 
