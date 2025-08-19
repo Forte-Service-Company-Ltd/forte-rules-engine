@@ -825,16 +825,14 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, fcSignature);
 
-        // Rule memory rule;
         rule.instructionSet = _createInstructionSet();
+        // placeholder for foreign call we just created
         rule.effectPlaceHolders = new Placeholder[](1);
         rule.effectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
         rule.effectPlaceHolders[0].typeSpecificIndex = uint128(foreignCallId);
 
         // positive effect
         uint256[] memory effectBytecode = new uint256[](0);
-        // effectBytecode[0] = uint(LogicalOp.PLH);
-        // effectBytecode[1] = 0; // we flag that we will be using placeholder 0
         Effect memory positiveEffect = Effect({
             valid: true,
             dynamicParam: false,
@@ -903,14 +901,15 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
         rule.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
 
+        // instruction set: is "expectedValue" == returned value from foreign call at index 0 ?
         rule.instructionSet = new uint[](7);
         rule.instructionSet[0] = uint(LogicalOp.PLH);
-        rule.instructionSet[1] = 0; // we flag that we will be
+        rule.instructionSet[1] = 0; // placeholder at index 0
         rule.instructionSet[2] = uint(LogicalOp.NUM);
-        rule.instructionSet[3] = expectedValue; // we flag that we will be
-        rule.instructionSet[4] = uint(LogicalOp.EQ);
-        rule.instructionSet[5] = 0; // we flag that we will be
-        rule.instructionSet[6] = 1; // we flag that we will be
+        rule.instructionSet[3] = expectedValue; // we place in memory our expected value
+        rule.instructionSet[4] = uint(LogicalOp.EQ); // we run equality check against these 2 values
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
         rule.posEffects = new Effect[](0);
 
         // negative effect
@@ -921,7 +920,6 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
-        // _addRuleIdsToPolicy(policyIds[0], ruleIds);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
@@ -945,7 +943,9 @@ contract RulesEngineCommon is DiamondMine, Test {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
         vm.startPrank(policyAdmin);
+        // we fuzz the amount of arrays
         ParamTypes[] memory pTypes = new ParamTypes[](arrayAmount);
+        // we assign the same type to all the arrays
         for (uint array; array < arrayAmount; array++) pTypes[array] = ParamTypes.DYNAMIC_TYPE_ARRAY;
 
         // Save the calling function
@@ -964,14 +964,13 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         Rule memory rule;
         rule.instructionSet = _createInstructionSet();
+        // placeholder for the foreign call
         rule.effectPlaceHolders = new Placeholder[](1);
         rule.effectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
         rule.effectPlaceHolders[0].typeSpecificIndex = uint128(foreignCallId);
 
         // positive effect
         uint256[] memory effectBytecode = new uint256[](0);
-        // effectBytecode[0] = uint(LogicalOp.PLH);
-        // effectBytecode[1] = 0; // we flag that we will be using placeholder 0
         Effect memory positiveEffect = Effect({
             valid: true,
             dynamicParam: false,
