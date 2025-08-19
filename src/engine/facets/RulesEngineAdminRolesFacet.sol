@@ -84,6 +84,10 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
     function renounceRole(bytes32 role, address account, uint256 policyId) public nonReentrant {
         /// enforcing the min-1-admin requirement.
         if (isPolicyAdmin(policyId, account)) revert(BELOW_ADMIN_THRESHOLD);
+        /// enforcing not allowing CallingContractAdmin renouncement
+        if (role == CALLING_CONTRACT_ADMIN) revert(RENOUNCE_NOT_ALLOWED);
+        /// enforcing not allowing ForeignCAllAdmin renouncement
+        if (role == FOREIGN_CALL_ADMIN) revert(RENOUNCE_NOT_ALLOWED);
         AccessControl.renounceRole(role, account);
         emit PolicyAdminRoleRenounced(account, policyId);
     }

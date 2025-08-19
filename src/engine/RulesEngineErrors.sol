@@ -76,3 +76,4 @@ string constant NOT_PERMISSIONED_FOR_FOREIGN_CALL = "Not Permissioned For Foreig
 string constant NOT_AUTH_FC = "Not An Authorized Foreign Call Admin";
 string constant NOT_AUTH_POLICY = "Not Authorized To Policy";
 string constant FOREIGN_CALL_ADMIN_NOT_GRANTED = "Foreign call admin has not been granted";
+string constant RENOUNCE_NOT_ALLOWED = "Admin is not allowed to renounce this role";

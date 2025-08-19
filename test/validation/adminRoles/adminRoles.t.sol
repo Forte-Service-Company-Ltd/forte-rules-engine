@@ -106,6 +106,30 @@ abstract contract adminRoles is RulesEngineCommon {
         assertTrue(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, callingContractAdmin));
     }
 
+    function testRulesEngine_Unit_RenounceContractAdmin_Negative()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {        
+        newUserContract.setCallingContractAdmin(callingContractAdmin);
+        assertTrue(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, callingContractAdmin));
+        vm.expectRevert("Admin is not allowed to renounce this role");
+        RulesEngineAdminRolesFacet(address(red)).renounceRole(CALLING_CONTRACT_ADMIN, callingContractAdmin, 0);
+    }
+
+    function testRulesEngine_Unit_RenounceForeignCallAdmin_Negative()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {        
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        _setUpForeignCallSimple(policyID);vm.expectRevert("Admin is not allowed to renounce this role");
+        RulesEngineAdminRolesFacet(address(red)).renounceRole(FOREIGN_CALL_ADMIN, callingContractAdmin, 0);
+    }
+
     function testRulesEngine_Unit_CreateCallingContractAdmin_ThroughCallingContract_Negative()
         public
         ifDeploymentTestsEnabled
