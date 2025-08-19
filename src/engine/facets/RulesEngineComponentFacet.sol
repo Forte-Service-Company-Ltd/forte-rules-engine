@@ -268,6 +268,19 @@ contract RulesEngineComponentFacet is FacetCommonImports {
     }
 
     /**
+     * @notice Retrieves the rule IDs associated with a specific tracker index for a given policy ID.
+     * @param policyId The policy ID the tracker is associated with.
+     * @param trackerIndex The index of the tracker to retrieve rule IDs for.
+     * @return An array of rule IDs associated with the specified tracker index.
+     */
+    function getTrackerToRuleIds(uint256 policyId, uint256 trackerIndex) external view returns (uint256[] memory) {
+        // Load the Tracker data from storage
+        TrackerStorage storage data = lib._getTrackerStorage();
+        // return trackers for contract address at speficic index
+        return data.trackerIdToRuleIds[policyId][trackerIndex];
+    }
+
+    /**
      * @notice Retrieves a tracker from the tracker storage mapping.
      * @param policyId The policy ID the tracker is associated with.
      * @param index The index of the tracker to retrieve.

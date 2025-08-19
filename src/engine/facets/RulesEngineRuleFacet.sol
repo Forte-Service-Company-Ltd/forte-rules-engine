@@ -118,7 +118,9 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         StorageLib._notCemented(policyId);
         bytes4[] memory callingFunctions = lib._getPolicyStorage().policyStorageSets[policyId].policy.callingFunctions;
         for (uint256 i = 0; i < callingFunctions.length; i++) {
-            uint256[] memory ruleIds = lib._getPolicyStorage().policyStorageSets[policyId].policy.callingFunctionsToRuleIds[callingFunctions[i]];
+            uint256[] memory ruleIds = lib._getPolicyStorage().policyStorageSets[policyId].policy.callingFunctionsToRuleIds[
+                callingFunctions[i]
+            ];
             uint256[] memory newRuleIds = new uint256[](ruleIds.length - 1);
             uint256 k = 0;
             for (uint256 j = 0; j < ruleIds.length; j++) {
@@ -130,6 +132,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             }
             lib._getPolicyStorage().policyStorageSets[policyId].policy.callingFunctionsToRuleIds[callingFunctions[i]] = newRuleIds;
         }
+        _removeRuleFromTrackerIdMapping(policyId, ruleId);
         delete lib._getRuleStorage().ruleStorageSets[policyId][ruleId];
 
         emit RuleDeleted(policyId, ruleId);
@@ -200,7 +203,115 @@ contract RulesEngineRuleFacet is FacetCommonImports {
 
         _data.ruleStorageSets[_policyId][_ruleId].set = true;
         _data.ruleStorageSets[_policyId][_ruleId].rule = _rule;
+        _updateTrackerIdMapping(_data, _policyId, _ruleId);
         return _ruleId;
+    }
+
+    /**
+     * @notice Updates the mapping of tracker IDs to rule IDs for a specific policy.
+     * @dev This function checks if a tracker is used in the instruction set of the rule and updates the mapping accordingly.
+     * @param _data The rule storage structure.
+     * @param _policyId The ID of the policy to update the mapping for.
+     * @param _ruleId The ID of the rule to check for tracker usage.
+     */
+    function _updateTrackerIdMapping(RuleStorage storage _data, uint256 _policyId, uint256 _ruleId) internal {
+        TrackerStorage storage trackerData = lib._getTrackerStorage();
+        Placeholder[] memory placeHolders = _data.ruleStorageSets[_policyId][_ruleId].rule.placeHolders;
+        Placeholder[] memory effectPlaceHolders = _data.ruleStorageSets[_policyId][_ruleId].rule.effectPlaceHolders;
+        // check if a tracker is used in the instruction set of the rule
+        // if so, we update the mapping to point to the rule ID
+        for (uint256 i = 0; i < placeHolders.length; i++) {
+            // check for tracker flag on placeholder
+            if (FacetUtils._isTrackerValue(placeHolders[i])) {
+                // if the placeholder flag is a tracker, save the ruleID to array
+                uint256 index = placeHolders[i].typeSpecificIndex;
+                bool exists = false;
+                for (uint256 j = 0; j < trackerData.trackerIdToRuleIds[_policyId][index].length; j++) {
+                    // check if the rule ID is already in the array
+                    if (trackerData.trackerIdToRuleIds[_policyId][index][j] == _ruleId) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    trackerData.trackerIdToRuleIds[_policyId][index].push(_ruleId);
+                }
+            }
+        }
+
+        // repeat for effectPlaceHolders
+        for (uint256 k = 0; k < effectPlaceHolders.length; k++) {
+            // check for tracker flag on placeholder
+            if (FacetUtils._isTrackerValue(effectPlaceHolders[k])) {
+                // retrieve the tracker ID from the placeholder
+                uint256 trackerId = effectPlaceHolders[k].typeSpecificIndex;
+                // check if the rule ID is already in the array
+                bool exists = false;
+                for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][trackerId].length; l++) {
+                    // check if the rule ID is already in the array
+                    if (trackerData.trackerIdToRuleIds[_policyId][trackerId][l] == _ruleId) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    trackerData.trackerIdToRuleIds[_policyId][trackerId].push(_ruleId);
+                }
+            }
+        }
+    }
+
+    /**
+     * @notice Removes a rule from the tracker ID mapping.
+     * @dev This function checks if a tracker is used in the instruction set of the rule and removes the rule ID from the mapping.
+     * @param _policyId The ID of the policy to update the mapping for.
+     * @param _ruleId The ID of the rule to check for tracker usage.
+     */
+    function _removeRuleFromTrackerIdMapping(uint256 _policyId, uint256 _ruleId) internal {
+        TrackerStorage storage trackerData = lib._getTrackerStorage();
+
+        Placeholder[] memory placeHolders = lib._getRuleStorage().ruleStorageSets[_policyId][_ruleId].rule.placeHolders;
+        Placeholder[] memory effectPlaceHolders = lib._getRuleStorage().ruleStorageSets[_policyId][_ruleId].rule.effectPlaceHolders;
+        // check if a tracker is used in the instruction set of the rule
+        // if so, we update the mapping to remove rule ID
+        for (uint256 i = 0; i < placeHolders.length; i++) {
+            // check for tracker flag on placeholder
+            if (FacetUtils._isTrackerValue(placeHolders[i])) {
+                // if the placeholder flag is a tracker, retrieve the tracker ID and remove the rule ID from the mapping
+                for (uint256 j = 0; j < trackerData.trackerIdToRuleIds[_policyId][placeHolders[i].typeSpecificIndex].length; ) {
+                    // check if the rule ID is already in the array
+                    if (trackerData.trackerIdToRuleIds[_policyId][placeHolders[i].typeSpecificIndex][j] == _ruleId) {
+                        trackerData.trackerIdToRuleIds[_policyId][placeHolders[i].typeSpecificIndex][j] = trackerData.trackerIdToRuleIds[
+                            _policyId
+                        ][placeHolders[i].typeSpecificIndex][
+                                trackerData.trackerIdToRuleIds[_policyId][placeHolders[i].typeSpecificIndex].length - 1
+                            ];
+                        trackerData.trackerIdToRuleIds[_policyId][placeHolders[i].typeSpecificIndex].pop();
+                    } else {
+                        j++; // Only increment if no removal occurred
+                    }
+                }
+            }
+        }
+        // repeat for effectPlaceHolders
+        for (uint256 k = 0; k < effectPlaceHolders.length; k++) {
+            // check for tracker flag on effect placeholder
+            if (FacetUtils._isTrackerValue(effectPlaceHolders[k])) {
+                // if the placeholder flag is a tracker, retrieve the tracker ID and remove the rule ID from the mapping
+                for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex].length; ) {
+                    // check if the rule ID is already in the array
+                    if (trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex][l] == _ruleId) {
+                        trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex][l] = trackerData
+                            .trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex][
+                                trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex].length - 1
+                            ];
+                        trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex].pop();
+                    } else {
+                        l++; // Only increment if no removal occurred
+                    }
+                }
+            }
+        }
     }
 
     /**

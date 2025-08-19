@@ -1656,6 +1656,68 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.effectPlaceHolders = new Placeholder[](1);
         rule.effectPlaceHolders[0].pType = ParamTypes.ADDR;
         rule.effectPlaceHolders[0].typeSpecificIndex = 2;
+
+        // Add a negative/positive effects
+        rule.negEffects = new Effect[](1);
+        rule.posEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+        rule.posEffects[0] = _createEffectExpressionTrackerUpdateParameterPlaceHolder();
+
+        // Add the tracker
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        // Save the rule
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = ruleId;
+        _addRuleIdsToPolicy(policyIds[0], ruleIds);
+
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+        return policyIds[0];
+    }
+
+    function setupRuleWithTrackerFlag(
+        uint256 _policyId,
+        Trackers memory tracker
+    ) public ifDeploymentTestsEnabled endWithStopPrank resetsGlobalVariables returns (uint256 policyId) {
+        uint256[] memory policyIds = new uint256[](1);
+
+        policyIds[0] = _policyId;
+
+        ParamTypes[] memory pTypes = new ParamTypes[](3);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        pTypes[2] = ParamTypes.ADDR;
+
+        _addCallingFunctionToPolicyWithString(policyIds[0]);
+
+        // Rule: amount > TR:minTransfer -> revert -> transfer(address _to, uint256 amount) returns (bool)"
+        Rule memory rule;
+
+        // Instruction set: LogicalOp.PLH, 0, LogicalOp.PLH, 1, LogicalOp.GT, 0, 1
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.NUM);
+        rule.instructionSet[1] = 1;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 1;
+        rule.instructionSet[4] = uint(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        rule.placeHolders = new Placeholder[](3);
+        rule.placeHolders[0].pType = ParamTypes.ADDR;
+        rule.placeHolders[0].typeSpecificIndex = 0;
+        rule.placeHolders[1].pType = ParamTypes.UINT;
+        rule.placeHolders[1].typeSpecificIndex = 1;
+        rule.placeHolders[2].pType = ParamTypes.ADDR;
+        rule.placeHolders[2].typeSpecificIndex = 2;
+
+        rule.effectPlaceHolders = new Placeholder[](1);
+        rule.effectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule.effectPlaceHolders[0].typeSpecificIndex = 2;
+        rule.effectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
         // Add a negative/positive effects
         rule.negEffects = new Effect[](1);
         rule.posEffects = new Effect[](1);
@@ -2719,6 +2781,56 @@ contract RulesEngineCommon is DiamondMine, Test {
         effect.instructionSet[3] = 1;
         effect.instructionSet[4] = 0;
         effect.instructionSet[5] = uint(TrackerTypes.PLACE_HOLDER);
+
+        return effect;
+    }
+
+    function _createEffectExpressionTrackerUpdateMultiTrackerUpdate() public pure returns (Effect memory) {
+        // Effect: TRU:someTracker = parameter 3
+        Effect memory effect;
+        effect.valid = true;
+        effect.effectType = EffectTypes.EXPRESSION;
+        effect.text = "";
+        effect.instructionSet = new uint256[](30);
+        effect.instructionSet[0] = uint(LogicalOp.PLH);
+        effect.instructionSet[1] = 0;
+        // Tracker Placeholder
+        effect.instructionSet[2] = uint(LogicalOp.TRU);
+        effect.instructionSet[3] = 1;
+        effect.instructionSet[4] = 0;
+        effect.instructionSet[5] = uint(TrackerTypes.PLACE_HOLDER);
+
+        effect.instructionSet[6] = uint(LogicalOp.PLH);
+        effect.instructionSet[7] = 1;
+        // Tracker Placeholder
+        effect.instructionSet[8] = uint(LogicalOp.TRU);
+        effect.instructionSet[9] = 2;
+        effect.instructionSet[10] = 0;
+        effect.instructionSet[11] = uint(TrackerTypes.PLACE_HOLDER);
+
+        effect.instructionSet[12] = uint(LogicalOp.PLH);
+        effect.instructionSet[13] = 1;
+        // Tracker Placeholder
+        effect.instructionSet[14] = uint(LogicalOp.TRU);
+        effect.instructionSet[15] = 3;
+        effect.instructionSet[16] = 0;
+        effect.instructionSet[17] = uint(TrackerTypes.PLACE_HOLDER);
+
+        effect.instructionSet[18] = uint(LogicalOp.PLH);
+        effect.instructionSet[19] = 1;
+        // Tracker Placeholder
+        effect.instructionSet[20] = uint(LogicalOp.TRU);
+        effect.instructionSet[21] = 4;
+        effect.instructionSet[22] = 0;
+        effect.instructionSet[23] = uint(TrackerTypes.PLACE_HOLDER);
+
+        effect.instructionSet[24] = uint(LogicalOp.PLH);
+        effect.instructionSet[25] = 2;
+        // Tracker Placeholder
+        effect.instructionSet[26] = uint(LogicalOp.TRU);
+        effect.instructionSet[27] = 5;
+        effect.instructionSet[28] = 0;
+        effect.instructionSet[29] = uint(TrackerTypes.PLACE_HOLDER);
 
         return effect;
     }

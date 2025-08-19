@@ -251,6 +251,7 @@ struct TrackerStorage {
     mapping(uint256 policyId => uint256 trackerIndex) trackerIndexCounter;
     mapping(uint256 policyId => mapping(uint256 trackerIndex => Trackers)) trackers;
     mapping(uint256 policyId => mapping(uint256 trackerIndex => mapping(bytes key => bytes value))) mappedTrackerValues;
+    mapping(uint256 policyId => mapping(uint256 trackerIndex => uint256[])) trackerIdToRuleIds; // This is used to store the rule Ids that are associated with a tracker
 }
 
 /**
