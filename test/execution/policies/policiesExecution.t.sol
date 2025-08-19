@@ -23,9 +23,12 @@ abstract contract policiesExecution is RulesEngineCommon {
     policyIds[1] = policy2;
     policyIds[2] = policy3;
     address[] memory contracts = new address[](3);
+    
+    vm.startPrank(callingContractAdmin);
     contracts[0] = address(new ExampleERC20("Test", "TEST"));
     contracts[1] = address(new ExampleERC20("Test2", "TEST2"));
     contracts[2] = address(new ExampleERC20("Test3", "TEST3"));
+    vm.stopPrank();
 
     for (uint256 i = 0; i < contracts.length; i++) {
         vm.startPrank(callingContractAdmin);
