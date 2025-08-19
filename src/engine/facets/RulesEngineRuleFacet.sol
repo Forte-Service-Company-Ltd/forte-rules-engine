@@ -279,7 +279,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
     function _validateInstructionSet(uint256[] calldata instructionSet) internal pure {
         uint expectedDataElements; // the number of expected data elements in the instruction set (memory pointers)
         bool isData; // the first item of an instruction set must be an opcode, so isData must be "initialized" to false
-
+        uint totalInstructions; // the total number of instructions in the instruction set (opcodes)
         // we loop through the instructionSet to validate it
         for (uint256 i = 0; i < instructionSet.length; i++) {
             // we extract the specific item from the validation set which is in memory, and we place it in the stack to save some gas
@@ -295,6 +295,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                     delete expectedDataElements;
                 }
             } else {
+                ++totalInstructions;
                 // if the instruction is not data, we check that it is a valid opcode
                 if (instruction > opsTotalSize) revert(INVALID_INSTRUCTION);
                 // NUM is a special case since it can expect any data, so no check is needed next
@@ -315,6 +316,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         }
         // if we have any expected data elements left, it means the instruction set is invalid
         if (expectedDataElements > 0 || isData) revert(INVALID_INSTRUCTION_SET);
+        if (totalInstructions > memorySize) revert(INSTRUCTION_SET_TOO_LARGE);
     }
 
     /**
