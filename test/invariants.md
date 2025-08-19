@@ -14,7 +14,8 @@
 - Only the current calling contract admin can propose a new calling contract admin 
 - Proposed calling contract Admin Role cannot act as calling contract admin until role is confirmed  
 - Only the calling contract admin can set which policies are invoked by the calling contract 
-- Zero address can never be calling contract admin 
+- Zero address can never be calling contract admin
+- A calling contract admin may renounce their role
 
 #### Permissioned Foreign Call Admin 
 - Each Foreign Call contract and selector pair has exactly one Foreign Call Admin
@@ -24,6 +25,7 @@
 - Only the current foreign call admin can propose a new calling contract admin 
 - Proposed foreign call Admin Role cannot act as the foreign call admin until role is confirmed 
 - For a given Foreign contract and selector pair, the Foreign Call Admin is the only one who can configure which Policy Admins may leverage the Foreign Call in their policies
+- A calling foreign contract admin may renounce their role
 
 ### Policy Invariants 
 - policyId can never be 0 

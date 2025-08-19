@@ -81,15 +81,36 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
      * @param role the role to renounce.
      * @param account address renouncing to the role.
      */
-    function renounceRole(bytes32 role, address account, uint256 policyId) public nonReentrant {
+    function renouncePolicyAdminRole(bytes32 role, address account, uint256 policyId) public nonReentrant {
         /// enforcing the min-1-admin requirement.
         if (isPolicyAdmin(policyId, account)) revert(BELOW_ADMIN_THRESHOLD);
-        /// enforcing not allowing CallingContractAdmin renouncement
-        if (role == CALLING_CONTRACT_ADMIN) revert(RENOUNCE_NOT_ALLOWED);
-        /// enforcing not allowing ForeignCAllAdmin renouncement
-        if (role == FOREIGN_CALL_ADMIN) revert(RENOUNCE_NOT_ALLOWED);
         AccessControl.renounceRole(role, account);
         emit PolicyAdminRoleRenounced(account, policyId);
+    }
+
+    /**
+     * @dev This function is used to renounce Calling Contract Admin Role. 
+     * @param callingContract the calling contract associated to the role.
+     * @param account address renouncing to the role.
+     */
+    function renounceCallingContractAdminRole(address callingContract, address account) external nonReentrant {
+        /// enforcing the min-1-admin requirement.
+        bytes32 adminRoleId = _generateCallingContractAdminRoleId(callingContract, CALLING_CONTRACT_ADMIN);
+        AccessControl.renounceRole(adminRoleId, account);
+        emit CallingContractAdminRoleRenounced(callingContract, account);
+    }
+
+    /**
+     * @dev This function is used to renounce Foreign Call Admin Role. 
+     * @param _foreignCallContract the role to renounce.
+     * @param _functionSignature function signature of the foreign call 
+     * @param account address renouncing to the role.
+     */
+    function renounceForeignCallAdminRole(address _foreignCallContract, bytes4 _functionSignature,address account) external nonReentrant {
+        /// enforcing the min-1-admin requirement.
+        bytes32 adminRoleId = _generateForeignCallAdminRoleId(_foreignCallContract, _functionSignature, FOREIGN_CALL_ADMIN);
+        AccessControl.renounceRole(adminRoleId, account);
+        emit ForeignCallPermissionsRenounced(_foreignCallContract, _functionSignature);
     }
 
     /**

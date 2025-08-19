@@ -54,6 +54,7 @@ event PolicyAdminRoleRevoked(address indexed adminAddress, uint256 indexed polic
 event CallingContractAdminRoleGranted(address indexed callingContract, address indexed adminAddress);
 event CallingContractAdminRoleProposed(address indexed callingContract, address indexed proposedAdminAddress);
 event CallingContractAdminRoleConfirmed(address indexed callingContract, address indexed adminAddress);
+event CallingContractAdminRoleRenounced(address indexed callingContract, address indexed adminAddress);
 
 event ForeignCallAdminRoleGranted(address indexed foreignCallContract, address indexed adminAddress);
 event ForeignCallAdminRoleProposed(address indexed foreignCallContract, address indexed proposedAdminAddress);
@@ -62,3 +63,4 @@ event AdminAddedToForeignCallPermissions(address indexed foreignCallContract, by
 event ForeignCallPermissionsListUpdate(address indexed foreignCallContract, bytes4 indexed selector, address[] indexed adminAddresses);
 event ForeignCallPermissionsListReset(address indexed foreignCallContract, bytes4 indexed selector);
 event ForeignCallPermissionsRemoved(address indexed foreignCallContract, bytes4 indexed selector);
+event ForeignCallPermissionsRenounced(address indexed foreignCallContract, bytes4 indexed selector);
