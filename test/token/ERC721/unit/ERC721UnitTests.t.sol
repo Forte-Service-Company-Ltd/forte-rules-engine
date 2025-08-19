@@ -178,13 +178,34 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
         // Test that the calling contract admin can be set by the contract owner
         vm.startPrank(callingContractAdmin);
         userContract721.setCallingContractAdmin(address(USER_ADDRESS_2));
-        assertEq(rearf.isCallingContractAdmin(address(userContract721), address(USER_ADDRESS_2)), true, "Calling contract admin was not set to address 2");
-        assertEq(rearf.isCallingContractAdmin(address(userContract721), address(callingContractAdmin)), false, "Deployer set to calling contract admin without explicitly being granted role");
+        assertEq(
+            rearf.isCallingContractAdmin(address(userContract721), address(USER_ADDRESS_2)),
+            true,
+            "Calling contract admin was not set to address 2"
+        );
+        assertEq(
+            rearf.isCallingContractAdmin(address(userContract721), address(callingContractAdmin)),
+            false,
+            "Deployer set to calling contract admin without explicitly being granted role"
+        );
+        vm.stopPrank();
+        vm.startPrank(address(USER_ADDRESS_2));
 
         // Transfer it to the contract owner
-        userContract721.setCallingContractAdmin(address(callingContractAdmin));
-        assertEq(rearf.isCallingContractAdmin(address(userContract721), address(callingContractAdmin)), true, "Calling contract admin role not given to new address");
-        assertEq(rearf.isCallingContractAdmin(address(userContract721), address(USER_ADDRESS_2)), false, "Previous calling contract admin role not removed on new set");
+        RulesEngineAdminRolesFacet(address(red)).proposeNewCallingContractAdmin(address(userContract721), address(callingContractAdmin));
+        vm.stopPrank();
+        vm.startPrank(address(callingContractAdmin));
+        RulesEngineAdminRolesFacet(address(red)).confirmNewCallingContractAdmin(address(userContract721));
+        assertEq(
+            rearf.isCallingContractAdmin(address(userContract721), address(callingContractAdmin)),
+            true,
+            "Calling contract admin role not given to new address"
+        );
+        assertEq(
+            rearf.isCallingContractAdmin(address(userContract721), address(USER_ADDRESS_2)),
+            false,
+            "Previous calling contract admin role not removed on new set"
+        );
         vm.stopPrank();
     }
 }

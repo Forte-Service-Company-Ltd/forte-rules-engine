@@ -34,7 +34,7 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
     function testERC20_Transfer_Before_Unit_checkRule_ForeignCall_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
         // set up the ERC20
-        
+
         _doSomeMinting(USER_ADDRESS, 1_000_000 * ATTO);
         _setup_checkRule_ForeignCall_Positive(ruleValue, userContractERC20Address);
 
@@ -47,7 +47,7 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
     function testERC20_Transfer_Before_Unit_checkRule_ForeignCall_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
         _setCallingContractAdmin();
         // set up the ERC20
-       _doSomeMinting(USER_ADDRESS, 1_000_000 * ATTO);
+        _doSomeMinting(USER_ADDRESS, 1_000_000 * ATTO);
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
@@ -179,7 +179,7 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
         pTypes[2] = ParamTypes.ADDR;
         // Expect revert while rule is enabled
         uint256 _policyId = _setupRuleWithRevertMint(ERC20_MINT_SIGNATURE, pTypes);
-        
+
         vm.expectRevert(abi.encodePacked(revert_text));
         _doSomeMinting(USER_ADDRESS, 3);
 
@@ -206,13 +206,34 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
         // Test that the calling contract admin can be set by the contract owner
         vm.startPrank(callingContractAdmin);
         userContractERC20.setCallingContractAdmin(address(USER_ADDRESS_2));
-        assertEq(rearf.isCallingContractAdmin(address(userContractERC20), address(USER_ADDRESS_2)), true, "Calling contract admin was not set to address 2");
-        assertEq(rearf.isCallingContractAdmin(address(userContractERC20), address(callingContractAdmin)), false, "Deployer set to calling contract admin without explicitly being granted role");
+        assertEq(
+            rearf.isCallingContractAdmin(address(userContractERC20), address(USER_ADDRESS_2)),
+            true,
+            "Calling contract admin was not set to address 2"
+        );
+        assertEq(
+            rearf.isCallingContractAdmin(address(userContractERC20), address(callingContractAdmin)),
+            false,
+            "Deployer set to calling contract admin without explicitly being granted role"
+        );
+        vm.stopPrank();
+        vm.startPrank(address(USER_ADDRESS_2));
 
         // Transfer it to the contract owner
-        userContractERC20.setCallingContractAdmin(address(callingContractAdmin));
-        assertEq(rearf.isCallingContractAdmin(address(userContractERC20), address(callingContractAdmin)), true, "Calling contract admin role not given to new address");
-        assertEq(rearf.isCallingContractAdmin(address(userContractERC20), address(USER_ADDRESS_2)), false, "Previous calling contract admin role not removed on new set");
+        RulesEngineAdminRolesFacet(address(red)).proposeNewCallingContractAdmin(address(userContractERC20), address(callingContractAdmin));
+        vm.stopPrank();
+        vm.startPrank(address(callingContractAdmin));
+        RulesEngineAdminRolesFacet(address(red)).confirmNewCallingContractAdmin(address(userContractERC20));
+        assertEq(
+            rearf.isCallingContractAdmin(address(userContractERC20), address(callingContractAdmin)),
+            true,
+            "Calling contract admin role not given to new address"
+        );
+        assertEq(
+            rearf.isCallingContractAdmin(address(userContractERC20), address(USER_ADDRESS_2)),
+            false,
+            "Previous calling contract admin role not removed on new set"
+        );
         vm.stopPrank();
     }
 }
