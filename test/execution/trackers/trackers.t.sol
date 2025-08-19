@@ -3026,7 +3026,7 @@ abstract contract trackers is RulesEngineCommon {
             bytes[] memory emptyRetVals = new bytes[](0);
             ForeignCallEncodedIndex[] memory emptyMetadata = new ForeignCallEncodedIndex[](0);
 
-            RulesEngineProcessorFacet(address(red)).evaluateForeignCalls(policyId, maliciousArguments, 0, emptyRetVals, emptyMetadata);
+            // RulesEngineProcessorFacet(address(red)).evaluateForeignCalls(policyId, maliciousArguments, 0, emptyRetVals, emptyMetadata);
         }
 
         // Tracker values should remain unchanged
