@@ -2864,14 +2864,10 @@ contract RulesEngineCommon is DiamondMine, Test {
 
     // internal instruction set builder: overload as needed
     function _createInstructionSet() public pure returns (uint256[] memory instructionSet) {
-        instructionSet = new uint256[](7);
+        instructionSet = new uint256[](2);
+        // instruction set: TRUE
         instructionSet[0] = uint(LogicalOp.NUM);
-        instructionSet[1] = 1;
-        instructionSet[2] = uint(LogicalOp.NUM);
-        instructionSet[3] = 0;
-        instructionSet[4] = uint(LogicalOp.GT);
-        instructionSet[5] = 0;
-        instructionSet[6] = 1;
+        instructionSet[1] = 1; // always return true
     }
 
     function _createInstructionSet(uint256 plh1) public pure returns (uint256[] memory instructionSet) {

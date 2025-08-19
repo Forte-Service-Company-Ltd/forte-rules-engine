@@ -494,10 +494,6 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             userContract.transfer(address(0x1234), 1);
             gasLeftAfter = gasleft();
             gasDelta = gasLeftBefore - gasLeftAfter;
-            console2.log("Gas used in recursive foreign call test:", gasDelta);
-            console2.log("GAS_LIMIT:", GAS_LIMIT);
-            console2.log("recursiveContract.gasLeft():", recursiveContract.gasLeft());
-            console2.log("recursiveContract.recursionDepth():", recursiveContract.recursionDepth());
             assertTrue(gasDelta > GAS_LIMIT);
         }
     }

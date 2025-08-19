@@ -105,6 +105,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     mappedTrackerKeyEI,
                     parameterTypesLength
                 );
+                /// @notice the following comparison is a difference check and not an equality check
             } else if (encodedIndex.eType != EncodedIndexType.ENCODED_VALUES) {
                 (encodedCall, lengthToAppend, dynamicData) = evaluateForeignCallForRulePlaceholderValues(
                     fc,
