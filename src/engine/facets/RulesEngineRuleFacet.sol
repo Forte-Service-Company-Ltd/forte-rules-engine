@@ -316,6 +316,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         }
         // if we have any expected data elements left, it means the instruction set is invalid
         if (expectedDataElements > 0 || isData) revert(INVALID_INSTRUCTION_SET);
+        // if the instruction set will overflow the memory size, we revert
         if (totalInstructions > memorySize) revert(INSTRUCTION_SET_TOO_LARGE);
     }
 

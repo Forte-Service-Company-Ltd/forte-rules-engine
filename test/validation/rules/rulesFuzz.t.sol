@@ -16,7 +16,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         uint256 opA = uint256(_opA);
         uint256 opB = uint256(_opB);
 
-        (uint opAElements, uint opBElements) = findArgumentSize(opA, opB);
+        (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
         uint256[] memory instructionSet = buildInstructionSet(opA, opB, opAElements, opBElements, 0);
 
         // rule setup
@@ -38,7 +38,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         _opAElements = bound(_opAElements, 1, 4);
         _opBElements = bound(_opBElements, 1, 4);
 
-        (uint opAElements, uint opBElements) = findArgumentSize(opA, opB);
+        (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
         uint totalElements = _opAElements + _opBElements + 2; // 2 for the opA and opB themselves
         uint256[] memory instructionSet = buildInstructionSet(opA, opB, _opAElements, _opBElements, 20);
 
@@ -62,7 +62,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         uint256 opA = bound(_opA, 1, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
         uint256 opB = bound(_opB, 1, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
 
-        (uint opAElements, uint opBElements) = findArgumentSize(opA, opB);
+        (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
         uint256[] memory instructionSet = buildInstructionSet(opA, opB, opAElements, opBElements, _data);
 
         // rule setup
@@ -74,6 +74,40 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.posEffects[0] = effectId_event;
         // test
         if (_data > RulesEngineRuleFacet(address(red)).getMemorySize()) vm.expectRevert("Memory Overflow");
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+    }
+
+    function testRulesEngine_Fuzz_createRule_instructionSetLength(uint opA, uint opB, bool causesOverflow) public {
+        opA = bound(opA, 0, RulesEngineRuleFacet(address(red)).opsTotalSize() - 1);
+        opB = bound(opB, 0, RulesEngineRuleFacet(address(red)).opsTotalSize() - 1);
+
+        (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
+        // the instruction set will have 90 or 91 instructions depending on the causesOverflow flag.
+        uint instructionSetLength = (opAElements + opBElements + 2) * (45 + (causesOverflow ? 1 : 0));
+        uint256[] memory instructionSet = new uint256[](instructionSetLength);
+        // we build the instruction set by alternating opA and opB
+        bool isOpBTurn;
+        for (uint i = 0; i < instructionSetLength; i++) {
+            if (isOpBTurn) {
+                instructionSet[i] = opB;
+                i += opBElements; // skip the arguments
+                isOpBTurn = false;
+            } else {
+                instructionSet[i] = opA;
+                i += opAElements; // skip the arguments
+                isOpBTurn = true;
+            }
+        }
+
+        // rule setup
+        Rule memory rule;
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        rule.instructionSet = instructionSet;
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0] = effectId_event;
+        // test
+        if (causesOverflow) vm.expectRevert("Instruction Set Too Large");
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
@@ -132,15 +166,16 @@ abstract contract rulesFuzz is RulesEngineCommon {
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
-    function findArgumentSize(uint opA, uint opB) internal view returns (uint opAElements, uint opBElements) {
-        opAElements = 1;
-        opBElements = 1;
-        if (opA >= RulesEngineRuleFacet(address(red)).getOpsSize1()) opAElements = 2;
-        if (opA >= RulesEngineRuleFacet(address(red)).getOpsSizeUpTo2()) opAElements = 3;
-        if (opA >= RulesEngineRuleFacet(address(red)).getOpsSizeUpTo3()) opAElements = 4;
-        if (opB >= RulesEngineRuleFacet(address(red)).getOpsSize1()) opBElements = 2;
-        if (opB >= RulesEngineRuleFacet(address(red)).getOpsSizeUpTo2()) opBElements = 3;
-        if (opB >= RulesEngineRuleFacet(address(red)).getOpsSizeUpTo3()) opBElements = 4;
+    function findArgumentSizes(uint opA, uint opB) internal view returns (uint opAElements, uint opBElements) {
+        opAElements = findInstructionArgSize(opA);
+        opBElements = findInstructionArgSize(opB);
+    }
+
+    function findInstructionArgSize(uint op) internal view returns (uint argSize) {
+        argSize = 1;
+        if (op >= RulesEngineRuleFacet(address(red)).opsSize1()) argSize = 2;
+        if (op >= RulesEngineRuleFacet(address(red)).opsSizeUpTo2()) argSize = 3;
+        if (op >= RulesEngineRuleFacet(address(red)).opsSizeUpTo3()) argSize = 4;
     }
 
     function buildInstructionSet(
