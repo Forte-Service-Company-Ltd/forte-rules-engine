@@ -25,7 +25,7 @@
 - Only the current foreign call admin can propose a new calling contract admin 
 - Proposed foreign call Admin Role cannot act as the foreign call admin until role is confirmed 
 - For a given Foreign contract and selector pair, the Foreign Call Admin is the only one who can configure which Policy Admins may leverage the Foreign Call in their policies
-- A calling foreign contract admin may renounce their role
+- A foreign call admin may renounce their role
 
 ### Policy Invariants 
 - policyId can never be 0 

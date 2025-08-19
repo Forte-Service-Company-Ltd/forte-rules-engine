@@ -94,7 +94,6 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
      * @param account address renouncing to the role.
      */
     function renounceCallingContractAdminRole(address callingContract, address account) external nonReentrant {
-        /// enforcing the min-1-admin requirement.
         bytes32 adminRoleId = _generateCallingContractAdminRoleId(callingContract, CALLING_CONTRACT_ADMIN);
         AccessControl.renounceRole(adminRoleId, account);
         emit CallingContractAdminRoleRenounced(callingContract, account);
@@ -106,8 +105,7 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
      * @param _functionSignature function signature of the foreign call 
      * @param account address renouncing to the role.
      */
-    function renounceForeignCallAdminRole(address _foreignCallContract, bytes4 _functionSignature,address account) external nonReentrant {
-        /// enforcing the min-1-admin requirement.
+    function renounceForeignCallAdminRole(address _foreignCallContract, bytes4 _functionSignature, address account) external nonReentrant {
         bytes32 adminRoleId = _generateForeignCallAdminRoleId(_foreignCallContract, _functionSignature, FOREIGN_CALL_ADMIN);
         AccessControl.renounceRole(adminRoleId, account);
         emit ForeignCallPermissionsRenounced(_foreignCallContract, _functionSignature);
