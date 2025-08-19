@@ -3014,21 +3014,6 @@ abstract contract trackers is RulesEngineCommon {
             vm.stopPrank();
         }
 
-        // Indirect manipulation via evaluateForeignCalls
-        {
-            vm.startPrank(maliciousActor);
-            bytes memory maliciousArguments = abi.encodeWithSelector(
-                bytes4(keccak256(bytes(callingFunction))),
-                address(0xDEAD),
-                999,
-                abi.encode(new uint256[](0))
-            );
-            bytes[] memory emptyRetVals = new bytes[](0);
-            ForeignCallEncodedIndex[] memory emptyMetadata = new ForeignCallEncodedIndex[](0);
-
-            // RulesEngineProcessorFacet(address(red)).evaluateForeignCalls(policyId, maliciousArguments, 0, emptyRetVals, emptyMetadata);
-        }
-
         // Tracker values should remain unchanged
         {
             Trackers memory finalTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, 1);
