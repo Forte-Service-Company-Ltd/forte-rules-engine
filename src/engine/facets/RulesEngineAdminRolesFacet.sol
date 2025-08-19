@@ -289,6 +289,7 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
         if (getRoleMemberCount(adminRoleId) > 0) revert(FOREIGN_CALL_ADMIN_ALREADY_GRANTED);
         // grant the admin role to the calling address of the createPolicy function from RulesEnginePolicyFacet
         _grantRole(adminRoleId, _account);
+        if (getRoleMemberCount(adminRoleId) > 1) revert(FOREIGN_CALL_ADMIN_ALREADY_GRANTED);
         // set up FC register lists
         // first add to master Permissioned FC map and list
         ForeignCallStorage storage foreignCallData = lib._getForeignCallStorage();
