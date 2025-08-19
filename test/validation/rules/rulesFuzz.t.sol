@@ -17,7 +17,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         uint256 opB = uint256(_opB);
 
         (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
-        uint256[] memory instructionSet = buildInstructionSet(opA, opB, opAElements, opBElements, 0);
+        uint256[] memory instructionSet = buildInstructionSet2Opcodes(opA, opB, opAElements, opBElements, 0);
 
         // rule setup
         Rule memory rule;
@@ -40,7 +40,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
 
         (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
         uint totalElements = _opAElements + _opBElements + 2; // 2 for the opA and opB themselves
-        uint256[] memory instructionSet = buildInstructionSet(opA, opB, _opAElements, _opBElements, 20);
+        uint256[] memory instructionSet = buildInstructionSet2Opcodes(opA, opB, _opAElements, _opBElements, 20);
 
         // rule setup
         Rule memory rule;
@@ -63,7 +63,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         uint256 opB = bound(_opB, 1, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
 
         (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
-        uint256[] memory instructionSet = buildInstructionSet(opA, opB, opAElements, opBElements, _data);
+        uint256[] memory instructionSet = buildInstructionSet2Opcodes(opA, opB, opAElements, opBElements, _data);
 
         // rule setup
         Rule memory rule;
@@ -81,34 +81,27 @@ abstract contract rulesFuzz is RulesEngineCommon {
         opA = bound(opA, 0, RulesEngineRuleFacet(address(red)).opsTotalSize() - 1);
         opB = bound(opB, 0, RulesEngineRuleFacet(address(red)).opsTotalSize() - 1);
 
+        // we avoid problematic opcodes to avoid complex setups: PLH, PLHM, DIV, TRU, TRUM
+        if (opA == 17 || opA == 18 || opA == 4 || opA == 2 || opA == 8) opA = 6;
+        if (opB == 17 || opB == 18 || opB == 4 || opB == 2 || opB == 8) opB = 6;
         (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
         // the instruction set will have 90 or 91 instructions depending on the causesOverflow flag.
-        uint instructionSetLength = (opAElements + opBElements + 2) * (45 + (causesOverflow ? 1 : 0));
-        uint256[] memory instructionSet = new uint256[](instructionSetLength);
-        // we build the instruction set by alternating opA and opB
-        bool isOpBTurn;
-        for (uint i = 0; i < instructionSetLength; i++) {
-            if (isOpBTurn) {
-                instructionSet[i] = opB;
-                i += opBElements; // skip the arguments
-                isOpBTurn = false;
-            } else {
-                instructionSet[i] = opA;
-                i += opAElements; // skip the arguments
-                isOpBTurn = true;
-            }
-        }
+        uint[] memory instructionSet = buildInstructionSetMax(opA, opB, opAElements, opBElements, causesOverflow, 1);
 
         // rule setup
         Rule memory rule;
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
         rule.instructionSet = instructionSet;
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
         rule.posEffects = new Effect[](1);
-        rule.posEffects[0] = effectId_event;
+        rule.posEffects[0] = effectId_revert;
         // test
         if (causesOverflow) vm.expectRevert("Instruction Set Too Large");
-        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        // if the instruction set is valid, we execute the rule to make sure it won't revert due to unexpected reasons
+        if (!causesOverflow) savePolicyAndExecuteInstructionSet(ruleId, policyIds);
     }
 
     function testRulesEngine_Fuzz_createRule_simple(uint256 _ruleValue, uint256 _transferValue) public {
@@ -178,7 +171,44 @@ abstract contract rulesFuzz is RulesEngineCommon {
         if (op >= RulesEngineRuleFacet(address(red)).opsSizeUpTo3()) argSize = 4;
     }
 
-    function buildInstructionSet(
+    function savePolicyAndExecuteInstructionSet(uint ruleId, uint[] memory policyIds) internal {
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        // Save the calling function
+        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyIds[0],
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes,
+            callingFunction,
+            ""
+        );
+        // Save the Policy
+        callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
+        callingFunctionIds.push(callingFunctionId);
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = ruleId;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyIds[0],
+            callingFunctions,
+            callingFunctionIds,
+            ruleIds,
+            PolicyType.CLOSED_POLICY,
+            policyName,
+            policyDescription
+        );
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+        // test that rule ( amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)" ) processes correctly
+        vm.startPrank(userContractAddress);
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1e18);
+        vm.expectRevert(abi.encode(revert_text));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+    }
+
+    function buildInstructionSet2Opcodes(
         uint256 opA,
         uint256 opB,
         uint256 opAElements,
@@ -192,6 +222,45 @@ abstract contract rulesFuzz is RulesEngineCommon {
         // we fill the instructions with the data
         for (uint i = 1; i < 1 + opAElements; i++) instructionSet[i] = uint(data);
         for (uint i = 2 + opAElements; i < instructionSet.length; i++) instructionSet[i] = uint(data);
+        return instructionSet;
+    }
+
+    function buildInstructionSetMax(
+        uint256 opA,
+        uint256 opB,
+        uint256 opAElements,
+        uint256 opBElements,
+        bool causesOverflow,
+        uint256 data
+    ) internal view returns (uint256[] memory instructionSet) {
+        uint instructionSetLength = (opAElements + opBElements + 2) *
+            (RulesEngineRuleFacet(address(red)).memorySize() / 2 + (causesOverflow ? 1 : 0));
+        instructionSet = new uint256[](instructionSetLength);
+        // we build the instruction set by alternating opA and opB. We assign all data elements with the "data" parameter
+        bool isOpBTurn;
+        bool isData;
+        uint dataElements;
+        for (uint i = 0; i < instructionSetLength; i++) {
+            if (isData) {
+                instructionSet[i] = data;
+                if (dataElements > 1) {
+                    --dataElements;
+                } else {
+                    isData = false;
+                }
+            } else {
+                if (isOpBTurn) {
+                    instructionSet[i] = opB;
+                    dataElements = opBElements;
+                    isOpBTurn = false;
+                } else {
+                    instructionSet[i] = opA;
+                    dataElements = opAElements;
+                    isOpBTurn = true;
+                }
+                isData = true;
+            }
+        }
         return instructionSet;
     }
 }
