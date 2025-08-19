@@ -1430,7 +1430,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallReturnValue memory result;
         // =
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.STATIC_TYPE_ARRAY));
 
@@ -1467,9 +1467,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         ForeignCallReturnValue memory result;
-        // =
+
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.STATIC_TYPE_ARRAY));
 
@@ -1507,7 +1507,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.DYNAMIC_TYPE_ARRAY));
 
@@ -1545,7 +1545,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.DYNAMIC_TYPE_ARRAY));
 
@@ -1579,7 +1579,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.BOOL));
 
@@ -1611,7 +1611,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.BYTES));
 
@@ -1643,7 +1643,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.UINT));
 
@@ -1675,7 +1675,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.UINT));
 
