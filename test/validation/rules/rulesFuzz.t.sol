@@ -78,8 +78,8 @@ abstract contract rulesFuzz is RulesEngineCommon {
     }
 
     function testRulesEngine_Fuzz_createRule_instructionSetLength(uint opA, uint opB, bool causesOverflow) public {
-        opA = bound(opA, 0, RulesEngineRuleFacet(address(red)).opsTotalSize() - 1);
-        opB = bound(opB, 0, RulesEngineRuleFacet(address(red)).opsTotalSize() - 1);
+        opA = bound(opA, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
+        opB = bound(opB, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
 
         // we avoid problematic opcodes to avoid complex setups: PLH, PLHM, DIV, TRU, TRUM
         if (opA == 17 || opA == 18 || opA == 4 || opA == 2 || opA == 8) opA = 6;
@@ -166,9 +166,9 @@ abstract contract rulesFuzz is RulesEngineCommon {
 
     function findInstructionArgSize(uint op) internal view returns (uint argSize) {
         argSize = 1;
-        if (op >= RulesEngineRuleFacet(address(red)).opsSize1()) argSize = 2;
-        if (op >= RulesEngineRuleFacet(address(red)).opsSizeUpTo2()) argSize = 3;
-        if (op >= RulesEngineRuleFacet(address(red)).opsSizeUpTo3()) argSize = 4;
+        if (op >= RulesEngineRuleFacet(address(red)).getOpsSize1()) argSize = 2;
+        if (op >= RulesEngineRuleFacet(address(red)).getOpsSizeUpTo2()) argSize = 3;
+        if (op >= RulesEngineRuleFacet(address(red)).getOpsSizeUpTo3()) argSize = 4;
     }
 
     function savePolicyAndExecuteInstructionSet(uint ruleId, uint[] memory policyIds) internal {
@@ -234,7 +234,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         uint256 data
     ) internal view returns (uint256[] memory instructionSet) {
         uint instructionSetLength = (opAElements + opBElements + 2) *
-            (RulesEngineRuleFacet(address(red)).memorySize() / 2 + (causesOverflow ? 1 : 0));
+            (RulesEngineRuleFacet(address(red)).getMemorySize() / 2 + (causesOverflow ? 1 : 0));
         instructionSet = new uint256[](instructionSetLength);
         // we build the instruction set by alternating opA and opB. We assign all data elements with the "data" parameter
         bool isOpBTurn;
