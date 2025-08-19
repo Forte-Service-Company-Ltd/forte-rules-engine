@@ -436,6 +436,87 @@ contract RulesEngineAdminRolesTest is RulesEngineCommon, RulesEngineAdminRolesFa
         }
     }
 
+    function action_grantCallingContractRole(address sender, address newAdmin) public {
+        if (newAdmin == address(0) || testUserContract == address(0)) return;
+
+        bool isCurrentAdmin = false;
+        if (RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(testUserContract, msg.sender)) {
+            isCurrentAdmin = true;
+        }
+
+        if (isCurrentAdmin) {
+            // Only impersonate if the original caller is authorized
+            vm.startPrank(sender);
+            try RulesEngineAdminRolesFacet(address(red)).grantCallingContractRole(testUserContract, newAdmin) {
+                proposedCallingContractAdminsCount++;
+            } catch {}
+            vm.stopPrank();
+        } else {
+            // For unauthorized callers, don't impersonate - try directly
+            try RulesEngineAdminRolesFacet(address(red)).grantCallingContractRole(testUserContract, newAdmin) {
+                // Track successful unauthorized proposal
+                unauthorizedSuccessfulProposals++;
+                console.log("INVARIANT VIOLATION: Non-admin successfully granted calling contract admin");
+            } catch {
+                unauthorizedActionAttempts++;
+            }
+        }
+    }
+
+    function action_grantCallingContractRole_AccessControl(address sender, address newAdmin) public {
+        if (newAdmin == address(0) || testUserContract == address(0)) return;
+
+        bool isCurrentAdmin = false;
+        if (RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(testUserContract, msg.sender)) {
+            isCurrentAdmin = true;
+        }
+
+        if (isCurrentAdmin) {
+            // Only impersonate if the original caller is authorized
+            vm.startPrank(sender);
+            try RulesEngineAdminRolesFacet(address(red)).grantCallingContractRoleAccessControl(testUserContract, newAdmin) {
+                proposedCallingContractAdminsCount++;
+            } catch {}
+            vm.stopPrank();
+        } else {
+            // For unauthorized callers, don't impersonate - try directly
+            try RulesEngineAdminRolesFacet(address(red)).grantCallingContractRoleAccessControl(testUserContract, newAdmin) {
+                // Track successful unauthorized proposal
+                unauthorizedSuccessfulProposals++;
+                console.log("INVARIANT VIOLATION: Non-admin successfully granted calling contract admin");
+            } catch {
+                unauthorizedActionAttempts++;
+            }
+        }
+    }
+
+    function action_grantCallingContractRole_Ownable(address sender, address newAdmin) public {
+        if (newAdmin == address(0) || testUserContract == address(0)) return;
+
+        bool isCurrentAdmin = false;
+        if (RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(testUserContract, msg.sender)) {
+            isCurrentAdmin = true;
+        }
+
+        if (isCurrentAdmin) {
+            // Only impersonate if the original caller is authorized
+            vm.startPrank(sender);
+            try RulesEngineAdminRolesFacet(address(red)).grantCallingContractRoleOwnable(testUserContract, newAdmin) {
+                proposedCallingContractAdminsCount++;
+            } catch {}
+            vm.stopPrank();
+        } else {
+            // For unauthorized callers, don't impersonate - try directly
+            try RulesEngineAdminRolesFacet(address(red)).grantCallingContractRoleOwnable(testUserContract, newAdmin) {
+                // Track successful unauthorized proposal
+                unauthorizedSuccessfulProposals++;
+                console.log("INVARIANT VIOLATION: Non-admin successfully granted calling contract admin");
+            } catch {
+                unauthorizedActionAttempts++;
+            }
+        }
+    }
+
     function action_proposeNewForeignCallAdmin(address sender, address newAdmin) public {
         if (newAdmin == address(0) || pfcContractAddress == address(0)) return;
 

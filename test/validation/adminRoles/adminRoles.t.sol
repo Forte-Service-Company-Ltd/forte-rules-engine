@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import "test/utils/RulesEngineCommon.t.sol";
 
-abstract contract adminRoles is RulesEngineCommon {
+abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
     /**
      *
      *
@@ -115,6 +115,28 @@ abstract contract adminRoles is RulesEngineCommon {
         assertFalse(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, callingContractAdmin));
     }
 
+    function testRulesEngine_Unit_CreateCallingContractAdmin_ThroughCallingContract_OnlyOne_Negative()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        vm.expectEmit(true, true, false, false);
+        emit CallingContractAdminRoleGranted(newUserContractAddress, callingContractAdmin);
+        newUserContract.setCallingContractAdmin(callingContractAdmin);
+        assertTrue(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, callingContractAdmin));
+        assertEq(
+            RulesEngineAdminRolesFacet(address(red)).getRoleMemberCount(
+                _generateCallingContractAdminRoleId(newUserContractAddress, CALLING_CONTRACT_ADMIN)
+            ),
+            1
+        );
+        vm.expectRevert("Calling Contract Admin Already Granted");
+        newUserContract.setCallingContractAdmin(callingContractAdmin);
+
+        vm.expectRevert("Calling Contract Admin Already Granted");
+        newUserContract.setCallingContractAdmin(address(0x1337));
+    }
+
     function testRulesEngine_Unit_ProposeAndConfirm_CallingContractAdmin_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         newUserContract.setCallingContractAdmin(callingContractAdmin);
         assertTrue(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, callingContractAdmin));
@@ -175,6 +197,15 @@ abstract contract adminRoles is RulesEngineCommon {
         emit CallingContractAdminRoleGranted(ownableUserContractAddress, callingContractAdmin);
         RulesEngineAdminRolesFacet(address(red)).grantCallingContractRoleOwnable(ownableUserContractAddress, callingContractAdmin);
         assertTrue(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(ownableUserContractAddress, callingContractAdmin));
+        assertEq(
+            RulesEngineAdminRolesFacet(address(red)).getRoleMemberCount(
+                _generateCallingContractAdminRoleId(ownableUserContractAddress, CALLING_CONTRACT_ADMIN)
+            ),
+            1
+        );
+
+        vm.expectRevert("Calling Contract Admin Already Granted");
+        RulesEngineAdminRolesFacet(address(red)).grantCallingContractRoleOwnable(ownableUserContractAddress, callingContractAdmin);
     }
 
     function testRulesEngine_Unit_CreateCallingContractAdmin_ThroughEngineOwnable_Negative()
@@ -221,6 +252,15 @@ abstract contract adminRoles is RulesEngineCommon {
         emit CallingContractAdminRoleGranted(acUserContractAddress, callingContractAdmin);
         RulesEngineAdminRolesFacet(address(red)).grantCallingContractRoleAccessControl(acUserContractAddress, callingContractAdmin);
         assertTrue(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(acUserContractAddress, callingContractAdmin));
+        assertEq(
+            RulesEngineAdminRolesFacet(address(red)).getRoleMemberCount(
+                _generateCallingContractAdminRoleId(acUserContractAddress, CALLING_CONTRACT_ADMIN)
+            ),
+            1
+        );
+
+        vm.expectRevert("Calling Contract Admin Already Granted");
+        RulesEngineAdminRolesFacet(address(red)).grantCallingContractRoleAccessControl(acUserContractAddress, address(0x1337));
     }
 
     function testRulesEngine_Unit_CreateCallingContractAdmin_ThroughEngineAccessControl_Negative()
@@ -466,6 +506,39 @@ abstract contract adminRoles is RulesEngineCommon {
         bytes4 foreignCallSelector = PermissionedForeignCallTestContract.simpleCheck.selector;
         vm.expectRevert("Zero Address Cannot Be Admin");
         RulesEngineAdminRolesFacet(address(red)).grantForeignCallAdminRole(pfcContractAddress, address(0x00), foreignCallSelector);
+    }
+
+    function testRulesEngine_Uint_GrantForeignCallAdminRole_OnlyOne_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
+        // set the selector from the permissioned foreign call contract
+        bytes4 foreignCallSelector = PermissionedForeignCallTestContract.simpleCheck.selector;
+
+        uint256 tester = RulesEngineAdminRolesFacet(address(red)).getRoleMemberCount(
+            bytes32(0x6878d605e7d295f5ec729ec64b010c83b80d3866b6a0aee6ccf10d0816bb5618) //_generateForeignCallAdminRoleId(address(permissionedForeignCallContract), foreignCallSelector, "FOREIGN_CALL_ADMIN")
+        );
+        vm.startPrank(address(permissionedForeignCallContract));
+        //vm.expectRevert("Only One Foreign Call Admin Allowed");
+        permissionedForeignCallContract.setForeignCallAdmin(address(0x1337), foreignCallSelector);
+
+        assertTrue(
+            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
+                address(permissionedForeignCallContract),
+                address(0x1337),
+                foreignCallSelector
+            )
+        );
+
+        assertEq(
+            RulesEngineAdminRolesFacet(address(red)).getRoleMemberCount(
+                _generateForeignCallAdminRoleId(address(permissionedForeignCallContract), foreignCallSelector, "Calling_Contract_Admin")
+            ),
+            1
+        );
+
+        vm.expectRevert("Foreign Call Admin Already Granted");
+        permissionedForeignCallContract.setForeignCallAdmin(address(0x1338), foreignCallSelector);
+
+        vm.expectRevert("Foreign Call Admin Already Granted");
+        permissionedForeignCallContract.setForeignCallAdmin(address(0x1337), foreignCallSelector);
     }
 
     function testRulesEngine_Uint_ProposeNewForeignCallAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
