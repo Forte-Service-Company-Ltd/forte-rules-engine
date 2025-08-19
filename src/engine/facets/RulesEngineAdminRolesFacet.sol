@@ -150,8 +150,6 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
      */
     function grantCallingContractRole(address _callingContract, address _account) public nonReentrant returns (bytes32) {
         if (msg.sender != _callingContract) revert(ONLY_CALLING_CONTRACT);
-        if (_callingContract.code.length == 0) revert(ONLY_CALLING_CONTRACT);
-
         return _grantCallingContractRoleHelper(_callingContract, _account);
     }
 
@@ -226,17 +224,16 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
      */
     function _grantCallingContractRoleHelper(address _callingContract, address _account) private returns (bytes32) {
         if (_account == address(0)) revert(ZERO_ADDRESS);
+        if (_callingContract.code.length == 0) revert(ONLY_CALLING_CONTRACT);
 
         // Create Admin Role for Calling Contract Role: concat the calling contract address and adminRole key together and keccak them. Cast to bytes32 for Admin Role identifier
         bytes32 adminRoleId = _generateCallingContractAdminRoleId(_callingContract, CALLING_CONTRACT_ADMIN);
 
-        if (hasRole(adminRoleId, _account)) revert(CALLING_CONTRACT_ADMIN_ROLE_ALREADY_GRANTED);
+        // Ensure only one admin per calling contract
+        if (getRoleMemberCount(adminRoleId) > 0) revert(CALLING_CONTRACT_ADMIN_ROLE_ALREADY_GRANTED);
 
         // grant the admin role to the calling address of the createPolicy function from RulesEnginePolicyFacet
         _grantRole(adminRoleId, _account);
-
-        // Ensure only one admin per calling contract
-        if (getRoleMemberCount(adminRoleId) > 1) revert(CALLING_CONTRACT_ADMIN_ROLE_ALREADY_GRANTED);
 
         emit CallingContractAdminRoleGranted(_callingContract, _account);
         return adminRoleId;
@@ -289,10 +286,9 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
         if (_functionSignature == bytes4(0)) revert(FOREIGN_CALL_SELECTOR_NOT_SET);
         // Create Admin Role for Foreign Call Admin Role: concat the calling contract address and adminRole key together and keccak them. Cast to bytes32 for Admin Role identifier
         bytes32 adminRoleId = _generateForeignCallAdminRoleId(_foreignCallContract, _functionSignature, FOREIGN_CALL_ADMIN);
-        if (hasRole(adminRoleId, _account)) revert(FOREIGN_CALL_ADMIN_ALREADY_GRANTED);
+        if (getRoleMemberCount(adminRoleId) > 0) revert(FOREIGN_CALL_ADMIN_ALREADY_GRANTED);
         // grant the admin role to the calling address of the createPolicy function from RulesEnginePolicyFacet
         _grantRole(adminRoleId, _account);
-        if (getRoleMemberCount(adminRoleId) > 1) revert(FOREIGN_CALL_ADMIN_ALREADY_GRANTED);
         // set up FC register lists
         // first add to master Permissioned FC map and list
         ForeignCallStorage storage foreignCallData = lib._getForeignCallStorage();
