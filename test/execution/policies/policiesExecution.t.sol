@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "test/utils/RulesEngineCommon.t.sol";
+import "src/example/ExampleERC20.sol";
 
 abstract contract policiesExecution is RulesEngineCommon {
 
@@ -12,6 +13,47 @@ abstract contract policiesExecution is RulesEngineCommon {
  *
  *
  */
+
+ function testPolicyClosingDoesntDeleteContractAssociations() public ifDeploymentTestsEnabled resetsGlobalVariables {
+    uint256[] memory policyIds = new uint256[](3);
+    uint256 policy1 = _createBlankPolicyOpen();
+    uint256 policy2 = _createBlankPolicyOpen();
+    uint256 policy3 = _createBlankPolicyOpen();
+    policyIds[0] = policy1;
+    policyIds[1] = policy2;
+    policyIds[2] = policy3;
+    address[] memory contracts = new address[](3);
+    contracts[0] = address(new ExampleERC20("Test", "TEST"));
+    contracts[1] = address(new ExampleERC20("Test2", "TEST2"));
+    contracts[2] = address(new ExampleERC20("Test3", "TEST3"));
+
+    for (uint256 i = 0; i < contracts.length; i++) {
+        vm.startPrank(callingContractAdmin);
+        ExampleERC20(contracts[i]).setRulesEngineAddress(address(red));
+        ExampleERC20(contracts[i]).setCallingContractAdmin(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(contracts[i], policyIds);
+        vm.stopPrank();
+    }
+    
+    vm.startPrank(policyAdmin);
+    RulesEnginePolicyFacet(address(red)).closePolicy(policyIds[0]);
+    vm.stopPrank();
+
+    uint256[] memory appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[0]);
+    assertEq(appliedPolicies.length, 2);
+    assertEq(appliedPolicies[0], policyIds[1]);
+    assertEq(appliedPolicies[1], policyIds[2]);
+
+    appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[1]);
+    assertEq(appliedPolicies.length, 2);
+    assertEq(appliedPolicies[0], policyIds[1]);
+    assertEq(appliedPolicies[1], policyIds[2]);
+
+    appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[2]);
+    assertEq(appliedPolicies.length, 2);
+    assertEq(appliedPolicies[0], policyIds[1]);
+    assertEq(appliedPolicies[1], policyIds[2]);
+ }
 
  function testRulesArrayStillFullAfterCallingFunctionDeletion() public ifDeploymentTestsEnabled resetsGlobalVariables {
     uint256[] memory policyIds = new uint256[](1);

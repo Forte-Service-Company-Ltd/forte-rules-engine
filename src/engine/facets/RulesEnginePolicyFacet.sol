@@ -481,7 +481,17 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
             PolicyAssociationStorage storage assocData = lib._getPolicyAssociationStorage();
             // Data validation will alway ensure assocData.policyIdContractMap[_policyId].length will be less than MAX_LOOP
             for (uint256 i = 0; i < assocData.policyIdContractMap[_policyId].length; i++) {
-                delete assocData.contractPolicyIdMap[assocData.policyIdContractMap[_policyId][i]];
+                address mappedAddress = assocData.policyIdContractMap[_policyId][i];
+                uint256 len = assocData.contractPolicyIdMap[mappedAddress].length;
+                for (uint256 j = 0; j < len; j ++) {
+                    if (assocData.contractPolicyIdMap[mappedAddress][j] == _policyId) {
+					    for (uint256 k = j; k < len - 1; k++) {
+                            assocData.contractPolicyIdMap[mappedAddress][k] = assocData.contractPolicyIdMap[mappedAddress][k + 1];
+                        }
+                        assocData.contractPolicyIdMap[mappedAddress].pop();
+                        break;
+				    }
+		        }
             }
             delete assocData.policyIdContractMap[_policyId];
         }
