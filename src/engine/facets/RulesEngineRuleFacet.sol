@@ -234,10 +234,6 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         // instructionSet
         if (rule.instructionSet.length == 0) revert(EMPTY_INSTRUCTION_SET); // only applies to top level instruction set
         _validateInstructionSet(rule.instructionSet);
-        // rawData
-        for (uint i = 0; i < rule.rawData.instructionSetIndex.length; i++) {
-            _validateInstructionSetIndex(rule.rawData.instructionSetIndex[i]);
-        }
         for (uint i = 0; i < rule.rawData.argumentTypes.length; i++) {
             _validateParamType(rule.rawData.argumentTypes[i]);
         }
@@ -336,14 +332,6 @@ contract RulesEngineRuleFacet is FacetCommonImports {
     function _validateEffectType(EffectTypes effectType) internal pure {
         uint EffectTypesSize = 3;
         if (uint(effectType) >= EffectTypesSize) revert(INVALID_EFFECT_TYPE);
-    }
-
-    /**
-     * @notice Validates an instruction set index type.
-     * @param index The index to validate.
-     */
-    function _validateInstructionSetIndex(uint256 index) internal pure {
-        if (index > memorySize) revert(MEMORY_OVERFLOW);
     }
 
     /**
