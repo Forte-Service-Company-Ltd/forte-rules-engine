@@ -389,7 +389,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         if (_ruleIds.length != _callingFunctions.length && _callingFunctions.length > 0) revert(INVALID_RULE_LENGTH);
         for (uint256 i = 0; i < _callingFunctions.length; i++) {
             // Validate calling function
-            if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctionIds[i]), _callingFunctions[i]) revert(INVALID_SIGNATURE);
+            if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctionIds[i], _callingFunctions[i])) revert(INVALID_SIGNATURE);
 
             // Map calling function to its ID and add to iterator array
             data.callingFunctionIdMap[_callingFunctions[i]] = _callingFunctionIds[i];
@@ -483,15 +483,15 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
             for (uint256 i = 0; i < assocData.policyIdContractMap[_policyId].length; i++) {
                 address mappedAddress = assocData.policyIdContractMap[_policyId][i];
                 uint256 len = assocData.contractPolicyIdMap[mappedAddress].length;
-                for (uint256 j = 0; j < len; j ++) {
+                for (uint256 j = 0; j < len; j++) {
                     if (assocData.contractPolicyIdMap[mappedAddress][j] == _policyId) {
-					    for (uint256 k = j; k < len - 1; k++) {
+                        for (uint256 k = j; k < len - 1; k++) {
                             assocData.contractPolicyIdMap[mappedAddress][k] = assocData.contractPolicyIdMap[mappedAddress][k + 1];
                         }
                         assocData.contractPolicyIdMap[mappedAddress].pop();
                         break;
-				    }
-		        }
+                    }
+                }
             }
             delete assocData.policyIdContractMap[_policyId];
         }

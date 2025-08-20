@@ -17,7 +17,7 @@ library RulesEngineStorageLib {
      * @param _callingFunctionId The ID of the calling function to check.
      * @return set True if the calling funciton is set, false otherwise.
      */
-    function _isCallingFunctionSet(uint256 _policyId, uint256 _callingFunctionId) internal view returns (bool) {
+    function _isCallingFunctionSet(uint256 _policyId, uint256 _callingFunctionId, bytes4 sig) internal view returns (bool) {
         // Load the calling function data from storage
         return
             lib._getCallingFunctionStorage().callingFunctionStorageSets[_policyId][_callingFunctionId].set &&
