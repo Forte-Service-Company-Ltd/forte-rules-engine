@@ -287,6 +287,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                                 trackerData.trackerIdToRuleIds[_policyId][placeHolders[i].typeSpecificIndex].length - 1
                             ];
                         trackerData.trackerIdToRuleIds[_policyId][placeHolders[i].typeSpecificIndex].pop();
+                        break; // Exit the loop after removal
                     } else {
                         j++; // Only increment if no removal occurred
                     }
@@ -306,6 +307,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                                 trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex].length - 1
                             ];
                         trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex].pop();
+                        break; // Exit the loop after removal
                     } else {
                         l++; // Only increment if no removal occurred
                     }

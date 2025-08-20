@@ -1004,6 +1004,118 @@ abstract contract policies is RulesEngineCommon {
         assertEq(trackerToRuleIdList.length, 0);
     }
 
+    function testRulesEngine_unit_UpdateRuleFromTrackerToRuleIdList() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        //build tracker
+        Trackers memory tracker;
+        /// build the members of the struct:
+        tracker.pType = ParamTypes.ADDR;
+        tracker.set = true;
+        tracker.trackerValue = abi.encode(0xD00D);
+        setupRuleWithTrackerFlag(policyIds[0], tracker);
+
+        uint256[] memory trackerToRuleIdList = RulesEngineComponentFacet(address(red)).getTrackerToRuleIds(1, 2);
+        assertEq(trackerToRuleIdList.length, 1);
+        // update the rule
+        vm.startPrank(policyAdmin);
+        Rule memory rule;
+        // Instruction set: LogicalOp.PLH, 0, LogicalOp.PLH, 1, LogicalOp.GT, 0, 1
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.NUM);
+        rule.instructionSet[1] = 1;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 1;
+        rule.instructionSet[4] = uint(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        rule.placeHolders = new Placeholder[](3);
+        rule.placeHolders[0].pType = ParamTypes.ADDR;
+        rule.placeHolders[0].typeSpecificIndex = 0;
+        rule.placeHolders[1].pType = ParamTypes.UINT;
+        rule.placeHolders[1].typeSpecificIndex = 1;
+        rule.placeHolders[2].pType = ParamTypes.ADDR;
+        rule.placeHolders[2].typeSpecificIndex = 2;
+        Trackers memory tracker1;
+        Trackers memory tracker2;
+        Trackers memory tracker3;
+        Trackers memory tracker4;
+        Trackers memory tracker5;
+        /// build the members of the struct:
+        tracker1.pType = ParamTypes.ADDR;
+        tracker1.set = true;
+        tracker1.trackerValue = abi.encode(0xD00D);
+
+        tracker2.pType = ParamTypes.UINT;
+        tracker2.set = true;
+        tracker2.trackerValue = abi.encode(500);
+
+        tracker3.pType = ParamTypes.BOOL;
+        tracker3.set = true;
+        tracker3.trackerValue = abi.encode(true);
+
+        tracker4.pType = ParamTypes.UINT;
+        tracker4.set = true;
+        tracker4.trackerValue = abi.encode(1000);
+
+        tracker5.pType = ParamTypes.ADDR;
+        tracker5.set = true;
+        tracker5.trackerValue = abi.encode(0x0033);
+
+        rule.effectPlaceHolders = new Placeholder[](5);
+        rule.effectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule.effectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.effectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+
+        rule.effectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.effectPlaceHolders[1].typeSpecificIndex = 2;
+        rule.effectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
+
+        rule.effectPlaceHolders[2].pType = ParamTypes.UINT;
+        rule.effectPlaceHolders[2].typeSpecificIndex = 3;
+        rule.effectPlaceHolders[2].flags = FLAG_TRACKER_VALUE;
+
+        rule.effectPlaceHolders[3].pType = ParamTypes.UINT;
+        rule.effectPlaceHolders[3].typeSpecificIndex = 4;
+        rule.effectPlaceHolders[3].flags = FLAG_TRACKER_VALUE;
+
+        rule.effectPlaceHolders[4].pType = ParamTypes.ADDR;
+        rule.effectPlaceHolders[4].typeSpecificIndex = 5;
+        rule.effectPlaceHolders[4].flags = FLAG_TRACKER_VALUE;
+
+        rule.negEffects = new Effect[](1);
+        rule.posEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+        rule.posEffects[0] = _createEffectExpressionTrackerUpdateMultiTrackerUpdate();
+
+        // Add the trackers
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "trName1");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker2, "trName2");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker3, "trName3");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker4, "trName4");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker5, "trName5");
+
+        // update the rule
+        vm.startPrank(policyAdmin);
+        RulesEngineRuleFacet(address(red)).updateRule(policyIds[0], 1, rule, "My rule", "My way or the highway");
+
+        uint256[] memory trackerToRuleIdList1 = RulesEngineComponentFacet(address(red)).getTrackerToRuleIds(1, 1);
+        assertEq(trackerToRuleIdList1.length, 1);
+
+        uint256[] memory trackerToRuleIdList2 = RulesEngineComponentFacet(address(red)).getTrackerToRuleIds(1, 2);
+        assertEq(trackerToRuleIdList2.length, 1);
+
+        uint256[] memory trackerToRuleIdList3 = RulesEngineComponentFacet(address(red)).getTrackerToRuleIds(1, 3);
+        assertEq(trackerToRuleIdList3.length, 1);
+
+        uint256[] memory trackerToRuleIdList4 = RulesEngineComponentFacet(address(red)).getTrackerToRuleIds(1, 4);
+        assertEq(trackerToRuleIdList4.length, 1);
+
+        uint256[] memory trackerToRuleIdList5 = RulesEngineComponentFacet(address(red)).getTrackerToRuleIds(1, 5);
+        assertEq(trackerToRuleIdList5.length, 1);
+    }
+
     function testRulesEngine_unit_RetrieveTrackerToRuleIdList_MultipleTrackers() public ifDeploymentTestsEnabled endWithStopPrank {
         _setUpRuleWithMultipleTrackers();
 
@@ -1080,6 +1192,53 @@ abstract contract policies is RulesEngineCommon {
 
         trackerToRuleIdList1 = RulesEngineComponentFacet(address(red)).getTrackerToRuleIds(1, 1);
         assertEq(trackerToRuleIdList1.length, 4);
+    }
+
+    function testRulesEngine_unit_UpdateRuleFromTrackerToRuleIdList_MultipleRules() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256 policyId = _setUpMultipleRulesWiTracker();
+
+        uint256[] memory trackerToRuleIdList1 = RulesEngineComponentFacet(address(red)).getTrackerToRuleIds(1, 1);
+        assertEq(trackerToRuleIdList1.length, 5);
+
+        // delete the rule
+        vm.startPrank(policyAdmin);
+
+        Rule memory rule6;
+        // Instruction set: LogicalOp.PLH, 0, LogicalOp.PLH, 1, LogicalOp.GT, 0, 1
+        rule6.instructionSet = new uint256[](7);
+        rule6.instructionSet[0] = uint(LogicalOp.NUM);
+        rule6.instructionSet[1] = 1;
+        rule6.instructionSet[2] = uint(LogicalOp.NUM);
+        rule6.instructionSet[3] = 1;
+        rule6.instructionSet[4] = uint(LogicalOp.EQ);
+        rule6.instructionSet[5] = 0;
+        rule6.instructionSet[6] = 1;
+
+        rule6.negEffects = new Effect[](1);
+        rule6.posEffects = new Effect[](1);
+        rule6.negEffects[0] = effectId_revert;
+        rule6.posEffects[0] = effectId_revert;
+        // Test adding a rule without a tracker does not update the list
+        RulesEngineRuleFacet(address(red)).createRule(policyId, rule6, ruleName, ruleDescription);
+
+        trackerToRuleIdList1 = RulesEngineComponentFacet(address(red)).getTrackerToRuleIds(1, 1);
+        assertEq(trackerToRuleIdList1.length, 5);
+
+        // update to the rule to now include a tracker and ensure it updates the list
+        rule6.effectPlaceHolders = new Placeholder[](1);
+        rule6.effectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule6.effectPlaceHolders[0].typeSpecificIndex = 1;
+        rule6.effectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+
+        rule6.negEffects = new Effect[](1);
+        rule6.posEffects = new Effect[](1);
+        rule6.negEffects[0] = effectId_revert;
+        rule6.posEffects[0] = _createEffectExpressionTrackerUpdateParameterPlaceHolder();
+
+        RulesEngineRuleFacet(address(red)).updateRule(policyId, 6, rule6, ruleName, ruleDescription);
+
+        trackerToRuleIdList1 = RulesEngineComponentFacet(address(red)).getTrackerToRuleIds(1, 1);
+        assertEq(trackerToRuleIdList1.length, 6);
     }
 
     function _setUpRuleWithMultipleTrackers() internal returns (uint256 policyId) {
