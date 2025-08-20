@@ -679,7 +679,11 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         RulesEngineForeignCallFacet(address(red)).addAdminToPermissionList(pfcContractAddress, address(0x66667777), foreignCallSelector);
     }
 
-    function testRulesEngine_Unit_ConfirmNewForeignCallAdmin_NewLines() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_ConfirmNewForeignCallAdmin_ConfirmDataStructureUpdates()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
         // Setup addresses
         address oldAdmin = address(0x1111);
         address newAdmin = address(0x2222);
