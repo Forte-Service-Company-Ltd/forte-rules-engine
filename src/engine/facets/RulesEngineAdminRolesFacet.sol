@@ -89,7 +89,7 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
     }
 
     /**
-     * @dev This function is used to renounce Calling Contract Admin Role. 
+     * @dev This function is used to renounce Calling Contract Admin Role.
      * @param callingContract the calling contract associated to the role.
      * @param account address renouncing to the role.
      */
@@ -100,9 +100,9 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
     }
 
     /**
-     * @dev This function is used to renounce Foreign Call Admin Role. 
+     * @dev This function is used to renounce Foreign Call Admin Role.
      * @param _foreignCallContract the role to renounce.
-     * @param _functionSignature function signature of the foreign call 
+     * @param _functionSignature function signature of the foreign call
      * @param account address renouncing to the role.
      */
     function renounceForeignCallAdminRole(address _foreignCallContract, bytes4 _functionSignature, address account) external nonReentrant {
@@ -360,6 +360,11 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
         _revokeRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSignature, PROPOSED_FOREIGN_CALL_ADMIN), msg.sender);
         _revokeRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSignature, FOREIGN_CALL_ADMIN), oldForeignCallAdmin);
         _grantRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSignature, FOREIGN_CALL_ADMIN), msg.sender);
+
+        ForeignCallStorage storage foreignCallData = lib._getForeignCallStorage();
+        foreignCallData.permissionedForeignCallAdmins[foreignCallContract][functionSignature][oldForeignCallAdmin] = false;
+        foreignCallData.permissionedForeignCallAdminsList[foreignCallContract][functionSignature].push(msg.sender);
+        foreignCallData.permissionedForeignCallAdmins[foreignCallContract][functionSignature][msg.sender] = true;
         emit ForeignCallAdminRoleConfirmed(foreignCallContract, msg.sender);
     }
 

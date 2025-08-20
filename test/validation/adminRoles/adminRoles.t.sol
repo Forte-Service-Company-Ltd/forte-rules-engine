@@ -114,11 +114,7 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         assertFalse(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, callingContractAdmin));
     }
 
-    function testRulesEngine_Unit_RenounceForeignCallAdmin_Positive()
-        public
-        ifDeploymentTestsEnabled
-        endWithStopPrank
-    {        
+    function testRulesEngine_Unit_RenounceForeignCallAdmin_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         // start test as address 0x55556666
         vm.startPrank(address(0x55556666));
         // set the selector from the permissioned foreign call contract
@@ -131,7 +127,11 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
                 foreignCallSelector
             )
         );
-        RulesEngineAdminRolesFacet(address(red)).renounceForeignCallAdminRole(address(permissionedForeignCallContract), foreignCallSelector, address(0x55556666));
+        RulesEngineAdminRolesFacet(address(red)).renounceForeignCallAdminRole(
+            address(permissionedForeignCallContract),
+            foreignCallSelector,
+            address(0x55556666)
+        );
         // confirm the foreign call admin has renounced
         assertFalse(
             RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
@@ -677,5 +677,78 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         vm.startPrank(address(0x66666666));
         vm.expectRevert("Not An Authorized Foreign Call Admin");
         RulesEngineForeignCallFacet(address(red)).addAdminToPermissionList(pfcContractAddress, address(0x66667777), foreignCallSelector);
+    }
+
+    function testRulesEngine_Unit_ConfirmNewForeignCallAdmin_NewLines() public ifDeploymentTestsEnabled endWithStopPrank {
+        // Setup addresses
+        address oldAdmin = address(0x1111);
+        address newAdmin = address(0x2222);
+        bytes4 selector = PermissionedForeignCallTestContract.simpleCheck.selector;
+
+        // set up initial state and test oldAdmin capabilities
+        vm.startPrank(oldAdmin);
+
+        // set oldAdmin as foreign call admin
+        permissionedForeignCallContract.setForeignCallAdmin(oldAdmin, selector);
+        assertTrue(
+            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(address(permissionedForeignCallContract), oldAdmin, selector)
+        );
+
+        // oldAdmin can add permissions
+        RulesEngineForeignCallFacet(address(red)).addAdminToPermissionList(
+            address(permissionedForeignCallContract),
+            address(0x3333),
+            selector
+        );
+
+        vm.stopPrank();
+
+        // oldAdmin creates both policy and foreign call
+        vm.startPrank(oldAdmin);
+        uint256 policyId = _createBlankPolicy();
+
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(permissionedForeignCallContract);
+        fc.signature = selector;
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.UINT;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+        fc.returnType = ParamTypes.UINT;
+        fc.foreignCallIndex = 0;
+
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+
+        // Propose new admin
+        RulesEngineAdminRolesFacet(address(red)).proposeNewForeignCallAdmin(address(permissionedForeignCallContract), newAdmin, selector);
+
+        // switch admin
+        vm.stopPrank();
+        vm.startPrank(newAdmin);
+        RulesEngineAdminRolesFacet(address(red)).confirmNewForeignCallAdmin(address(permissionedForeignCallContract), selector);
+
+        // test oldAdmin lost permissions
+        vm.stopPrank();
+        vm.startPrank(oldAdmin);
+
+        // oldAdmin can no longer update foreign calls due to storage mapping change
+        fc.returnType = ParamTypes.BOOL;
+        vm.expectRevert("Not Permissioned For Foreign Call");
+        RulesEngineForeignCallFacet(address(red)).updateForeignCall(policyId, foreignCallId, fc);
+
+        // make newAdmin a policy admin so they can update foreign calls
+        vm.startPrank(address(red));
+        RulesEngineAdminRolesFacet(address(red)).generatePolicyAdminRole(policyId, newAdmin);
+
+        vm.stopPrank();
+        vm.startPrank(newAdmin);
+
+        // newAdmin CAN update foreign calls
+        RulesEngineForeignCallFacet(address(red)).updateForeignCall(policyId, foreignCallId, fc);
+
+        // Verify the update was successful
+        ForeignCall memory updatedFc = RulesEngineForeignCallFacet(address(red)).getForeignCall(policyId, foreignCallId);
+        assertTrue(updatedFc.returnType == ParamTypes.BOOL, "newAdmin should be able to update foreign call after admin transfer");
     }
 }
