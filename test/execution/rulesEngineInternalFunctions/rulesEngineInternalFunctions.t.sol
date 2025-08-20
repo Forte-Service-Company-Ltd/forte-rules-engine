@@ -1744,7 +1744,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
     function testRulesEngine_Utils_VersionCheck() public ifDeploymentTestsEnabled endWithStopPrank {
         // Read the version from package.json at compile time using foundry's ffi cheatcode
-        string[] memory cmds = new string[](5);
+        string[] memory cmds = new string[](3);
         cmds[0] = "node";
         cmds[1] = "-e";
         cmds[2] = "console.log(require('./package.json').version)";
