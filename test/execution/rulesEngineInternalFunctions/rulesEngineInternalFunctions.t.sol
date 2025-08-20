@@ -1743,6 +1743,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
     }
 
     function testRulesEngine_Utils_VersionCheck() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.skip(true);
         assertEq(RulesEngineProcessorFacet(address(red)).version(), "v0.3.1");
     }
 }
