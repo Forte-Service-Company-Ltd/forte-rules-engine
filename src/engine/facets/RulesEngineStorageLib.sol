@@ -19,7 +19,9 @@ library RulesEngineStorageLib {
      */
     function _isCallingFunctionSet(uint256 _policyId, uint256 _callingFunctionId) internal view returns (bool) {
         // Load the calling function data from storage
-        return lib._getCallingFunctionStorage().callingFunctionStorageSets[_policyId][_callingFunctionId].set;
+        return
+            lib._getCallingFunctionStorage().callingFunctionStorageSets[_policyId][_callingFunctionId].set &&
+            lib._getCallingFunctionStorage().callingFunctionStorageSets[_policyId][_callingFunctionId].signature == sig;
     }
 
     /**

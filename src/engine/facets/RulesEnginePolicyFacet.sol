@@ -389,7 +389,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         if (_ruleIds.length != _callingFunctions.length && _callingFunctions.length > 0) revert(INVALID_RULE_LENGTH);
         for (uint256 i = 0; i < _callingFunctions.length; i++) {
             // Validate calling function
-            if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctionIds[i])) revert(INVALID_SIGNATURE);
+            if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctionIds[i]), _callingFunctions[i]) revert(INVALID_SIGNATURE);
 
             // Map calling function to its ID and add to iterator array
             data.callingFunctionIdMap[_callingFunctions[i]] = _callingFunctionIds[i];
@@ -416,7 +416,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
     ) private {
         for (uint256 i = 0; i < _callingFunctions.length; i++) {
             // Validate calling function
-            if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctionIds[i])) revert(INVALID_SIGNATURE);
+            if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctionIds[i], _callingFunctions[i])) revert(INVALID_SIGNATURE);
 
             // Map calling function to its ID and add to iterator array
             data.callingFunctionIdMap[_callingFunctions[i]] = _callingFunctionIds[i];
