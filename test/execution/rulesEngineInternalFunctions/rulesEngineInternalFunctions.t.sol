@@ -1743,7 +1743,13 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
     }
 
     function testRulesEngine_Utils_VersionCheck() public ifDeploymentTestsEnabled endWithStopPrank {
-        vm.skip(true);
-        assertEq(RulesEngineProcessorFacet(address(red)).version(), "v0.3.1");
+        // Read the version from package.json at compile time using foundry's ffi cheatcode
+        string[] memory cmds = new string[](5);
+        cmds[0] = "node";
+        cmds[1] = "-e";
+        cmds[2] = "console.log(require('./package.json').version)";
+        bytes memory out = vm.ffi(cmds);
+        string memory version = string(abi.encodePacked("v", out));
+        assertEq(RulesEngineProcessorFacet(address(red)).version(), version);
     }
 }
