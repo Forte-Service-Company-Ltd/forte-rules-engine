@@ -114,11 +114,7 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         assertFalse(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, callingContractAdmin));
     }
 
-    function testRulesEngine_Unit_RenounceForeignCallAdmin_Positive()
-        public
-        ifDeploymentTestsEnabled
-        endWithStopPrank
-    {        
+    function testRulesEngine_Unit_RenounceForeignCallAdmin_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         // start test as address 0x55556666
         vm.startPrank(address(0x55556666));
         // set the selector from the permissioned foreign call contract
@@ -131,7 +127,11 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
                 foreignCallSelector
             )
         );
-        RulesEngineAdminRolesFacet(address(red)).renounceForeignCallAdminRole(address(permissionedForeignCallContract), foreignCallSelector, address(0x55556666));
+        RulesEngineAdminRolesFacet(address(red)).renounceForeignCallAdminRole(
+            address(permissionedForeignCallContract),
+            foreignCallSelector,
+            address(0x55556666)
+        );
         // confirm the foreign call admin has renounced
         assertFalse(
             RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(

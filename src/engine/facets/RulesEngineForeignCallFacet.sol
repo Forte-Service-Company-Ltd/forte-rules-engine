@@ -273,8 +273,6 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
             // index starts at one to skip the foreign call admin address
             lib._getForeignCallStorage().permissionedForeignCallAdmins[foriegnCallAddress][selector][oldAdminList[i]] = false;
         }
-        // re create the Foreign Call admin list with the first admin
-        lib._getForeignCallStorage().permissionedForeignCallAdminsList[foriegnCallAddress][selector].push(msg.sender);
         // emit event
         emit ForeignCallPermissionsListReset(foriegnCallAddress, selector);
     }

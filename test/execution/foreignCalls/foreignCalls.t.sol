@@ -806,34 +806,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         assertTrue(pfcStorage.length == 4, "There should be four permissioned foreign call admins");
         RulesEngineForeignCallFacet(address(red)).removeAllFromPermissionList(pfcContractAddress, foreignCallSelector);
         pfcStorage = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(pfcContractAddress, foreignCallSelector);
-        assertTrue(pfcStorage.length == 1, "There should be only be the original foreign call admin");
-    }
-
-    function testRulesEngine_Unit_PermissionedForeignCall_removeAllWithOnlyOneAdmin_Positive()
-        public
-        ifDeploymentTestsEnabled
-        endWithStopPrank
-    {
-        // start test as address 0x55556666
-        vm.startPrank(address(0x55556666));
-        // set the selector from the permissioned foreign call contract
-        bytes4 foreignCallSelector = PermissionedForeignCallTestContract.simpleCheck.selector;
-        permissionedForeignCallContract.setForeignCallAdmin(address(0x55556666), foreignCallSelector);
-        assertTrue(
-            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
-                address(permissionedForeignCallContract),
-                address(0x55556666),
-                foreignCallSelector
-            )
-        );
-
-        // test remove with only one admin
-        RulesEngineForeignCallFacet(address(red)).removeAllFromPermissionList(pfcContractAddress, foreignCallSelector);
-        address[] memory pfcStorage = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(
-            pfcContractAddress,
-            foreignCallSelector
-        );
-        assertTrue(pfcStorage.length == 1, "There should be only be the original foreign call admin");
+        assertTrue(pfcStorage.length == 0, "There should be no permissioned foreign call admins");
     }
 
     function testRulesEngine_Unit_PermissionedForeignCall_removeAll_AddToPolicyAfterRemoval_Positive()
