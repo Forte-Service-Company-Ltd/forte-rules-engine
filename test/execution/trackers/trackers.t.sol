@@ -177,6 +177,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.UINT;
         tracker.trackerKeyType = ParamTypes.UINT;
 
@@ -234,6 +235,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.ADDR;
         tracker.trackerKeyType = ParamTypes.ADDR;
 
@@ -289,6 +291,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.UINT; // set the ParamType for the tracker value to be decoded as
         tracker.trackerKeyType = ParamTypes.ADDR;
 
@@ -347,6 +350,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.ADDR; // set the ParamType for the tracker value to be decoded as
         tracker.trackerKeyType = ParamTypes.ADDR;
 
@@ -403,6 +407,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.BOOL;
         tracker.trackerKeyType = ParamTypes.UINT;
 
@@ -458,6 +463,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.BOOL;
         tracker.trackerKeyType = ParamTypes.UINT;
 
@@ -513,6 +519,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.ADDR;
         tracker.trackerKeyType = ParamTypes.ADDR;
 
@@ -566,6 +573,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct for bool→address mapping
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.ADDR; // tracker stores address values
         tracker.trackerKeyType = ParamTypes.BOOL; // keys are booleans
 
@@ -627,6 +635,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct for address→string mapping
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.STR; // tracker stores string values
         tracker.trackerKeyType = ParamTypes.ADDR; // keys are addresses
 
@@ -688,6 +697,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct for string→address mapping
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.ADDR; // tracker stores address values
         tracker.trackerKeyType = ParamTypes.STR; // keys are strings
 
@@ -758,6 +768,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.UINT;
         tracker.trackerKeyType = ParamTypes.STR;
 
@@ -823,6 +834,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.STR;
         tracker.trackerKeyType = ParamTypes.UINT;
 
@@ -883,6 +895,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.BOOL;
         tracker.trackerKeyType = ParamTypes.STR;
 
@@ -952,6 +965,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.STR;
         tracker.trackerKeyType = ParamTypes.BOOL;
 
@@ -1021,6 +1035,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.STR;
         tracker.trackerKeyType = ParamTypes.STR;
 
@@ -1090,6 +1105,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.UINT;
         tracker.trackerKeyType = ParamTypes.BYTES;
 
@@ -1155,6 +1171,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.BYTES;
         tracker.trackerKeyType = ParamTypes.UINT;
 
@@ -1220,6 +1237,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.ADDR;
         tracker.trackerKeyType = ParamTypes.BYTES;
 
@@ -1275,6 +1293,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.BYTES;
         tracker.trackerKeyType = ParamTypes.ADDR;
 
@@ -1340,6 +1359,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.BOOL;
         tracker.trackerKeyType = ParamTypes.BYTES;
 
@@ -1407,6 +1427,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.BYTES;
         tracker.trackerKeyType = ParamTypes.BOOL;
 
@@ -1474,6 +1495,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.STR;
         tracker.trackerKeyType = ParamTypes.BYTES;
 
@@ -1543,6 +1565,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.BYTES;
         tracker.trackerKeyType = ParamTypes.STR;
 
@@ -1612,6 +1635,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.BYTES;
         tracker.trackerKeyType = ParamTypes.BYTES;
 
@@ -1682,6 +1706,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.BOOL;
         tracker.trackerKeyType = ParamTypes.BOOL;
 
@@ -1738,6 +1763,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.UINT;
         tracker.trackerKeyType = ParamTypes.UINT;
         /// create tracker key arrays
@@ -1788,6 +1814,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct for uint→address mapping
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.ADDR; // tracker stores address values
         tracker.trackerKeyType = ParamTypes.UINT; // keys are uints
 
@@ -1853,6 +1880,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct for address→uint mapping
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.UINT; // tracker stores uint values
         tracker.trackerKeyType = ParamTypes.ADDR; // keys are addresses
 
@@ -1915,6 +1943,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct for address→address mapping
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.ADDR; // tracker stores address values
         tracker.trackerKeyType = ParamTypes.ADDR; // keys are addresses
 
@@ -2000,6 +2029,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct for address→bool mapping
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.BOOL; // tracker stores bool values
         tracker.trackerKeyType = ParamTypes.ADDR; // keys are addresses
 
@@ -2082,6 +2112,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.UINT;
         tracker.trackerKeyType = ParamTypes.ADDR;
         tracker.mapped = true;
@@ -2144,6 +2175,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.ADDR;
         tracker.trackerKeyType = ParamTypes.BYTES;
         tracker.mapped = true;
@@ -2243,6 +2275,7 @@ abstract contract trackers is RulesEngineCommon {
         _addCallingFunctionToPolicy(policyIds[0]);
         /// create tracker struct
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = ParamTypes.UINT;
         tracker.trackerValue = abi.encode(1);
         string memory trackerName = "tracker1";

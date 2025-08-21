@@ -1902,7 +1902,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.posEffects[0] = effectId_event;
 
         // Add the tracker
-        trackerIndex = RulesEngineComponentFacet(address(red)).createTracker(
+        trackerIndex = RulesEngineComponentFacet(address(red)).createMappedTracker(
             policyIds[0],
             tracker,
             trackerName,
@@ -1983,7 +1983,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         }
 
         // Add the tracker
-        trackerIndex = RulesEngineComponentFacet(address(red)).createTracker(
+        trackerIndex = RulesEngineComponentFacet(address(red)).createMappedTracker(
             policyIds[0],
             tracker,
             trackerName,
@@ -2063,7 +2063,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         }
 
         // Add the tracker
-        trackerIndex = RulesEngineComponentFacet(address(red)).createTracker(
+        trackerIndex = RulesEngineComponentFacet(address(red)).createMappedTracker(
             policyIds[0],
             tracker,
             trackerName,
@@ -2288,6 +2288,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         bytes[] memory trackerVls
     ) internal {
         Trackers memory tracker;
+        tracker.mapped = true;
         tracker.pType = trackerPType;
         tracker.trackerKeyType = trackerKeyType;
 
@@ -2304,7 +2305,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         /// create tracker name
         string memory trackerName = "tracker1";
         // Add the tracker
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, trackerName, trackerKeys, trackerValues);
+        RulesEngineComponentFacet(address(red)).createMappedTracker(policyIds[0], tracker, trackerName, trackerKeys, trackerValues);
     }
 
     function _createForeignCallUsingMappedTrackerValueHelper(
