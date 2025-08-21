@@ -300,14 +300,10 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             }
         }
         uint256 retValIndex;
-        uint256 iter = 0;
         for (uint256 j = 0; j < metadata.length; j++) {
             if (metadata[j].index == index && metadata[j].eType == fc.encodedIndices[i].eType) {
-                retValIndex = iter;
+                retValIndex = j;
                 break;
-            }
-            if (metadata[j].eType != EncodedIndexType.ENCODED_VALUES) {
-                iter += 1;
             }
         }
         bytes memory value = retVals[retValIndex];

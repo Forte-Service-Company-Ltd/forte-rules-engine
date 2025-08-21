@@ -961,9 +961,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
             address(0x1234567)
         );
         bytes memory vals = abi.encode(array1, array3);
-        bytes[] memory retVals = new bytes[](2);
-        retVals[0] = abi.encode(array2);
-        retVals[1] = abi.encode(array4);
+        bytes[] memory retVals = new bytes[](4);
+        retVals[0] = abi.encode(array1); // ENCODED_VALUES at metadata[0]
+        retVals[1] = abi.encode(array2); // FOREIGN_CALL at metadata[1]
+        retVals[2] = abi.encode(array3); // ENCODED_VALUES at metadata[2]
+        retVals[3] = abi.encode(array4); // FOREIGN_CALL at metadata[3]
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
@@ -998,6 +1000,78 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
                 address(0x1234567)
             )
         );
+    }
+
+    function testRulesEngine_Unit_createRule_ForeignCall_TrackerValuesUsed2_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256[] memory policyIds = new uint256[](1);
+
+        policyIds[0] = _createBlankPolicy();
+
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+
+        _addCallingFunctionToPolicy(policyIds[0]);
+
+        Rule memory rule;
+
+        // Build the foreign call placeholder
+        rule.placeHolders = new Placeholder[](3);
+        rule.placeHolders[0].pType = ParamTypes.UINT;
+        rule.placeHolders[0].typeSpecificIndex = 1; //@audit: value 4
+
+        rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.placeHolders[1].typeSpecificIndex = 1; //@audit: value 2
+
+        rule.placeHolders[2].flags = FLAG_FOREIGN_CALL;
+        rule.placeHolders[2].typeSpecificIndex = 1; //@audit: shoud be 2*2=4, but be 4*4=16
+
+        uint256[] memory instructionSet = new uint256[](7);
+        instructionSet[0] = uint(LogicalOp.PLH);
+        instructionSet[1] = 0; //
+        instructionSet[2] = uint(LogicalOp.PLH);
+        instructionSet[3] = 2; //
+        instructionSet[4] = uint(LogicalOp.EQ);
+        instructionSet[5] = 0;
+        instructionSet[6] = 1;
+
+        rule.instructionSet = instructionSet;
+
+        rule = _setUpEffect(rule, EffectTypes.REVERT, false);
+
+        Trackers memory tracker;
+
+        /// build the members of the struct:
+        tracker.pType = ParamTypes.UINT;
+        tracker.trackerValue = abi.encode(2);
+        // Add the tracker
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+
+        ParamTypes[] memory fcArgs = new ParamTypes[](1);
+        fcArgs[0] = ParamTypes.UINT;
+        ForeignCall memory fc;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 1; // @audit: should get tracker value `2` in placeholder 1, but incorrectly get value `4` in placeholder 0
+        fc.encodedIndices[0].eType = EncodedIndexType.TRACKER;
+        fc.parameterTypes = fcArgs;
+        fc.foreignCallAddress = address(testContract);
+        fc.signature = bytes4(keccak256(bytes("square(uint256)")));
+        fc.returnType = ParamTypes.UINT;
+        fc.foreignCallIndex = 0;
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "square(uint256)");
+        // Save the rule
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = ruleId;
+        _addRuleIdsToPolicy(policyIds[0], ruleIds);
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 4);
+        vm.startPrank(address(userContract));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments); //@audit revert due to 4 != 16
     }
 
     function testRulesEngine_Unit_EncodingForeignCallArrayMixedTypes_Simple() public ifDeploymentTestsEnabled endWithStopPrank {
