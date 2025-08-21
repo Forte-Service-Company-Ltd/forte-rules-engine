@@ -11,6 +11,17 @@ library RulesEngineStorageLib {
     /// This section is for internal functions used for validation of components. They are here to optimize gas consumption.
 
     /**
+     * @notice Checks if a rule is set.
+     * @param _policyId The ID of the policy the calling function is associated with.
+     * @param _ruleId The ID of the rule to check.
+     * @return set True if the rule is set, false otherwise.
+     */
+    function _isRuleSet(uint256 _policyId, uint256 _ruleId) internal view returns (bool) {
+        // Load the rule data from storage
+        return lib._getRuleStorage().ruleStorageSets[_policyId][_ruleId].set;
+    }
+
+    /**
      * @notice Checks if a calling function is set for the specified policy.
      * @dev Validates whether the calling function exists in the policy's storage.
      * @param _policyId The ID of the policy the calling function is associated with.

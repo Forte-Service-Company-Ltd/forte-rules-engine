@@ -87,7 +87,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             rules[i] = new Rule[](ruleIds.length);
             // Data validation will always ensure ruleIds.length will be less than MAX_LOOP
             for (uint256 j = 0; j < ruleIds.length; j++) {
-                if (lib._getRuleStorage().ruleStorageSets[policyId][ruleIds[j]].set) {
+                if (StorageLib._isRuleSet(policyId, ruleIds[j])) {
                     rules[i][j] = lib._getRuleStorage().ruleStorageSets[policyId][ruleIds[j]].rule;
                 }
             }
