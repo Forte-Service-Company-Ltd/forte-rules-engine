@@ -62,6 +62,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         if (policyId == 0) revert(POLICY_ID_0);
         _policyAdminOnly(policyId, msg.sender);
         _validateRule(rule);
+        if (!StorageLib._isRuleSet(policyId, ruleId)) revert(RULE_NOT_SET);
         StorageLib._notCemented(policyId);
         // Load the rule data from storage
         RuleStorage storage data = lib._getRuleStorage();

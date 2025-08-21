@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "src/engine/facets/FacetCommonImports.sol";
+import {RulesEngineStorageLib as StorageLib} from "src/engine/facets/RulesEngineStorageLib.sol";
 
 /**
  * @title Rules Engine Foreign Call Facet
@@ -61,6 +62,7 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
     ) external returns (ForeignCall memory fc) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
+        if (!StorageLib._isForeignCallSet(policyId, foreignCallId)) revert(FOREIGN_CALL_NOT_SET);
         _isForeignCallPermissioned(foreignCall.foreignCallAddress, foreignCall.signature);
         fc = foreignCall;
         fc.foreignCallIndex = foreignCallId;
