@@ -170,6 +170,48 @@ abstract contract trackers is RulesEngineCommon {
         RulesEngineComponentFacet(address(red)).updateTracker(policyId, 10_000, tracker);
     }
 
+    function testRuleEngine_Unit_createTrackerInvalidMappedFlag() public {
+        uint256[] memory policyIds = new uint256[](1);
+
+        policyIds[0] = _createBlankPolicy();
+        Trackers memory tracker;
+        tracker.mapped = true;
+
+        /// build the members of the struct:
+        tracker.pType = ParamTypes.UINT;
+        tracker.trackerValue = abi.encode(666);
+        vm.expectRevert("Invalid type");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+    }
+
+    function testRuleEngine_Unit_MappedTrackerCreateTrackerInvalidMappedFlag() public {
+        uint256[] memory policyIds = new uint256[](1);
+
+        policyIds[0] = _createBlankPolicy();
+        Trackers memory tracker;
+        tracker.pType = ParamTypes.UINT;
+        tracker.trackerKeyType = ParamTypes.UINT;
+
+        /// create tracker key arrays
+        bytes[] memory trackerKeys = new bytes[](2);
+        trackerKeys[0] = abi.encode(1); // key 1
+        trackerKeys[1] = abi.encode(2); // key 2
+
+        /// create tracker value arrays
+        bytes[] memory trackerValues = new bytes[](2);
+        trackerValues[0] = abi.encode(1000000000); // value 1
+        trackerValues[1] = abi.encode(2000000000); // value
+
+        /// create tracker name
+        string memory trackerName = "tracker1";
+
+        /// build the members of the struct:
+        tracker.pType = ParamTypes.UINT;
+        tracker.trackerValue = abi.encode(666);
+        vm.expectRevert("Invalid type");
+        RulesEngineComponentFacet(address(red)).createMappedTracker(policyIds[0], tracker, trackerName, trackerKeys, trackerValues);
+    }
+
     //// Mapped Trackers
     /// trackers as a rule conditional
     /// uint to uint trackers
