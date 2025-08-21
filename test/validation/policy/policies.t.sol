@@ -290,7 +290,7 @@ abstract contract policies is RulesEngineCommon {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = policyId;
         Rule memory r;
-        // Set up the 
+        // Set up the parameter types for the calling function
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
