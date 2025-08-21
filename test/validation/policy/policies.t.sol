@@ -283,6 +283,83 @@ abstract contract policies is RulesEngineCommon {
         assertEq(RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(address(potentialSubscriber)).length, 0);
     }
 
+    function testRulesEngine_Unit_UpdatePolicy_With_Rules_Delete_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.startPrank(policyAdmin);
+        uint256 ruleCount = 50;
+        uint256 policyId = _createBlankPolicy();
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        Rule memory r;
+        // Set up the 
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        uint256 callingFunctionId;        
+
+        uint256[][] memory ruleIds = new uint256[][](50);        
+        ruleIds[0] = new uint256[](50);
+        bytes4[] memory selectors = new bytes4[](50);
+        uint256[] memory functionIds = new uint256[](50);
+        // This loop will create 50 calling functions with a rule on each one.
+        for (uint i = 0; i < ruleCount; i++) {
+            callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyId,
+                bytes4(keccak256(bytes(callingFunction))),
+                pTypes,
+                callingFunction,
+                ""
+            );
+            selectors[i] = bytes4(keccak256(bytes(callingFunction)));
+            functionIds[i] = callingFunctionId;
+            r = _createLTRule();
+            ruleIds[i] = new uint256[](1);
+            ruleIds[i][0] = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], r, "rule", "ruleDescription");
+        }
+        ruleCount -= 1;
+        uint256 lastRuleId = ruleIds[ruleCount][0];
+        uint256 lastFunctionId = functionIds[ruleCount];
+        bytes4 lastSelector = selectors[ruleCount];
+        // Remove all but the last calling function and rule.
+        selectors = new bytes4[](1);
+        functionIds = new uint256[](1);
+        ruleIds = new uint256[][](1); 
+        selectors[0] = lastSelector;
+        functionIds[0] = lastFunctionId;
+        ruleIds[0] = new uint256[](1);
+        ruleIds[0][0] = lastRuleId;
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            functionIds,
+            ruleIds,
+            PolicyType.OPEN_POLICY,
+            policyName,
+            policyDescription
+        );
+        // verify that only the single rule and calling function exist in this policy
+        (selectors, functionIds, ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
+        assertEq(selectors.length, 1, "Rules delete in updatePolicy did not remove all the function selectors");
+        assertEq(functionIds.length, 1, "Rules delete in updatePolicy did not remove all the calling function records");
+        assertEq(ruleIds.length, 1, "Rules delete in updatePolicy did not remove all the calling function assocations");
+        assertEq(ruleIds[0].length, 1, "Rules delete in updatePolicy did not remove all the rules");
+
+        // verify that the old rules and calling functions cannot be used 
+        selectors[0] = lastSelector;
+        functionIds[0] = 0;
+        ruleIds[0] = new uint256[](1);
+        ruleIds[0][0] = 0;
+        vm.expectRevert("Invalid Signature");
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            functionIds,
+            ruleIds,
+            PolicyType.OPEN_POLICY,
+            policyName,
+            policyDescription
+        );
+    }
+
     function testRulesEngine_Unit_ClosePolicy_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         vm.startPrank(policyAdmin);
         uint256 policyId = _createBlankPolicy();

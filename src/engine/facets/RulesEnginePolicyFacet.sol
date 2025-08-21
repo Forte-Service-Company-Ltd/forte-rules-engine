@@ -353,6 +353,12 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         _processPolicyTypeChange(_policyId, _policyType);
         _storePolicyMetadata(_policyId, _policyName, _policyDescription);
 
+        // clear the calling function to rule id associations.
+        bytes4[] memory oldCallingFunctions = data.callingFunctions;
+        for (uint256 i = 0; i < oldCallingFunctions.length; i ++) {
+            delete data.callingFunctionsToRuleIds[oldCallingFunctions[i]];
+        }
+
         // Clear the iterator array
         delete data.callingFunctions;
 
