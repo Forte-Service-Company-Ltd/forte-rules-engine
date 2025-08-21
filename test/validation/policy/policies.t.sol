@@ -340,7 +340,7 @@ abstract contract policies is RulesEngineCommon {
         (selectors, functionIds, ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
         assertEq(selectors.length, 1, "Rules delete in updatePolicy did not remove all the function selectors");
         assertEq(functionIds.length, 1, "Rules delete in updatePolicy did not remove all the calling function records");
-        assertEq(ruleIds.length, 1, "Rules delete in updatePolicy did not remove all the calling function assocations");
+        assertEq(ruleIds.length, 1, "Rules delete in updatePolicy did not remove all the calling function associations");
         assertEq(ruleIds[0].length, 1, "Rules delete in updatePolicy did not remove all the rules");
 
         // verify that the old rules and calling functions cannot be used 
