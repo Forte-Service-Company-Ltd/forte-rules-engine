@@ -2317,7 +2317,6 @@ abstract contract trackers is RulesEngineCommon {
         _addCallingFunctionToPolicy(policyIds[0]);
         /// create tracker struct
         Trackers memory tracker;
-        tracker.mapped = true;
         tracker.pType = ParamTypes.UINT;
         tracker.trackerValue = abi.encode(1);
         string memory trackerName = "tracker1";
