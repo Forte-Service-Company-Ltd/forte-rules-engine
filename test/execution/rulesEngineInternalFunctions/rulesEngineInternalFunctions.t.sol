@@ -1018,13 +1018,13 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         // Build the foreign call placeholder
         rule.placeHolders = new Placeholder[](3);
         rule.placeHolders[0].pType = ParamTypes.UINT;
-        rule.placeHolders[0].typeSpecificIndex = 1; //@audit: value 4
+        rule.placeHolders[0].typeSpecificIndex = 1;
 
         rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
-        rule.placeHolders[1].typeSpecificIndex = 1; //@audit: value 2
+        rule.placeHolders[1].typeSpecificIndex = 1;
 
         rule.placeHolders[2].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[2].typeSpecificIndex = 1; //@audit: shoud be 2*2=4, but be 4*4=16
+        rule.placeHolders[2].typeSpecificIndex = 1;
 
         uint256[] memory instructionSet = new uint256[](7);
         instructionSet[0] = uint(LogicalOp.PLH);
@@ -1041,7 +1041,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         Trackers memory tracker;
 
-        /// build the members of the struct:
+        /// build the members of the struct
         tracker.pType = ParamTypes.UINT;
         tracker.trackerValue = abi.encode(2);
         // Add the tracker
@@ -1051,7 +1051,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fcArgs[0] = ParamTypes.UINT;
         ForeignCall memory fc;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-        fc.encodedIndices[0].index = 1; // @audit: should get tracker value `2` in placeholder 1, but incorrectly get value `4` in placeholder 0
+        fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.TRACKER;
         fc.parameterTypes = fcArgs;
         fc.foreignCallAddress = address(testContract);
@@ -1071,7 +1071,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 4);
         vm.startPrank(address(userContract));
-        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments); //@audit revert due to 4 != 16
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
     function testRulesEngine_Unit_EncodingForeignCallArrayMixedTypes_Simple() public ifDeploymentTestsEnabled endWithStopPrank {
