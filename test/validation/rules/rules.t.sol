@@ -255,7 +255,7 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
         // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
         RulesEngineRuleFacet(address(red)).deleteRule(policyId, ruleId);
         RuleStorageSet memory sig = RulesEngineRuleFacet(address(red)).getRule(policyId, ruleId);
@@ -275,7 +275,7 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
         // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
         RulesEnginePolicyFacet(address(red)).cementPolicy(policyId);
         vm.expectRevert("Not allowed for cemented policy");
@@ -296,7 +296,7 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects[0] = effectId_event;
 
         // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
         vm.startPrank(newPolicyAdmin);
         vm.expectRevert("Not Authorized To Policy");
@@ -316,7 +316,7 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
         // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
         vm.expectEmit(true, false, false, false);
         emit RuleDeleted(policyId, ruleId);
         RulesEngineRuleFacet(address(red)).deleteRule(policyId, ruleId);

@@ -320,7 +320,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
         // Save the rule
-        ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyIds[0], 0, rule, ruleName, ruleDescription);
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;

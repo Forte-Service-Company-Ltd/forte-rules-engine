@@ -135,7 +135,7 @@ abstract contract policies is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
 
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyIds[0], 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
@@ -163,7 +163,7 @@ abstract contract policies is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
 
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyIds[0], 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
@@ -982,7 +982,7 @@ abstract contract policies is RulesEngineCommon {
             rule.negEffects = new Effect[](1);
             rule.negEffects[0] = effectId_revert;
             // Save the rule
-            ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, "My rule", "My way or the highway");
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "My rule", "My way or the highway");
         }
 
         uint functionId;
