@@ -1028,9 +1028,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         uint256[] memory instructionSet = new uint256[](7);
         instructionSet[0] = uint(LogicalOp.PLH);
-        instructionSet[1] = 0; //
+        instructionSet[1] = 0;
         instructionSet[2] = uint(LogicalOp.PLH);
-        instructionSet[3] = 2; //
+        instructionSet[3] = 2;
         instructionSet[4] = uint(LogicalOp.EQ);
         instructionSet[5] = 0;
         instructionSet[6] = 1;
