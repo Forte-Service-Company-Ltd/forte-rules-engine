@@ -28,6 +28,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
     function createTracker(uint256 policyId, Trackers calldata tracker, string calldata trackerName) external returns (uint256) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
+        if (tracker.mapped) revert(INVALID_TYPE);
         _validateTrackerType(tracker);
         // Step 1: Increment tracker index
         uint256 trackerIndex = _incrementTrackerIndex(policyId);
@@ -49,7 +50,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
      * @param trackerName Names of the trackers
      * @return trackerIndex The index of the created tracker.
      */
-    function createTracker(
+    function createMappedTracker(
         uint256 policyId,
         Trackers calldata tracker,
         string calldata trackerName,
@@ -58,6 +59,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
     ) external returns (uint256) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
+        if (!tracker.mapped) revert(INVALID_TYPE);
         _validateTrackerType(tracker);
         if (trackerKeys.length != trackerValues.length) revert(KEY_AND_VALUE_SAME);
         uint256 trackerIndex = lib._getTrackerStorage().trackerIndexCounter[policyId];
@@ -473,7 +475,6 @@ contract RulesEngineComponentFacet is FacetCommonImports {
 
         // After this, you can clear the mapping for this function's ruleIds
         delete data.policy.callingFunctionsToRuleIds[signature];
-
 
         for (uint256 i = 0; i < data.policy.callingFunctions.length; i++) {
             if (data.policy.callingFunctions[i] == signature) {
