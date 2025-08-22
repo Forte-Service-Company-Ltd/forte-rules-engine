@@ -1037,6 +1037,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         rule.instructionSet = instructionSet;
 
+        // Set up dual effects: EVENT when rule passes (true), REVERT when rule fails (false)
+        rule = _setUpEffect(rule, EffectTypes.EVENT, true);
         rule = _setUpEffect(rule, EffectTypes.REVERT, false);
 
         Trackers memory tracker;
@@ -1071,6 +1073,14 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 4);
         vm.startPrank(address(userContract));
+
+        // Expect the event to be emitted when the rule passes (4 == square(2))
+        vm.expectEmit(true, true, true, true);
+        emit RulesEngineEvent(1, EVENTTEXT, event_text);
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+
+        vm.expectRevert("Rules Engine Revert");
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 5);
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
