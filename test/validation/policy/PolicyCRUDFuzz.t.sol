@@ -231,8 +231,8 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         uint policyId = _createBlankPolicy();
 
         uint ruleId;
+        Rule memory rule;
         {
-            Rule memory rule;
             // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, *uint256 representation of Bad Info*, LogicalOp.EQ, 0, 1
             // Build the instruction set for the rule (including placeholders)
             rule.instructionSet = new uint256[](7);
@@ -243,6 +243,11 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             rule.instructionSet[4] = uint(LogicalOp.EQ);
             rule.instructionSet[5] = 0;
             rule.instructionSet[6] = 1;
+
+            rule.negEffects = new Effect[](1);
+            rule.negEffects[0] = effectId_revert;
+
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "My rule", "My way or the highway");
 
             rule.rawData.argumentTypes = new ParamTypes[](1);
             rule.rawData.dataValues = new bytes[](1);
@@ -255,10 +260,9 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             rule.placeHolders = new Placeholder[](1);
             rule.placeHolders[0].pType = ParamTypes.STR;
             rule.placeHolders[0].typeSpecificIndex = 1;
-            rule.negEffects = new Effect[](1);
-            rule.negEffects[0] = effectId_revert;
+
             // Save the rule
-            ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, "My rule", "My way or the highway");
+            RulesEngineRuleFacet(address(red)).updateRule(policyId, ruleId, rule, "My rule", "My way or the highway");
         }
 
         uint functionId;
@@ -276,34 +280,39 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
                 ""
             );
         }
-        bytes4[] memory selectors = new bytes4[](functionAmount);
-        if (functionAmount > 0) for (uint i; i < functionAmount; i++) selectors[i] = sigCallingFunction;
-        uint256[] memory functionIds = new uint256[](functionAmount);
-        if (functionAmount > 0) for (uint i; i < functionAmount; i++) functionIds[i] = functionId;
-        uint256[][] memory _ruleIds = new uint256[][](ruleAmounts);
-        uint256[] memory _ids = new uint256[](1);
-        _ids[0] = ruleId;
-        if (ruleAmounts > 0) for (uint i; i < ruleAmounts; i++) _ruleIds[i] = _ids;
-        // bool willRevert = functionAmount != ruleAmounts && ruleAmounts > 0 && functionAmount > 0;
-        if (functionAmount != ruleAmounts && ruleAmounts > 0 && functionAmount > 0) vm.expectRevert("Invalid rule array length");
-        RulesEnginePolicyFacet(address(red)).updatePolicy(
-            policyId,
-            selectors,
-            functionIds,
-            _ruleIds,
-            PolicyType.OPEN_POLICY,
-            "Test Policy",
-            "This is a test policy"
-        );
-
+        {
+            bytes4[] memory selectors = new bytes4[](functionAmount);
+            if (functionAmount > 0) for (uint i; i < functionAmount; i++) selectors[i] = sigCallingFunction;
+            uint256[] memory functionIds = new uint256[](functionAmount);
+            if (functionAmount > 0) for (uint i; i < functionAmount; i++) functionIds[i] = functionId;
+            uint256[][] memory _ruleIds = new uint256[][](ruleAmounts);
+            uint256[] memory _ids = new uint256[](1);
+            console2.log("ruleId", ruleId);
+            _ids[0] = ruleId;
+            console2.log("_ids[0]", _ids[0]);
+            if (ruleAmounts > 0) for (uint i; i < ruleAmounts; i++) _ruleIds[i] = _ids;
+            // console2.log("_ruleIds[0][0]", _ruleIds[0][0]);
+            if (functionAmount != ruleAmounts && ruleAmounts > 0 && functionAmount > 0) vm.expectRevert("Invalid rule array length");
+            RulesEnginePolicyFacet(address(red)).updatePolicy(
+                policyId,
+                selectors,
+                functionIds,
+                _ruleIds,
+                PolicyType.OPEN_POLICY,
+                "Test Policy",
+                "This is a test policy"
+            );
+        }
         if (functionAmount == ruleAmounts && ruleAmounts > 0 && functionAmount > 0) {
             (bytes4[] memory callingFunctions_, uint256[] memory callingFunctionIds_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(
                 address(red)
             ).getPolicy(policyId);
-            assertEq(callingFunctions_.length, selectors.length, "selector length mismatch");
-            assertEq(callingFunctionIds_.length, functionIds.length, "function id length mismatch");
-            assertEq(ruleIds_.length, _ruleIds.length, "rule id length mismatch");
-            for (uint i; i < _ruleIds.length; i++) {
+            assertEq(callingFunctions_.length, functionAmount, "selector length mismatch");
+            assertEq(callingFunctionIds_.length, functionAmount, "function id length mismatch");
+            assertEq(ruleIds_.length, ruleAmounts, "rule id length mismatch");
+            for (uint i; i < ruleIds_.length; i++) {
+                console2.log("i", i);
+                console2.log("ruleIds_[0][0]", ruleIds_[0][0]);
                 assertEq(ruleIds_[i].length, functionAmount, "rule id length mismatch");
                 RuleStorageSet memory ruleStorage = RulesEngineRuleFacet(address(red)).getRule(policyId, ruleIds_[i][0]);
                 assertEq(ruleStorage.rule.instructionSet.length, 7, "instruction set length mismatch");
