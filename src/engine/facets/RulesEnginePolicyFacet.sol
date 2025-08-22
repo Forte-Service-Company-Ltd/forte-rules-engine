@@ -304,15 +304,14 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         if (policy.callingFunctions.length > 0) {
             callingFunctions = new bytes4[](policy.callingFunctions.length);
             callingFunctionIds = new uint256[](policy.callingFunctions.length);
-            // ruleIds = new uint256[][](policy.callingFunctions.length);
+            ruleIds = new uint256[][](policy.callingFunctions.length);
         }
-
+        ruleIds = new uint256[][](policy.callingFunctions.length);
         // Loop through the callng functions and load the return arrays
         // Data validation will alway ensure policy.signatures.length will be less than MAX_LOOP
         for (uint256 i = 0; i < policy.callingFunctions.length; i++) {
             callingFunctions[i] = policy.callingFunctions[i];
             callingFunctionIds[i] = policy.callingFunctionIdMap[policy.callingFunctions[i]];
-            ruleIds = new uint256[][](policy.callingFunctions.length);
             // Initialize the ruleId return array if necessary
             // Data validation will alway ensure policy.signatureToRuleIds[policy.callingFunctions[i]].length will be less than MAX_LOOP
             for (uint256 ruleIndex = 0; ruleIndex < policy.callingFunctionsToRuleIds[policy.callingFunctions[i]].length; ruleIndex++) {
@@ -430,42 +429,30 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         }
     }
 
-    event Log(string, uint);
     /**
      * @notice Internal helper function to process rules for a calling function.
      * @dev This function validates placeholders in the rule and maps rules to the calling function.
      * @param _policyId The ID of the policy.
      * @param _callingFunction The function signature of the calling function.
-     * @param _ruleIds_i The IDs of the rules associated with the calling function.
+     * @param _ruleIds The IDs of the rules associated with the calling function.
      * @param data The policy data storage structure.
      */
     function _processRulesForCallingFunction(
         uint256 _policyId,
         bytes4 _callingFunction,
-        uint256[] memory _ruleIds_i,
+        uint256[] calldata _ruleIds,
         Policy storage data
     ) private {
-        emit Log("_ruleIds_i.length;", _ruleIds_i.length);
-        for (uint256 j = 0; j < _ruleIds_i.length; j++) {
-            emit Log("j", j);
-            RuleStorageSet memory ruleStore = lib._getRuleStorage().ruleStorageSets[_policyId][_ruleIds_i[j]];
+        for (uint256 j = 0; j < _ruleIds.length; j++) {
+            RuleStorageSet memory ruleStore = lib._getRuleStorage().ruleStorageSets[_policyId][_ruleIds[j]];
             if (!ruleStore.set) revert(INVALID_RULE);
 
             // Validate placeholders in the rule
             _validatePlaceholders(_policyId, ruleStore.rule.placeHolders);
-            /// TODO validate effects placeholders
 
             // Map rules to the calling function
-            data.callingFunctionsToRuleIds[_callingFunction].push(_ruleIds_i[j]);
+            data.callingFunctionsToRuleIds[_callingFunction].push(_ruleIds[j]);
         }
-        for (uint k = 0; k < data.callingFunctionsToRuleIds[_callingFunction].length; k++) {
-            emit Log("k", data.callingFunctionsToRuleIds[_callingFunction][k]);
-        }
-        emit Log("data.callingFunctionsToRuleIds[_callingFunction].length", data.callingFunctionsToRuleIds[_callingFunction].length);
-        emit Log(
-            "data.callingFunctionsToRuleIds[data.callingFunctionsToRuleIds[_callingFunction].length]",
-            data.callingFunctionsToRuleIds[_callingFunction][data.callingFunctionsToRuleIds[_callingFunction].length - 1]
-        );
     }
 
     /**
