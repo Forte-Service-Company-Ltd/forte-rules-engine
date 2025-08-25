@@ -43,8 +43,6 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, callingFuncSig, functionSig, ParamTypes.UINT);
-        bytes memory vals = abi.encode(1);
-        bytes[] memory retVals = new bytes[](0);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))), 1);
 
         vm.startPrank(address(userContract));
@@ -54,7 +52,6 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
     }
 
     function testRulesEngine_Unit_EncodingForeignCallUintWithRetVals() public ifDeploymentTestsEnabled endWithStopPrank {
-        string memory callingFuncSig = "func(uint256)";
         string memory functionSig = "testSig(uint256)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
@@ -106,7 +103,6 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
     }
 
     function testRulesEngine_Unit_EncodingForeignCallTwoUintWithRetVals() public ifDeploymentTestsEnabled endWithStopPrank {
-        string memory callingFuncSig = "func(uint256,uint256)";
         string memory functionSig = "testSig(uint256,uint256)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
@@ -1047,7 +1043,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         tracker.pType = ParamTypes.UINT;
         tracker.trackerValue = abi.encode(2);
         // Add the tracker
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
 
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
         fcArgs[0] = ParamTypes.UINT;

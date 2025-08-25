@@ -294,9 +294,9 @@ abstract contract policies is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId;        
+        uint256 callingFunctionId;
 
-        uint256[][] memory ruleIds = new uint256[][](50);        
+        uint256[][] memory ruleIds = new uint256[][](50);
         ruleIds[0] = new uint256[](50);
         bytes4[] memory selectors = new bytes4[](50);
         uint256[] memory functionIds = new uint256[](50);
@@ -322,7 +322,7 @@ abstract contract policies is RulesEngineCommon {
         // Remove all but the last calling function and rule.
         selectors = new bytes4[](1);
         functionIds = new uint256[](1);
-        ruleIds = new uint256[][](1); 
+        ruleIds = new uint256[][](1);
         selectors[0] = lastSelector;
         functionIds[0] = lastFunctionId;
         ruleIds[0] = new uint256[](1);
@@ -343,7 +343,7 @@ abstract contract policies is RulesEngineCommon {
         assertEq(ruleIds.length, 1, "Rules delete in updatePolicy did not remove all the calling function associations");
         assertEq(ruleIds[0].length, 1, "Rules delete in updatePolicy did not remove all the rules");
 
-        // verify that the old rules and calling functions cannot be used 
+        // verify that the old rules and calling functions cannot be used
         selectors[0] = lastSelector;
         functionIds[0] = 0;
         ruleIds[0] = new uint256[](1);
@@ -1200,11 +1200,11 @@ abstract contract policies is RulesEngineCommon {
         rule.posEffects[0] = _createEffectExpressionTrackerUpdateMultiTrackerUpdate();
 
         // Add the trackers
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "trName1");
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker2, "trName2");
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker3, "trName3");
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker4, "trName4");
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker5, "trName5");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "trName1", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker2, "trName2", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker3, "trName3", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker4, "trName4", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker5, "trName5", TrackerArrayTypes.VOID);
 
         // update the rule
         vm.startPrank(policyAdmin);
@@ -1430,11 +1430,11 @@ abstract contract policies is RulesEngineCommon {
         rule.posEffects[0] = _createEffectExpressionTrackerUpdateMultiTrackerUpdate();
 
         // Add the trackers
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "trName1");
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker2, "trName2");
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker3, "trName3");
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker4, "trName4");
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker5, "trName5");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "trName1", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker2, "trName2", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker3, "trName3", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker4, "trName4", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker5, "trName5", TrackerArrayTypes.VOID);
 
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
@@ -1493,7 +1493,7 @@ abstract contract policies is RulesEngineCommon {
         rule.posEffects[0] = _createEffectExpressionTrackerUpdateParameterPlaceHolder();
 
         // Add the trackers
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "trName1");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "trName1", TrackerArrayTypes.VOID);
 
         // Save the rules
         uint256 ruleId1 = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);

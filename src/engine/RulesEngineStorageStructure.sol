@@ -71,6 +71,15 @@ enum ParamTypes {
     STATIC_TYPE_ARRAY,
     DYNAMIC_TYPE_ARRAY
 }
+
+enum TrackerArrayTypes {
+    VOID, // used for non-array trackers and mapped trackers (which cannot use arrays)
+    ADDR_ARRAY,
+    STR_ARRAY,
+    UINT_ARRAY,
+    BOOL_ARRAY,
+    BYTES_ARRAY
+}
 /**
  * Effect Storage Structures
  * Supported Effect Types
@@ -160,6 +169,7 @@ struct TrackerMetadataStruct {
     bytes initialValue;
     bytes[] initialKeys;
     bytes[] initialValues;
+    TrackerArrayTypes arrayType; // if the tracker is an array, this will determine the type of the array
 }
 
 /**

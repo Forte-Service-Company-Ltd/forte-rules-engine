@@ -25,17 +25,27 @@ contract RulesEngineComponentFacet is FacetCommonImports {
      * @param trackerName Name of the tracker
      * @return trackerIndex The index of the created tracker.
      */
-    function createTracker(uint256 policyId, Trackers calldata tracker, string calldata trackerName) external returns (uint256) {
+    function createTracker(
+        uint256 policyId,
+        Trackers calldata tracker,
+        string calldata trackerName,
+        TrackerArrayTypes arrayType
+    ) external returns (uint256) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
         if (tracker.mapped) revert(INVALID_TYPE);
+        // ensure tracker value types (pType) of arrays are not VOID type (used for non array tracker types)
+        if (
+            (tracker.pType == ParamTypes.STATIC_TYPE_ARRAY || tracker.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) &&
+            arrayType == TrackerArrayTypes.VOID
+        ) revert(INVALID_TYPE);
         _validateTrackerType(tracker);
         // Step 1: Increment tracker index
         uint256 trackerIndex = _incrementTrackerIndex(policyId);
         // Step 2: Store tracker data without mapping
         _storeTrackerData(policyId, trackerIndex, tracker);
         // Step 3: Store tracker metadata
-        _storeTrackerMetadata(policyId, trackerIndex, trackerName, tracker.trackerValue);
+        _storeTrackerMetadata(policyId, trackerIndex, trackerName, tracker.trackerValue, arrayType);
         // Emit event
         emit TrackerCreated(policyId, trackerIndex);
 
@@ -55,11 +65,17 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         Trackers calldata tracker,
         string calldata trackerName,
         bytes[] calldata trackerKeys,
-        bytes[] calldata trackerValues
+        bytes[] calldata trackerValues,
+        TrackerArrayTypes arrayType
     ) external returns (uint256) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
         if (!tracker.mapped) revert(INVALID_TYPE);
+        // ensure mapped tracker value types (pType) of arrays are not VOID type (used for non array value types)
+        if (
+            (tracker.pType == ParamTypes.STATIC_TYPE_ARRAY || tracker.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) &&
+            arrayType == TrackerArrayTypes.VOID
+        ) revert(INVALID_TYPE);
         _validateTrackerType(tracker);
         if (trackerKeys.length != trackerValues.length) revert(KEY_AND_VALUE_SAME);
         uint256 trackerIndex = lib._getTrackerStorage().trackerIndexCounter[policyId];
@@ -69,7 +85,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
             _storeTrackerData(policyId, trackerIndex, tracker, trackerKeys[i], trackerValues[i]);
         }
         // Step 3: Store tracker metadata
-        _storeMappedTrackerMetadata(policyId, trackerIndex, trackerName, trackerKeys, trackerValues);
+        _storeMappedTrackerMetadata(policyId, trackerIndex, trackerName, trackerKeys, trackerValues, arrayType);
         // return the final tracker index and the created tracker array
         return trackerIndex;
     }
@@ -144,12 +160,14 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         uint256 _policyId,
         uint256 _trackerIndex,
         string calldata _trackerName,
-        bytes calldata initialValue
+        bytes calldata initialValue,
+        TrackerArrayTypes arrayType
     ) internal {
         require(keccak256(bytes(_trackerName)) != EMPTY_STRING_HASH, NAME_REQ);
         TrackerMetadataStruct memory struc;
         struc.trackerName = _trackerName;
         struc.initialValue = initialValue;
+        struc.arrayType = arrayType;
         lib._getTrackerMetadataStorage().trackerMetadata[_policyId][_trackerIndex] = struc;
     }
 
@@ -158,13 +176,15 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         uint256 _trackerIndex,
         string calldata _trackerName,
         bytes[] calldata initialKeys,
-        bytes[] calldata initialValues
+        bytes[] calldata initialValues,
+        TrackerArrayTypes arrayType
     ) internal {
         require(keccak256(bytes(_trackerName)) != EMPTY_STRING_HASH, NAME_REQ);
         TrackerMetadataStruct memory struc;
         struc.trackerName = _trackerName;
         struc.initialKeys = initialKeys;
         struc.initialValues = initialValues;
+        struc.arrayType = arrayType;
         lib._getTrackerMetadataStorage().trackerMetadata[_policyId][_trackerIndex] = struc;
     }
 

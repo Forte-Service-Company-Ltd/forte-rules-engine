@@ -65,8 +65,8 @@
   "StaticArrayTracker_LargeArray": "73264",
   "StaticArrayTracker_UintArray": "101606",
   "checkRule_ForeignCall": "57482",
-  "checkRule_ForeignCall_ForeignCallReferenced": "57690",
-  "checkRule_ForeignCall_TrackerValuesUsed": "30972",
+  "checkRule_ForeignCall_ForeignCallReferenced": "57685",
+  "checkRule_ForeignCall_TrackerValuesUsed": "30967",
   "checkRule_simpleGTEQL": "26039",
   "checkRule_simpleLTEQL": "26068",
   "checkRule_simple_GT": "25880"

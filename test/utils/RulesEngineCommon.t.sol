@@ -470,7 +470,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
 
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
         fcArgs[0] = ParamTypes.UINT;
         ForeignCall memory fc;
@@ -534,7 +534,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
 
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
         fcArgs[0] = ParamTypes.UINT;
         ForeignCall memory fc;
@@ -772,7 +772,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         tracker.pType = ParamTypes.UINT;
         tracker.trackerValue = abi.encode(_amount);
         // Add the tracker
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
 
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
         fcArgs[0] = ParamTypes.UINT;
@@ -1483,7 +1483,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         tracker.pType = ParamTypes.UINT;
         tracker.trackerValue = abi.encode(trackerValue);
         // Add the tracker
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
@@ -1542,7 +1542,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.posEffects[0] = effectId_event;
 
         // Add the tracker
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -1558,7 +1558,8 @@ contract RulesEngineCommon is DiamondMine, Test {
 
     function setupRuleWithTracker2(
         uint256 _policyId,
-        Trackers memory tracker
+        Trackers memory tracker,
+        TrackerArrayTypes arrayType
     ) public ifDeploymentTestsEnabled endWithStopPrank resetsGlobalVariables returns (uint256 policyId) {
         uint256[] memory policyIds = new uint256[](1);
 
@@ -1603,7 +1604,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         // rule.posEffects[0] = effectId_event;
 
         // Add the tracker
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", arrayType);
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -1664,7 +1665,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.posEffects[0] = _createEffectExpressionTrackerUpdateParameterPlaceHolder();
 
         // Add the tracker
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -1725,7 +1726,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.posEffects[0] = _createEffectExpressionTrackerUpdateParameterPlaceHolder();
 
         // Add the tracker
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -1785,7 +1786,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.posEffects[0] = _createEffectExpressionTrackerUpdateParameterPlaceHolder();
 
         // Add the tracker
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -1845,7 +1846,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.posEffects[0] = _createEffectExpressionTrackerUpdateParameterPlaceHolder();
 
         // Add the tracker
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -1907,7 +1908,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             tracker,
             trackerName,
             trackerKeys,
-            trackerValues
+            trackerValues,
+            TrackerArrayTypes.VOID
         );
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
@@ -1988,7 +1990,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             tracker,
             trackerName,
             trackerKeys,
-            trackerValues
+            trackerValues,
+            TrackerArrayTypes.VOID
         );
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
@@ -2068,7 +2071,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             tracker,
             trackerName,
             trackerKeys,
-            trackerValues
+            trackerValues,
+            TrackerArrayTypes.VOID
         );
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
@@ -2305,7 +2309,14 @@ contract RulesEngineCommon is DiamondMine, Test {
         /// create tracker name
         string memory trackerName = "tracker1";
         // Add the tracker
-        RulesEngineComponentFacet(address(red)).createMappedTracker(policyIds[0], tracker, trackerName, trackerKeys, trackerValues);
+        RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyIds[0],
+            tracker,
+            trackerName,
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.BYTES_ARRAY
+        );
     }
 
     function _createForeignCallUsingMappedTrackerValueHelper(

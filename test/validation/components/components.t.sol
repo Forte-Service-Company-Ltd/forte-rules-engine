@@ -632,7 +632,7 @@ abstract contract components is RulesEngineCommon {
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
     }
 
-        function testRulesEngine_Unit_PermissionedForeignCall_SetGeneratePolicyAdminRole_Negative()
+    function testRulesEngine_Unit_PermissionedForeignCall_SetGeneratePolicyAdminRole_Negative()
         public
         ifDeploymentTestsEnabled
         endWithStopPrank
@@ -671,7 +671,7 @@ abstract contract components is RulesEngineCommon {
         tracker.pType = ParamTypes.ADDR;
         RulesEnginePolicyFacet(address(red)).cementPolicy(policyID);
         vm.expectRevert("Not allowed for cemented policy");
-        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
     }
 
     function testRulesEngine_unit_CreateTracker_Negative_Non_PolicyAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -686,7 +686,7 @@ abstract contract components is RulesEngineCommon {
         // Prank a random, non-policy admin address
         vm.startPrank(address(0x1337));
         vm.expectRevert("Not Authorized To Policy");
-        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
     }
 
     function testRulesEngine_unit_CreateTracker_Event() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -700,7 +700,7 @@ abstract contract components is RulesEngineCommon {
         tracker.pType = ParamTypes.ADDR;
         vm.expectEmit(true, false, false, false);
         emit TrackerCreated(policyID, trackerId);
-        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
     }
 
     // Get Trackers
@@ -720,7 +720,7 @@ abstract contract components is RulesEngineCommon {
             Trackers memory tracker;
             tracker.trackerValue = abi.encode(uint256(i));
             tracker.pType = ParamTypes.UINT;
-            RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "trName");
+            RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "trName", TrackerArrayTypes.VOID);
         }
 
         Trackers[] memory trackers = RulesEngineComponentFacet(address(red)).getAllTrackers(policyId);
@@ -747,7 +747,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         tracker.trackerValue = abi.encode(address(testContract));
         tracker.pType = ParamTypes.ADDR;
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
         tracker.trackerValue = abi.encode(address(userContractAddress));
         RulesEnginePolicyFacet(address(red)).cementPolicy(policyID);
 
@@ -765,7 +765,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         tracker.trackerValue = abi.encode(address(testContract));
         tracker.pType = ParamTypes.ADDR;
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
         tracker.trackerValue = abi.encode(address(userContractAddress));
 
         // Prank a random, non-policy admin address
@@ -782,7 +782,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         tracker.trackerValue = abi.encode(address(testContract));
         tracker.pType = ParamTypes.ADDR;
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
         tracker.trackerValue = abi.encode(address(userContractAddress));
         vm.expectEmit(true, false, false, false);
         emit TrackerUpdated(policyID, trackerId);
@@ -798,7 +798,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         tracker.trackerValue = abi.encode(address(testContract));
         tracker.pType = ParamTypes.ADDR;
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
         RulesEnginePolicyFacet(address(red)).cementPolicy(policyID);
         vm.expectRevert("Not allowed for cemented policy");
         RulesEngineComponentFacet(address(red)).deleteTracker(policyID, trackerId);
@@ -812,7 +812,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         tracker.trackerValue = abi.encode(address(testContract));
         tracker.pType = ParamTypes.ADDR;
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
 
         // Prank a random, non-policy admin address
         vm.startPrank(address(0x1337));
@@ -826,7 +826,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         tracker.trackerValue = abi.encode(address(testContract));
         tracker.pType = ParamTypes.ADDR;
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
 
         vm.expectEmit(true, false, false, false);
         emit TrackerDeleted(policyID, trackerId);
@@ -1094,6 +1094,332 @@ abstract contract components is RulesEngineCommon {
         tracker.set = true;
         tracker.trackerValue = abi.encode(bool(false));
         vm.expectRevert(abi.encodePacked(NAME_REQ));
-        RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "");
+        RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "", TrackerArrayTypes.VOID);
+    }
+
+    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Uint() public ifDeploymentTestsEnabled endWithStopPrank {
+        // create policy and tracker array type
+
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        Trackers memory tracker;
+        uint256[] memory emptyArray = new uint256[](0);
+        tracker.trackerValue = abi.encode(emptyArray);
+        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
+            policyID,
+            tracker,
+            "trName",
+            TrackerArrayTypes.UINT_ARRAY
+        );
+
+        // ensure metadata is correct
+        TrackerMetadataStruct memory metaData = RulesEngineComponentFacet(address(red)).getTrackerMetadata(policyID, trackerId);
+        assertTrue(metaData.arrayType == TrackerArrayTypes.UINT_ARRAY);
+    }
+
+    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Bytes() public ifDeploymentTestsEnabled endWithStopPrank {
+        // create policy and tracker array type
+
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        Trackers memory tracker;
+        bytes[] memory emptyArray = new bytes[](0);
+        tracker.trackerValue = abi.encode(emptyArray);
+        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
+            policyID,
+            tracker,
+            "trName",
+            TrackerArrayTypes.BYTES_ARRAY
+        );
+
+        // ensure metadata is correct
+        TrackerMetadataStruct memory metaData = RulesEngineComponentFacet(address(red)).getTrackerMetadata(policyID, trackerId);
+        assertTrue(metaData.arrayType == TrackerArrayTypes.BYTES_ARRAY);
+    }
+
+    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Address() public ifDeploymentTestsEnabled endWithStopPrank {
+        // create policy and tracker array type
+
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        Trackers memory tracker;
+        address[] memory emptyArray = new address[](0);
+        tracker.trackerValue = abi.encode(emptyArray);
+        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
+            policyID,
+            tracker,
+            "trName",
+            TrackerArrayTypes.ADDR_ARRAY
+        );
+
+        // ensure metadata is correct
+        TrackerMetadataStruct memory metaData = RulesEngineComponentFacet(address(red)).getTrackerMetadata(policyID, trackerId);
+        assertTrue(metaData.arrayType == TrackerArrayTypes.ADDR_ARRAY);
+    }
+
+    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Strings() public ifDeploymentTestsEnabled endWithStopPrank {
+        // create policy and tracker array type
+
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        Trackers memory tracker;
+        string[] memory emptyArray = new string[](0);
+        tracker.trackerValue = abi.encode(emptyArray);
+        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.STR_ARRAY);
+
+        // ensure metadata is correct
+        TrackerMetadataStruct memory metaData = RulesEngineComponentFacet(address(red)).getTrackerMetadata(policyID, trackerId);
+        assertTrue(metaData.arrayType == TrackerArrayTypes.STR_ARRAY);
+    }
+
+    function testRulesEngine_Unit_TestTrackerArrayValueEnum_DynamicBytes() public ifDeploymentTestsEnabled endWithStopPrank {
+        // create policy and tracker array type
+
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        Trackers memory tracker;
+        string[] memory initialArray = new string[](3);
+        initialArray[0] = "helloWorldTest";
+        initialArray[1] = "Test long string with spaces that is meant to simulate a realistic scenario.";
+        initialArray[
+            2
+        ] = "test a second and even longer string to really make sure this is testing the dynamic bytes array functionality properly.";
+        tracker.trackerValue = abi.encode(initialArray);
+        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
+            policyID,
+            tracker,
+            "trName",
+            TrackerArrayTypes.BYTES_ARRAY
+        );
+
+        // ensure metadata is correct
+        TrackerMetadataStruct memory metaData = RulesEngineComponentFacet(address(red)).getTrackerMetadata(policyID, trackerId);
+        assertTrue(metaData.arrayType == TrackerArrayTypes.BYTES_ARRAY);
+    }
+
+    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Uint_InvalidType() public ifDeploymentTestsEnabled endWithStopPrank {
+        // create policy and tracker array type
+
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        Trackers memory tracker;
+        uint256[] memory emptyArray = new uint256[](0);
+        tracker.trackerValue = abi.encode(emptyArray);
+        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        vm.expectRevert("Invalid type");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
+    }
+
+    // Mapped Tracker array value types
+    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Uint_MappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
+        // create policy and tracker array type
+
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        // create tracker value arrays
+        /// create tracker value arrays
+        uint256[] memory trackerValues1 = new uint256[](2);
+        trackerValues1[0] = 100;
+        trackerValues1[1] = 200;
+
+        /// create tracker value arrays
+        uint256[] memory trackerValues2 = new uint256[](2);
+        trackerValues2[0] = 300;
+        trackerValues2[1] = 400;
+
+        Trackers memory tracker;
+        tracker.mapped = true;
+        tracker.trackerKeyType = ParamTypes.UINT;
+        /// create tracker key arrays
+        bytes[] memory trackerKeys = new bytes[](2);
+        trackerKeys[0] = abi.encode(1); // key 1
+        trackerKeys[1] = abi.encode(2); // key 2
+
+        /// create tracker value arrays
+        bytes[] memory trackerValues = new bytes[](2);
+        trackerValues[0] = abi.encode(trackerValues); // value 1
+        trackerValues[1] = abi.encode(trackerValues2); // value
+
+        /// create tracker name
+        string memory trackerName = "tracker1";
+
+        /// build the members of the struct:
+        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.trackerValue = abi.encode(trackerValues);
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyID,
+            tracker,
+            trackerName,
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.UINT_ARRAY
+        );
+
+        // ensure metadata is correct
+        TrackerMetadataStruct memory metaData = RulesEngineComponentFacet(address(red)).getTrackerMetadata(policyID, trackerId);
+        assertTrue(metaData.arrayType == TrackerArrayTypes.UINT_ARRAY);
+    }
+
+    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Bytes_MappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
+        // create policy and tracker array type
+
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        // create tracker value arrays
+        /// create tracker value arrays
+        bytes[] memory trackerValues1 = new bytes[](2);
+        trackerValues1[0] = abi.encode(bytes("hello"));
+        trackerValues1[1] = abi.encode(bytes("world"));
+
+        /// create tracker value arrays
+        bytes[] memory trackerValues2 = new bytes[](2);
+        trackerValues2[0] = abi.encode(bytes("foo"));
+        trackerValues2[1] = abi.encode(bytes("bar"));
+        Trackers memory tracker;
+        tracker.mapped = true;
+        tracker.trackerKeyType = ParamTypes.UINT;
+        /// create tracker key arrays
+        bytes[] memory trackerKeys = new bytes[](2);
+        trackerKeys[0] = abi.encode(1); // key 1
+        trackerKeys[1] = abi.encode(2); // key 2
+
+        /// create tracker value arrays
+        bytes[] memory trackerValues = new bytes[](2);
+        trackerValues[0] = abi.encode(trackerValues); // value 1
+        trackerValues[1] = abi.encode(trackerValues2); // value
+
+        /// create tracker name
+        string memory trackerName = "tracker1";
+
+        /// build the members of the struct:
+        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        tracker.trackerValue = abi.encode(trackerValues);
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyID,
+            tracker,
+            trackerName,
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.BYTES_ARRAY
+        );
+
+        // ensure metadata is correct
+        TrackerMetadataStruct memory metaData = RulesEngineComponentFacet(address(red)).getTrackerMetadata(policyID, trackerId);
+        assertTrue(metaData.arrayType == TrackerArrayTypes.BYTES_ARRAY);
+    }
+
+    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Address_MappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
+        // create policy and tracker array type
+
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        // create tracker value arrays
+        /// create tracker value arrays
+        address[] memory trackerValues1 = new address[](2);
+        trackerValues1[0] = address(0x001);
+        trackerValues1[1] = address(0x002);
+
+        /// create tracker value arrays
+        address[] memory trackerValues2 = new address[](2);
+        trackerValues2[0] = address(0x003);
+        trackerValues2[1] = address(0x004);
+        Trackers memory tracker;
+        tracker.mapped = true;
+        tracker.trackerKeyType = ParamTypes.UINT;
+        /// create tracker key arrays
+        bytes[] memory trackerKeys = new bytes[](2);
+        trackerKeys[0] = abi.encode(1); // key 1
+        trackerKeys[1] = abi.encode(2); // key 2
+
+        /// create tracker value arrays
+        bytes[] memory trackerValues = new bytes[](2);
+        trackerValues[0] = abi.encode(trackerValues); // value 1
+        trackerValues[1] = abi.encode(trackerValues2); // value
+
+        /// create tracker name
+        string memory trackerName = "tracker1";
+
+        /// build the members of the struct:
+        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.trackerValue = abi.encode(trackerValues);
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyID,
+            tracker,
+            trackerName,
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.ADDR_ARRAY
+        );
+
+        // ensure metadata is correct
+        TrackerMetadataStruct memory metaData = RulesEngineComponentFacet(address(red)).getTrackerMetadata(policyID, trackerId);
+        assertTrue(metaData.arrayType == TrackerArrayTypes.ADDR_ARRAY);
+    }
+
+    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Address_MappedTracker_InvalidType()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        // create policy and tracker array type
+
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        // create tracker value arrays
+        Trackers memory tracker;
+        tracker.mapped = true;
+        tracker.pType = ParamTypes.ADDR; // set the ParamType for the tracker value to be decoded as
+        tracker.trackerKeyType = ParamTypes.ADDR;
+
+        /// create tracker key arrays
+        bytes[] memory trackerKeys = new bytes[](2);
+        trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
+        trackerKeys[1] = abi.encode(address(0x1234567)); // key 2
+
+        /// create tracker value arrays
+        bytes[] memory trackerValues = new bytes[](2);
+        trackerValues[0] = abi.encode(address(0x7654321)); // value 1 - allowed recipient
+        trackerValues[1] = abi.encode(address(0x7654321)); // value 2 - allowed recipient
+
+        /// create tracker name
+        string memory trackerName = "tracker1";
+
+        /// build the members of the struct:
+        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.trackerValue = abi.encode(trackerValues);
+        vm.expectRevert("Invalid type");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyID,
+            tracker,
+            trackerName,
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.VOID
+        );
     }
 }

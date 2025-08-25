@@ -125,7 +125,7 @@ contract ReentrancyTest is RulesEngineCommon {
         tracker1.set = true;
 
         // Create a tracker for the rule
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "totalVolume");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "totalVolume", TrackerArrayTypes.VOID);
 
         ForeignCallEncodedIndex[] memory encodedIndices = new ForeignCallEncodedIndex[](2);
         encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -207,8 +207,8 @@ contract ReentrancyTest is RulesEngineCommon {
         tracker1.set = true;
 
         // Create a tracker for the rule
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "totalVolume");
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[1], tracker1, "totalVolume");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "totalVolume", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[1], tracker1, "totalVolume", TrackerArrayTypes.VOID);
         ForeignCallEncodedIndex[] memory encodedIndices = new ForeignCallEncodedIndex[](2);
         encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         encodedIndices[0].index = 0;

@@ -1082,14 +1082,14 @@ abstract contract rulesExecution is RulesEngineCommon {
         /// build the members of the struct:
         tracker.pType = ParamTypes.UINT;
         tracker.trackerValue = abi.encode(1000000000);
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
 
         //build second tracker
         Trackers memory tracker2;
         /// build the members of the struct:
         tracker2.pType = ParamTypes.UINT;
         tracker2.trackerValue = abi.encode(2000000000);
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker2, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker2, "trName", TrackerArrayTypes.VOID);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;

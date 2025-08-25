@@ -326,7 +326,7 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         tracker.trackerValue = abi.encode(address(testContract));
         tracker.pType = ParamTypes.ADDR;
 
-        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
     }
 
     function testRulesEngine_unit_adminRoles_CreateTracker_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -341,7 +341,7 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         tracker.pType = ParamTypes.ADDR;
 
         vm.expectRevert("Not Authorized To Policy");
-        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
     }
 
     function testRulesEngine_unit_adminRoles_UpdateTracker_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -353,7 +353,7 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         tracker.trackerValue = abi.encode(address(testContract));
         tracker.pType = ParamTypes.ADDR;
 
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
 
         tracker.trackerValue = abi.encode(address(userContractAddress));
         RulesEngineComponentFacet(address(red)).updateTracker(policyID, trackerId, tracker);
@@ -365,7 +365,7 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         Trackers memory tracker;
         tracker.trackerValue = abi.encode(address(testContract));
         tracker.pType = ParamTypes.ADDR;
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
         vm.stopPrank();
         vm.startPrank(newPolicyAdmin);
         bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, newPolicyAdmin);
@@ -383,7 +383,7 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         Trackers memory tracker;
         tracker.trackerValue = abi.encode(address(testContract));
         tracker.pType = ParamTypes.ADDR;
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
         bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
         assertTrue(hasAdminRole);
         RulesEngineComponentFacet(address(red)).deleteTracker(policyID, trackerId);
@@ -400,7 +400,7 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         Trackers memory tracker;
         tracker.trackerValue = abi.encode(address(testContract));
         tracker.pType = ParamTypes.ADDR;
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trkName");
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trkName", TrackerArrayTypes.VOID);
         vm.stopPrank();
         vm.startPrank(newPolicyAdmin);
         bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, newPolicyAdmin);
@@ -548,9 +548,6 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         // set the selector from the permissioned foreign call contract
         bytes4 foreignCallSelector = PermissionedForeignCallTestContract.simpleCheck.selector;
 
-        uint256 tester = RulesEngineAdminRolesFacet(address(red)).getRoleMemberCount(
-            bytes32(0x6878d605e7d295f5ec729ec64b010c83b80d3866b6a0aee6ccf10d0816bb5618) //_generateForeignCallAdminRoleId(address(permissionedForeignCallContract), foreignCallSelector, "FOREIGN_CALL_ADMIN")
-        );
         vm.startPrank(address(permissionedForeignCallContract));
         //vm.expectRevert("Only One Foreign Call Admin Allowed");
         permissionedForeignCallContract.setForeignCallAdmin(address(0x1337), foreignCallSelector);

@@ -305,8 +305,22 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
                 tracker2Values[0] = abi.encode(22);
                 tracker2Values[1] = abi.encode(33);
 
-                RulesEngineComponentFacet(address(red)).createMappedTracker(policyId, tracker1, "tracker1", tracker1Keys, tracker1Values);
-                RulesEngineComponentFacet(address(red)).createMappedTracker(policyId, tracker2, "tracker2", tracker2Keys, tracker2Values);
+                RulesEngineComponentFacet(address(red)).createMappedTracker(
+                    policyId,
+                    tracker1,
+                    "tracker1",
+                    tracker1Keys,
+                    tracker1Values,
+                    TrackerArrayTypes.VOID
+                );
+                RulesEngineComponentFacet(address(red)).createMappedTracker(
+                    policyId,
+                    tracker2,
+                    "tracker2",
+                    tracker2Keys,
+                    tracker2Values,
+                    TrackerArrayTypes.VOID
+                );
             }
 
             Rule memory rule;

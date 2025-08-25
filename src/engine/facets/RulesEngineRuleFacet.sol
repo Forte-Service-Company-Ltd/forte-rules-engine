@@ -150,19 +150,19 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         return lib._getRuleStorage().ruleStorageSets[policyId][ruleId];
     }
 
-    function getMemorySize() external view returns (uint) {
+    function getMemorySize() external pure returns (uint) {
         return memorySize;
     }
-    function getOpsSize1() external view returns (uint) {
+    function getOpsSize1() external pure returns (uint) {
         return opsSize1;
     }
-    function getOpsSizeUpTo2() external view returns (uint) {
+    function getOpsSizeUpTo2() external pure returns (uint) {
         return opsSizeUpTo2;
     }
-    function getOpsSizeUpTo3() external view returns (uint) {
+    function getOpsSizeUpTo3() external pure returns (uint) {
         return opsSizeUpTo3;
     }
-    function getOpsTotalSize() external view returns (uint) {
+    function getOpsTotalSize() external pure returns (uint) {
         return opsTotalSize;
     }
 

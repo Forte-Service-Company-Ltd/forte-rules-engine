@@ -173,7 +173,7 @@ abstract contract storageTest is RulesEngineCommon {
             /// build the members of the struct:
             tracker.pType = ParamTypes.UINT;
             tracker.trackerValue = abi.encode(index);
-            id = RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+            id = RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
             tracker2 = RulesEngineComponentFacet(address(red)).getTracker(policyIds[0], id);
             assertEq(tracker.trackerValue, tracker2.trackerValue);
         }

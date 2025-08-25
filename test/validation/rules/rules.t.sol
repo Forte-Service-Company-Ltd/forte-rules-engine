@@ -1406,7 +1406,12 @@ abstract contract rules is RulesEngineCommon {
             Trackers memory tracker;
             tracker.pType = ParamTypes.UINT;
             tracker.trackerValue = abi.encode(uint256(0));
-            trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "timestampTracker");
+            trackerId = RulesEngineComponentFacet(address(red)).createTracker(
+                policyId,
+                tracker,
+                "timestampTracker",
+                TrackerArrayTypes.VOID
+            );
 
             // Create a rule that always passes (1 == 1)
             Rule memory rule;

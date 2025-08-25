@@ -92,7 +92,7 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.BYTES;
         tracker.set = true;
         tracker.trackerValue = bytes("initial");
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.VOID);
 
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 5, bytes("post"));
         vm.startPrank(address(userContract));
@@ -115,7 +115,7 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.BYTES;
         tracker.set = true;
         tracker.trackerValue = "initial";
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.VOID);
 
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 5, "post");
         vm.startPrank(address(userContract));
@@ -181,7 +181,7 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.UINT;
         tracker.trackerValue = abi.encode(666);
         vm.expectRevert("Invalid type");
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
     }
 
     function testRuleEngine_Unit_MappedTrackerCreateTrackerInvalidMappedFlag() public {
@@ -209,7 +209,14 @@ abstract contract trackers is RulesEngineCommon {
         tracker.pType = ParamTypes.UINT;
         tracker.trackerValue = abi.encode(666);
         vm.expectRevert("Invalid type");
-        RulesEngineComponentFacet(address(red)).createMappedTracker(policyIds[0], tracker, trackerName, trackerKeys, trackerValues);
+        RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyIds[0],
+            tracker,
+            trackerName,
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.VOID
+        );
     }
 
     //// Mapped Trackers
@@ -2321,12 +2328,12 @@ abstract contract trackers is RulesEngineCommon {
         tracker.trackerValue = abi.encode(1);
         string memory trackerName = "tracker1";
 
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, trackerName);
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, trackerName, TrackerArrayTypes.VOID);
         Trackers memory tracker2;
         tracker2.pType = ParamTypes.UINT;
         tracker2.trackerValue = abi.encode(2);
         string memory trackerName2 = "tracker2";
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker2, trackerName2);
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker2, trackerName2, TrackerArrayTypes.VOID);
 
         ForeignCallTestContract foreignCallTestContract = new ForeignCallTestContract();
         ForeignCall memory foreignCall;
@@ -2469,7 +2476,7 @@ abstract contract trackers is RulesEngineCommon {
         initialArray[1] = 200;
         tracker.trackerValue = abi.encode(initialArray);
 
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.UINT_ARRAY);
 
         // Create updated array for the function call
         uint256[] memory updatedArray = new uint256[](3);
@@ -2529,7 +2536,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256[] memory emptyArray = new uint256[](0);
         tracker.trackerValue = abi.encode(emptyArray);
 
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.UINT_ARRAY);
 
         // Create another empty array for the function call
         uint256[] memory updatedEmptyArray = new uint256[](0);
@@ -2590,7 +2597,7 @@ abstract contract trackers is RulesEngineCommon {
         }
         tracker.trackerValue = abi.encode(initialArray);
 
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.UINT_ARRAY);
 
         // Create updated large array for the function call
         uint256[] memory updatedArray = new uint256[](50);
@@ -2656,7 +2663,7 @@ abstract contract trackers is RulesEngineCommon {
         initialArray[1] = address(0x0987654321098765432109876543210987654321);
         tracker.trackerValue = abi.encode(initialArray);
 
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.ADDR_ARRAY);
 
         // Create updated address array for the function call
         address[] memory updatedArray = new address[](3);
@@ -2724,7 +2731,7 @@ abstract contract trackers is RulesEngineCommon {
         initialArray[3] = false;
         tracker.trackerValue = abi.encode(initialArray);
 
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.BOOL_ARRAY);
 
         // Create updated bool array for the function call
         bool[] memory updatedArray = new bool[](3);
@@ -2793,7 +2800,7 @@ abstract contract trackers is RulesEngineCommon {
         initialArray[2] = "test";
         tracker.trackerValue = abi.encode(initialArray);
 
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.STR_ARRAY);
 
         // Create updated string array for the function call
         string[] memory updatedArray = new string[](2);
@@ -2855,7 +2862,7 @@ abstract contract trackers is RulesEngineCommon {
         string[] memory emptyArray = new string[](0);
         tracker.trackerValue = abi.encode(emptyArray);
 
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.STR_ARRAY);
 
         // Create another empty string array for the function call
         string[] memory updatedEmptyArray = new string[](0);
@@ -2916,7 +2923,7 @@ abstract contract trackers is RulesEngineCommon {
         }
         tracker.trackerValue = abi.encode(initialArray);
 
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.STR_ARRAY);
 
         // Create updated string array for the function call
         string[] memory updatedArray = new string[](25);
@@ -2987,7 +2994,7 @@ abstract contract trackers is RulesEngineCommon {
         initialArray[2] = hex"0123456789abcdef";
         tracker.trackerValue = abi.encode(initialArray);
 
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.BYTES_ARRAY);
 
         // Create updated bytes array for the function call
         bytes[] memory updatedArray = new bytes[](2);
@@ -3044,7 +3051,7 @@ abstract contract trackers is RulesEngineCommon {
             tracker.set = true;
             uint256[] memory emptyArray = new uint256[](0);
             tracker.trackerValue = abi.encode(emptyArray);
-            setupRuleWithTracker2(policyId, tracker);
+            setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.UINT_ARRAY);
         }
 
         // Normal operation: Update tracker legitimately
@@ -3109,7 +3116,7 @@ abstract contract trackers is RulesEngineCommon {
         tracker.trackerValue = abi.encode(emptyArray);
 
         // Set up rule with tracker
-        setupRuleWithTracker2(policyId, tracker);
+        setupRuleWithTracker2(policyId, tracker, TrackerArrayTypes.UINT_ARRAY);
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = policyId;
 

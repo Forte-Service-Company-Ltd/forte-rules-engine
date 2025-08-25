@@ -1054,7 +1054,7 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         /// build the members of the struct:
         tracker.pType = ParamTypes.UINT;
         tracker.trackerValue = abi.encode(1000000000);
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName");
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
