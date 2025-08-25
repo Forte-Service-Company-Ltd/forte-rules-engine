@@ -7,8 +7,9 @@ import {StdInvariant} from "forge-std/src/StdInvariant.sol";
 import "test/utils/RulesEngineCommon.t.sol";
 import "test/clientContractExamples/ExampleUserContract.sol";
 import "test/utils/PermissionedForeignCalls.sol";
+import "test/utils/DiamondMineNoCheatcodes.sol";
 
-contract RulesEngineAdminRolesTest is RulesEngineCommon, RulesEngineAdminRolesFacet {
+contract RulesEngineAdminRolesTest is RulesEngineCommon, RulesEngineAdminRolesFacet, DiamondMineNoCheatcodes {
     uint256 public testPolicyId;
     address public testUserContract;
     uint256 public proposedPolicyAdminsCount;
