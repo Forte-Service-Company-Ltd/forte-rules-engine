@@ -516,8 +516,8 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
 }
 // NOTE for my self
 
-// 1. create test exclusively for the algorithm that checks for no identical items in array
-// 2. create negative path test for identical elements in an array
+// 1. create test exclusively for the algorithm that checks for no identical items in array (done)
+// 2. create negative path test for identical elements in an array (done)
 // 3. create test to demonstrate that identical signatures can have different Ids
 // 4. fix the identical functioins with different ids by checking for the set flag at creation time
 // 5. Create test that proves that there is no check updating policy with rules without function sigs and ids

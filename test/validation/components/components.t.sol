@@ -28,6 +28,19 @@ abstract contract components is RulesEngineCommon {
         assertEq(uint8(sig.parameterTypes[1]), uint8(ParamTypes.UINT));
     }
 
+    function testRulesEngine_Unit_createCallingFunction_DuplicatedSig() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256 policyId = _createBlankPolicy();
+        uint256 callingFunctionId = _addCallingFunctionToPolicy(policyId);
+        assertEq(callingFunctionId, 1);
+        CallingFunctionStorageSet memory sig = RulesEngineComponentFacet(address(red)).getCallingFunction(policyId, callingFunctionId);
+        assertEq(sig.set, true);
+        assertEq(sig.signature, bytes4(keccak256(bytes(callingFunction))));
+        assertEq(uint8(sig.parameterTypes[0]), uint8(ParamTypes.ADDR));
+        assertEq(uint8(sig.parameterTypes[1]), uint8(ParamTypes.UINT));
+        vm.expectRevert();
+        uint256 secondCallingFunctionId = _addCallingFunctionToPolicy(policyId);
+    }
+
     function testRulesEngine_Unit_createCallingFunction_Negative_Non_PolicyAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         ParamTypes[] memory pTypes = new ParamTypes[](2);
