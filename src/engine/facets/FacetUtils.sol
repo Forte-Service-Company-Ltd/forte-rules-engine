@@ -99,7 +99,7 @@ contract FacetUtils {
 
     /**
      * @dev this is a type-agnostic solution for determining if an array of value types from calldata contains duplicates in it
-     * @param len the length of the array. Can be easily retrieved in _Solidity_ by using i.e. array.length;
+     * @param len the length of the array. Can be easily retrieved in _Solidity_ by using array.length;
      * @param start the location in the calldata of the first element of the array. Can be retrieved with _Yul_ by doing array.offset
      * @return duplicatesFound true if at least one element is repeated in the array. False otherwise
      * @notice this is only useful for an array passed as an argument to an external/public function and the function explicitely uses

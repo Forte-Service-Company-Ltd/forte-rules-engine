@@ -2,6 +2,37 @@
 pragma solidity ^0.8.24;
 
 import "test/utils/RulesEngineCommon.t.sol";
+import {FacetUtils} from "src/engine/facets/FacetUtils.sol";
+
+/**
+ * @dev this is a test facet contract that exposes the uses the internal _isThereDuplicatesInCalldataValueTypeArray function
+ * from the FacetUtils. Since the function is not meant to be used directly, some example functions were created.
+ */
+contract TestFacetUtils is FacetUtils {
+    function testDuplicatesBytes4(bytes4[] calldata sigs) public {
+        uint start;
+        assembly {
+            start := sigs.offset
+        }
+        if (_isThereDuplicatesInCalldataValueTypeArray(sigs.length, start)) revert(DUPLICATES_NOT_ALLOWED);
+    }
+
+    function testDuplicatesBytes32(bytes32[] calldata hashes) public {
+        uint start;
+        assembly {
+            start := hashes.offset
+        }
+        if (_isThereDuplicatesInCalldataValueTypeArray(hashes.length, start)) revert(DUPLICATES_NOT_ALLOWED);
+    }
+
+    function testDuplicatesUint256(uint256[] calldata ids) public {
+        uint start;
+        assembly {
+            start := ids.offset
+        }
+        if (_isThereDuplicatesInCalldataValueTypeArray(ids.length, start)) revert(DUPLICATES_NOT_ALLOWED);
+    }
+}
 
 abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
     /**
@@ -320,6 +351,60 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
                 assertEq(ruleStorage.rule.instructionSet.length, 7, "instruction set length mismatch");
             }
         }
+    }
+
+    function testPolicy_updatePolicy_identicalElementsInCalldataArrayBytes4(uint seedSig, uint multiplier) public {
+        uint sigAmount = 4;
+        TestFacetUtils facet = new TestFacetUtils();
+        bytes4[] memory sigs = new bytes4[](sigAmount);
+        for (uint i; i < sigAmount; i++) {
+            unchecked {
+                sigs[i] = bytes4(bytes32(seedSig * multiplier * (i + 1)));
+            }
+        }
+        /// the following condition is basically a representation of what the algorithm does
+        if (
+            (sigs[0] == sigs[1] || sigs[0] == sigs[2] || sigs[0] == sigs[3]) ||
+            (sigs[1] == sigs[2] || sigs[1] == sigs[3]) ||
+            sigs[2] == sigs[3]
+        ) vm.expectRevert("Duplicates not allowed");
+        facet.testDuplicatesBytes4(sigs);
+    }
+
+    function testPolicy_updatePolicy_identicalElementsInCalldataArrayBytes32(uint seedSig, uint multiplier) public {
+        uint sigAmount = 4;
+        TestFacetUtils facet = new TestFacetUtils();
+        bytes32[] memory sigs = new bytes32[](sigAmount);
+        for (uint i; i < sigAmount; i++) {
+            unchecked {
+                sigs[i] = bytes32(seedSig * multiplier * (i + 1));
+            }
+        }
+        /// the following condition is basically a representation of what the algorithm does
+        if (
+            (sigs[0] == sigs[1] || sigs[0] == sigs[2] || sigs[0] == sigs[3]) ||
+            (sigs[1] == sigs[2] || sigs[1] == sigs[3]) ||
+            sigs[2] == sigs[3]
+        ) vm.expectRevert("Duplicates not allowed");
+        facet.testDuplicatesBytes32(sigs);
+    }
+
+    function testPolicy_updatePolicy_identicalElementsInCalldataArrayUint(uint seedSig, uint multiplier) public {
+        uint sigAmount = 4;
+        TestFacetUtils facet = new TestFacetUtils();
+        uint[] memory sigs = new uint[](sigAmount);
+        for (uint i; i < sigAmount; i++) {
+            unchecked {
+                sigs[i] = seedSig * multiplier * (i + 1);
+            }
+        }
+        /// the following condition is basically a representation of what the algorithm does
+        if (
+            (sigs[0] == sigs[1] || sigs[0] == sigs[2] || sigs[0] == sigs[3]) ||
+            (sigs[1] == sigs[2] || sigs[1] == sigs[3]) ||
+            sigs[2] == sigs[3]
+        ) vm.expectRevert("Duplicates not allowed");
+        facet.testDuplicatesUint256(sigs);
     }
 }
 // NOTE for my self
