@@ -1097,7 +1097,7 @@ abstract contract components is RulesEngineCommon {
         RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "", TrackerArrayTypes.VOID);
     }
 
-    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Uint() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_TestTrackerArrayValue_Uint() public ifDeploymentTestsEnabled endWithStopPrank {
         // create policy and tracker array type
 
         vm.startPrank(policyAdmin);
@@ -1120,7 +1120,7 @@ abstract contract components is RulesEngineCommon {
         assertTrue(metaData.arrayType == TrackerArrayTypes.UINT_ARRAY);
     }
 
-    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Bytes() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_TestTrackerArrayValue_Bytes() public ifDeploymentTestsEnabled endWithStopPrank {
         // create policy and tracker array type
 
         vm.startPrank(policyAdmin);
@@ -1143,7 +1143,7 @@ abstract contract components is RulesEngineCommon {
         assertTrue(metaData.arrayType == TrackerArrayTypes.BYTES_ARRAY);
     }
 
-    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Address() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_TestTrackerArrayValue_Address() public ifDeploymentTestsEnabled endWithStopPrank {
         // create policy and tracker array type
 
         vm.startPrank(policyAdmin);
@@ -1166,7 +1166,7 @@ abstract contract components is RulesEngineCommon {
         assertTrue(metaData.arrayType == TrackerArrayTypes.ADDR_ARRAY);
     }
 
-    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Strings() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_TestTrackerArrayValue_Strings() public ifDeploymentTestsEnabled endWithStopPrank {
         // create policy and tracker array type
 
         vm.startPrank(policyAdmin);
@@ -1184,7 +1184,7 @@ abstract contract components is RulesEngineCommon {
         assertTrue(metaData.arrayType == TrackerArrayTypes.STR_ARRAY);
     }
 
-    function testRulesEngine_Unit_TestTrackerArrayValueEnum_DynamicBytes() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_TestTrackerArrayValue_DynamicBytes() public ifDeploymentTestsEnabled endWithStopPrank {
         // create policy and tracker array type
 
         vm.startPrank(policyAdmin);
@@ -1212,7 +1212,7 @@ abstract contract components is RulesEngineCommon {
         assertTrue(metaData.arrayType == TrackerArrayTypes.BYTES_ARRAY);
     }
 
-    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Uint_InvalidType() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_TestTrackerArrayValue_Uint_InvalidType() public ifDeploymentTestsEnabled endWithStopPrank {
         // create policy and tracker array type
 
         vm.startPrank(policyAdmin);
@@ -1228,7 +1228,7 @@ abstract contract components is RulesEngineCommon {
     }
 
     // Mapped Tracker array value types
-    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Uint_MappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_TestTrackerArrayValue_Uint_MappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
         // create policy and tracker array type
 
         vm.startPrank(policyAdmin);
@@ -1279,7 +1279,7 @@ abstract contract components is RulesEngineCommon {
         assertTrue(metaData.arrayType == TrackerArrayTypes.UINT_ARRAY);
     }
 
-    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Bytes_MappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_TestTrackerArrayValue_Bytes_MappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
         // create policy and tracker array type
 
         vm.startPrank(policyAdmin);
@@ -1329,7 +1329,7 @@ abstract contract components is RulesEngineCommon {
         assertTrue(metaData.arrayType == TrackerArrayTypes.BYTES_ARRAY);
     }
 
-    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Address_MappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_TestTrackerArrayValue_Address_MappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
         // create policy and tracker array type
 
         vm.startPrank(policyAdmin);
@@ -1379,7 +1379,7 @@ abstract contract components is RulesEngineCommon {
         assertTrue(metaData.arrayType == TrackerArrayTypes.ADDR_ARRAY);
     }
 
-    function testRulesEngine_Unit_TestTrackerArrayValueEnum_Address_MappedTracker_InvalidType()
+    function testRulesEngine_Unit_TestTrackerArrayValue_Address_MappedTracker_InvalidType()
         public
         ifDeploymentTestsEnabled
         endWithStopPrank
