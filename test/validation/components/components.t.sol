@@ -632,7 +632,7 @@ abstract contract components is RulesEngineCommon {
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
     }
 
-        function testRulesEngine_Unit_PermissionedForeignCall_SetGeneratePolicyAdminRole_Negative()
+    function testRulesEngine_Unit_PermissionedForeignCall_SetGeneratePolicyAdminRole_Negative()
         public
         ifDeploymentTestsEnabled
         endWithStopPrank
@@ -1095,5 +1095,93 @@ abstract contract components is RulesEngineCommon {
         tracker.trackerValue = abi.encode(bool(false));
         vm.expectRevert(abi.encodePacked(NAME_REQ));
         RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "");
+    }
+
+    function testRulesEngine_Unit_ValidateDiamondMineDeploymentBytecode() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.startPrank(policyAdmin);
+
+        // deploy standalone facets for comparison
+        RulesEngineProcessorFacet standaloneProcessor = new RulesEngineProcessorFacet();
+        RulesEnginePolicyFacet standalonePolicy = new RulesEnginePolicyFacet();
+        RulesEngineComponentFacet standaloneComponent = new RulesEngineComponentFacet();
+        RulesEngineForeignCallFacet standaloneForeignCall = new RulesEngineForeignCallFacet();
+        RulesEngineAdminRolesFacet standaloneAdminRoles = new RulesEngineAdminRolesFacet();
+        RulesEngineInitialFacet standaloneInitial = new RulesEngineInitialFacet();
+        RulesEngineRuleFacet standaloneRule = new RulesEngineRuleFacet();
+        NativeFacet standaloneNative = new NativeFacet();
+
+        address[] memory standaloneFacets = new address[](8);
+        standaloneFacets[0] = address(standaloneProcessor);
+        standaloneFacets[1] = address(standalonePolicy);
+        standaloneFacets[2] = address(standaloneComponent);
+        standaloneFacets[3] = address(standaloneForeignCall);
+        standaloneFacets[4] = address(standaloneAdminRoles);
+        standaloneFacets[5] = address(standaloneInitial);
+        standaloneFacets[6] = address(standaloneRule);
+        standaloneFacets[7] = address(standaloneNative);
+
+        string[] memory facetNames = new string[](8);
+        facetNames[0] = "RulesEngineProcessorFacet";
+        facetNames[1] = "RulesEnginePolicyFacet";
+        facetNames[2] = "RulesEngineComponentFacet";
+        facetNames[3] = "RulesEngineForeignCallFacet";
+        facetNames[4] = "RulesEngineAdminRolesFacet";
+        facetNames[5] = "RulesEngineInitialFacet";
+        facetNames[6] = "RulesEngineRuleFacet";
+        facetNames[7] = "NativeFacet";
+
+        // get all deployed facet addresses from the diamond
+        address[] memory deployedFacetAddresses = DiamondLoupeFacet(address(red)).facetAddresses();
+
+        // for each standalone facet find its corresponding deployed facet and compare bytecode
+        for (uint256 i = 0; i < standaloneFacets.length; i++) {
+            address standaloneFacetAddress = standaloneFacets[i];
+            string memory facetName = facetNames[i];
+
+            // verify standalone facet has bytecode
+            uint256 standaloneCodeSize;
+            assembly {
+                standaloneCodeSize := extcodesize(standaloneFacetAddress)
+            }
+            assertTrue(standaloneCodeSize > 0, string(abi.encodePacked("Standalone facet has no bytecode: ", facetName)));
+
+            // find the corresponding deployed facet address by checking if any deployed address has matching bytecode
+            bool matchingFacetFound = false;
+
+            for (uint256 j = 0; j < deployedFacetAddresses.length; j++) {
+                address deployedFacetAddress = deployedFacetAddresses[j];
+
+                // get bytecode for both facets
+                bytes memory standaloneCode;
+                bytes memory deployedCode;
+
+                assembly {
+                    // get standalone facet bytecode
+                    let standaloneSize := extcodesize(standaloneFacetAddress)
+                    standaloneCode := mload(0x40)
+                    mstore(0x40, add(standaloneCode, and(add(add(standaloneSize, 0x20), 0x1f), not(0x1f))))
+                    mstore(standaloneCode, standaloneSize)
+                    extcodecopy(standaloneFacetAddress, add(standaloneCode, 0x20), 0, standaloneSize)
+
+                    // get deployed facet bytecode
+                    let deployedSize := extcodesize(deployedFacetAddress)
+                    deployedCode := mload(0x40)
+                    mstore(0x40, add(deployedCode, and(add(add(deployedSize, 0x20), 0x1f), not(0x1f))))
+                    mstore(deployedCode, deployedSize)
+                    extcodecopy(deployedFacetAddress, add(deployedCode, 0x20), 0, deployedSize)
+                }
+
+                // compare bytecode
+                if (keccak256(standaloneCode) == keccak256(deployedCode)) {
+                    matchingFacetFound = true;
+                    break;
+                }
+            }
+
+            assertTrue(matchingFacetFound, string(abi.encodePacked("No matching deployed facet found for standalone: ", facetName)));
+        }
+
+        // validate that all expected facets are deployed
+        assertEq(deployedFacetAddresses.length, 8, "Unexpected number of deployed facets");
     }
 }
