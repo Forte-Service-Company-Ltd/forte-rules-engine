@@ -224,7 +224,8 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
     function testPolicy_updatePolicy_arrayLengthWithRules(uint functionAmount, uint ruleAmounts) public {
         {
             uint maxSizeArray = 7;
-            functionAmount = functionAmount % maxSizeArray;
+            functionAmount = (functionAmount % maxSizeArray) + 1;
+            console2.log("functionAmount", functionAmount);
             ruleAmounts = ruleAmounts % maxSizeArray;
         }
         vm.startPrank(user1);
@@ -264,27 +265,27 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             // Save the rule
             RulesEngineRuleFacet(address(red)).updateRule(policyId, ruleId, rule, "My rule", "My way or the highway");
         }
-
-        uint functionId;
-        bytes4 sigCallingFunction;
-        {
-            ParamTypes[] memory pTypes = new ParamTypes[](2);
-            pTypes[0] = ParamTypes.ADDR;
-            pTypes[1] = ParamTypes.UINT;
-            sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
-            functionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
-                policyId,
-                sigCallingFunction,
-                pTypes,
-                callingFunction,
-                ""
-            );
-        }
+        bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
         {
             bytes4[] memory selectors = new bytes4[](functionAmount);
-            if (functionAmount > 0) for (uint i; i < functionAmount; i++) selectors[i] = sigCallingFunction;
+            if (functionAmount > 0)
+                // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
+                // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
+                for (uint i; i < functionAmount; i++) selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
             uint256[] memory functionIds = new uint256[](functionAmount);
-            if (functionAmount > 0) for (uint i; i < functionAmount; i++) functionIds[i] = functionId;
+            if (functionAmount > 0)
+                for (uint i; i < functionAmount; i++) {
+                    ParamTypes[] memory pTypes = new ParamTypes[](2);
+                    pTypes[0] = ParamTypes.ADDR;
+                    pTypes[1] = ParamTypes.UINT;
+                    functionIds[i] = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                        policyId,
+                        selectors[i],
+                        pTypes,
+                        callingFunction,
+                        ""
+                    );
+                }
             uint256[][] memory _ruleIds = new uint256[][](ruleAmounts);
             uint256[] memory _ids = new uint256[](1);
             console2.log("ruleId", ruleId);
@@ -313,10 +314,33 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             for (uint i; i < ruleIds_.length; i++) {
                 console2.log("i", i);
                 console2.log("ruleIds_[0][0]", ruleIds_[0][0]);
-                assertEq(ruleIds_[i].length, functionAmount, "rule id length mismatch");
+                assertEq(ruleIds_.length, functionAmount, "rule id length mismatch");
+                assertEq(ruleIds_[i].length, 1, "rule id length mismatch");
                 RuleStorageSet memory ruleStorage = RulesEngineRuleFacet(address(red)).getRule(policyId, ruleIds_[i][0]);
                 assertEq(ruleStorage.rule.instructionSet.length, 7, "instruction set length mismatch");
             }
         }
     }
 }
+// NOTE for my self
+
+// 1. create test exclusively for the algorithm that checks for no identical items in array
+// 2. create negative path test for identical elements in an array
+// 3. create test to demonstrate that identical signatures can have different Ids
+// 4. fix the identical functioins with different ids by checking for the set flag at creation time
+// 5. Create test that proves that there is no check updating policy with rules without function sigs and ids
+// 6. Fix this
+// 7. create test that proves that we can fool the system by giving the wrong id to a sig by giving identica ids in the sig id array
+// 8. Fix this by checking for identical ids in the array
+
+// Proposed change:
+// Main idea is to delete the id for callingFunctions since the selector MUST be the id. For this we neet to:
+
+// 1.
+// 2. delete the functionIdCounter.
+// 3. callingFunctionStorageSets MUST be ` mapping(uint256 policyId => mapping(bytes4 selector => CallingFunctionStorageSet))`.
+// 4. CallingFunctionStorageSet MUST not have the signature field.
+// 5. Policy MUST keep the callingFunctions array.
+// 6. delete callingFunctionIdMap from Policy
+
+// Same goes for foreign calls
