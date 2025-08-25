@@ -353,6 +353,113 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         }
     }
 
+    function testPolicy_updatePolicy_identicalSigs(
+        uint functionAmount,
+        uint copiedElementIndex,
+        uint identicalElementIndex,
+        bool shouldRevert
+    ) public {
+        {
+            uint maxSizeArray = 7;
+            functionAmount = (functionAmount % maxSizeArray) + 2; // will be between 2 and 9
+            identicalElementIndex = (identicalElementIndex % (functionAmount - 1)) + 1; // will be between 1 and functionAmount - 1
+            copiedElementIndex = (copiedElementIndex % (functionAmount)); // could be any index inside the array
+            if (copiedElementIndex == identicalElementIndex) {
+                identicalElementIndex = copiedElementIndex == 0 ? 1 : copiedElementIndex - 1;
+            }
+        }
+        vm.startPrank(user1);
+        uint policyId = _createBlankPolicy();
+
+        uint ruleId;
+        Rule memory rule;
+        {
+            // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, *uint256 representation of Bad Info*, LogicalOp.EQ, 0, 1
+            // Build the instruction set for the rule (including placeholders)
+            rule.instructionSet = new uint256[](7);
+            rule.instructionSet[0] = uint(LogicalOp.PLH);
+            rule.instructionSet[1] = 0;
+            rule.instructionSet[2] = uint(LogicalOp.NUM);
+            rule.instructionSet[3] = uint256(keccak256(abi.encode("Bad Info")));
+            rule.instructionSet[4] = uint(LogicalOp.EQ);
+            rule.instructionSet[5] = 0;
+            rule.instructionSet[6] = 1;
+
+            rule.negEffects = new Effect[](1);
+            rule.negEffects[0] = effectId_revert;
+
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "My rule", "My way or the highway");
+
+            rule.rawData.argumentTypes = new ParamTypes[](1);
+            rule.rawData.dataValues = new bytes[](1);
+            rule.rawData.instructionSetIndex = new uint256[](1);
+            rule.rawData.argumentTypes[0] = ParamTypes.STR;
+            rule.rawData.dataValues[0] = abi.encode("Bad Info");
+            rule.rawData.instructionSetIndex[0] = 3;
+
+            // Build the calling function argument placeholder
+            rule.placeHolders = new Placeholder[](1);
+            rule.placeHolders[0].pType = ParamTypes.STR;
+            rule.placeHolders[0].typeSpecificIndex = 1;
+
+            // Save the rule
+            RulesEngineRuleFacet(address(red)).updateRule(policyId, ruleId, rule, "My rule", "My way or the highway");
+        }
+        bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
+        {
+            bytes4[] memory selectors = new bytes4[](functionAmount);
+            if (functionAmount > 0)
+                // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
+                // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
+                for (uint i; i < functionAmount; i++) selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
+            uint256[] memory functionIds = new uint256[](functionAmount);
+            if (shouldRevert) selectors[identicalElementIndex] = selectors[copiedElementIndex]; // we duplicate a random element in a random position
+            if (functionAmount > 0)
+                for (uint i; i < functionAmount; i++) {
+                    ParamTypes[] memory pTypes = new ParamTypes[](2);
+                    pTypes[0] = ParamTypes.ADDR;
+                    pTypes[1] = ParamTypes.UINT;
+                    functionIds[i] = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                        policyId,
+                        selectors[i],
+                        pTypes,
+                        callingFunction,
+                        ""
+                    );
+                }
+            uint256[][] memory _ruleIds = new uint256[][](functionAmount);
+            uint256[] memory _ids = new uint256[](1);
+            _ids[0] = ruleId;
+            for (uint i; i < functionAmount; i++) _ruleIds[i] = _ids;
+            if (shouldRevert) vm.expectRevert("Duplicates not allowed");
+            RulesEnginePolicyFacet(address(red)).updatePolicy(
+                policyId,
+                selectors,
+                functionIds,
+                _ruleIds,
+                PolicyType.OPEN_POLICY,
+                "Test Policy",
+                "This is a test policy"
+            );
+        }
+        if (!shouldRevert) {
+            (bytes4[] memory callingFunctions_, uint256[] memory callingFunctionIds_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(
+                address(red)
+            ).getPolicy(policyId);
+            assertEq(callingFunctions_.length, functionAmount, "selector length mismatch");
+            assertEq(callingFunctionIds_.length, functionAmount, "function id length mismatch");
+            assertEq(ruleIds_.length, functionAmount, "rule id length mismatch");
+            for (uint i; i < ruleIds_.length; i++) {
+                console2.log("i", i);
+                console2.log("ruleIds_[0][0]", ruleIds_[0][0]);
+                assertEq(ruleIds_.length, functionAmount, "rule id length mismatch");
+                assertEq(ruleIds_[i].length, 1, "rule id length mismatch");
+                RuleStorageSet memory ruleStorage = RulesEngineRuleFacet(address(red)).getRule(policyId, ruleIds_[i][0]);
+                assertEq(ruleStorage.rule.instructionSet.length, 7, "instruction set length mismatch");
+            }
+        }
+    }
+
     function testPolicy_updatePolicy_identicalElementsInCalldataArrayBytes4(uint seedSig, uint multiplier) public {
         uint sigAmount = 4;
         TestFacetUtils facet = new TestFacetUtils();
