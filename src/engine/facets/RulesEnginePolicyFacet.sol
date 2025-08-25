@@ -473,9 +473,11 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
     }
 
     function _validateNoIdenticalFunctionSigs(bytes4[] calldata sigs) internal {
-        for (uint sigIndex; sigIndex < sigs.length - 1; sigIndex++)
-            for (uint otherSigIndex = sigIndex + 1; otherSigIndex < sigs.length; otherSigIndex++)
-                if (sigs[sigIndex] == sigs[otherSigIndex]) revert("Duplicates not allowed");
+        uint start;
+        assembly {
+            start := sigs.offset
+        }
+        if (_isThereDuplicatesInCalldataValueTypeArray(sigs.length, start)) revert(DUPLICATES_NOT_ALLOWED);
     }
 
     /**

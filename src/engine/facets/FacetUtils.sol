@@ -96,4 +96,41 @@ contract FacetUtils {
             globalVarType := shr(2, flags) // MASK_GLOBAL_VAR = 0x1C, SHIFT_GLOBAL_VAR = 2
         }
     }
+
+    /**
+     * @dev this is a type-agnostic solution for determining if an array of value types from calldata contains duplicates in it
+     * @param len the length of the array. Can be easily retrieved in _Solidity_ by using i.e. array.length;
+     * @param start the location in the calldata of the first element of the array. Can be retrieved with _Yul_ by doing array.offset
+     * @return duplicatesFound true if at least one element is repeated in the array. False otherwise
+     * @notice this is only useful for an array passed as an argument to an external/public function and the function explicitely uses
+     *      the calldata keyword. This won't work if the array is stored in memory.
+     */
+    function _isThereDuplicatesInCalldataValueTypeArray(uint len, uint start) internal pure returns (bool duplicatesFound) {
+        assembly {
+            // loop for element (a) can only go until length - 1 (last one must be (b))
+            for {
+                let i := 0
+            } lt(i, sub(len, 1)) {
+                i := add(i, 1)
+            } {
+                let element := calldataload(add(start, mul(i, 32))) // we load the element from calldata to later compare it against all others
+                // loop for element (b) must start from i + 1 item (i must be (a))
+                for {
+                    let j := add(i, 1)
+                } lt(j, len) {
+                    j := add(j, 1)
+                } {
+                    let other := calldataload(add(start, mul(j, 32))) // we store the other element (b)
+                    // now we compare element a with b
+                    if eq(element, other) {
+                        duplicatesFound := 1 // if they are equal we set the result to true
+                        break // we are done now
+                    }
+                }
+                if gt(duplicatesFound, 0) {
+                    break
+                }
+            }
+        }
+    }
 }
