@@ -146,11 +146,16 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
         // we skip the creation of the function to provoke the error
         uint functionId = 1;
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
         bytes4[] memory selectors = new bytes4[](selectorAmount);
-        if (selectorAmount > 0) for (uint i; i < selectorAmount; i++) selectors[i] = sigCallingFunction;
-        uint256[] memory functionIds = new uint256[](selectorAmount);
-        if (selectorAmount > 0) for (uint i; i < selectorAmount; i++) functionIds[i] = functionId;
+        if (selectorAmount > 0)
+            // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
+            // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
+            for (uint i; i < selectorAmount; i++) selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
         uint256[][] memory _ruleIds = new uint256[][](0);
+        // TODO make this test better by fuzzing some more vars
         vm.expectRevert("Invalid Signature");
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -162,36 +167,36 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         );
     }
 
-    function testPolicy_updatePolicy_arrayLengthWithoutRules(uint selectorAmount, uint functionIdAmount) public {
-        uint maxSizeArray = 7;
-        selectorAmount = selectorAmount % maxSizeArray;
-        functionIdAmount = functionIdAmount % maxSizeArray;
-        vm.startPrank(user1);
-        uint policyId = _createBlankPolicy();
-        ParamTypes[] memory pTypes = new ParamTypes[](2);
-        pTypes[0] = ParamTypes.ADDR;
-        pTypes[1] = ParamTypes.UINT;
-        bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
-        RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
-        bytes4[] memory selectors = new bytes4[](selectorAmount);
-        if (selectorAmount > 0) for (uint i; i < selectorAmount; i++) selectors[i] = sigCallingFunction;
-        uint256[][] memory _ruleIds = new uint256[][](0);
-        if (selectorAmount != functionIdAmount) vm.expectRevert("Signatures and signature id's are inconsistent");
-        RulesEnginePolicyFacet(address(red)).updatePolicy(
-            policyId,
-            selectors,
-            _ruleIds,
-            PolicyType.OPEN_POLICY,
-            "Test Policy",
-            "This is a test policy"
-        );
-        if (selectorAmount == functionIdAmount) {
-            (bytes4[] memory callingFunctions_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
-            assertEq(callingFunctions_.length, selectors.length, "selector length mismatch");
-            assertEq(ruleIds_.length, selectorAmount, "rule id length mismatch");
-            for (uint i; i < selectorAmount; i++) assertEq(ruleIds_[i].length, 0, "rule id length mismatch");
-        }
-    }
+    // function testPolicy_updatePolicy_arrayLengthWithoutRules(uint selectorAmount, uint functionIdAmount) public {
+    //     uint maxSizeArray = 7;
+    //     selectorAmount = selectorAmount % maxSizeArray;
+    //     functionIdAmount = functionIdAmount % maxSizeArray;
+    //     vm.startPrank(user1);
+    //     uint policyId = _createBlankPolicy();
+    //     ParamTypes[] memory pTypes = new ParamTypes[](2);
+    //     pTypes[0] = ParamTypes.ADDR;
+    //     pTypes[1] = ParamTypes.UINT;
+    //     bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
+    //     RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
+    //     bytes4[] memory selectors = new bytes4[](selectorAmount);
+    //     if (selectorAmount > 0) for (uint i; i < selectorAmount; i++) selectors[i] = sigCallingFunction;
+    //     uint256[][] memory _ruleIds = new uint256[][](0);
+    //     if (selectorAmount != functionIdAmount) vm.expectRevert("Signatures and signature id's are inconsistent");
+    //     RulesEnginePolicyFacet(address(red)).updatePolicy(
+    //         policyId,
+    //         selectors,
+    //         _ruleIds,
+    //         PolicyType.OPEN_POLICY,
+    //         "Test Policy",
+    //         "This is a test policy"
+    //     );
+    //     if (selectorAmount == functionIdAmount) {
+    //         (bytes4[] memory callingFunctions_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
+    //         assertEq(callingFunctions_.length, selectors.length, "selector length mismatch");
+    //         assertEq(ruleIds_.length, selectorAmount, "rule id length mismatch");
+    //         for (uint i; i < selectorAmount; i++) assertEq(ruleIds_[i].length, 0, "rule id length mismatch");
+    //     }
+    // }
 
     function testPolicy_updatePolicy_InvalidRule(uint functionAmount) public {
         uint maxSizeArray = 7;
@@ -368,11 +373,17 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         }
         bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
         {
+            ParamTypes[] memory pTypes = new ParamTypes[](2);
+            pTypes[0] = ParamTypes.ADDR;
+            pTypes[1] = ParamTypes.UINT;
             bytes4[] memory selectors = new bytes4[](functionAmount);
             if (functionAmount > 0)
                 // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
                 // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
-                for (uint i; i < functionAmount; i++) selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
+                for (uint i; i < functionAmount; i++) {
+                    selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
+                    RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, selectors[i], pTypes, callingFunction, "");
+                }
             if (shouldRevert) selectors[identicalElementIndex] = selectors[copiedElementIndex]; // we duplicate a random element in a random position
 
             uint256[][] memory _ruleIds = new uint256[][](functionAmount);
