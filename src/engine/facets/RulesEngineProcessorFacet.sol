@@ -613,7 +613,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 if (tt == TrackerTypes.MEMORY) {
                     _updateTrackerValue(_policyId, _prog[idx + 1], mem[_prog[idx + 2]]);
                 } else {
-                    _updateTrackerValue(_policyId, _prog[idx + 1], _arguments[_prog[idx + 2]]);
+                    if (_placeHolders[_prog[idx + 2]].flags != FacetUtils.FLAG_TRACKER_VALUE) {
+                        _updateTrackerValue(_policyId, _prog[idx + 1], uint256(keccak256(_arguments[_prog[idx + 2]])));
+                    } else {
+                        _updateTrackerValue(_policyId, _prog[idx + 1], _arguments[_prog[idx + 2]]);
+                    }
                 }
                 idx += 4;
             } else if (op == LogicalOp.TRUM) {
@@ -630,7 +634,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 uint256 key = mem[_prog[idx + 3]];
                 tt == TrackerTypes.MEMORY
                     ? _updateMappedTrackerValue(_policyId, _prog[idx + 1], mem[_prog[idx + 2]], key)
-                    : _updateMappedTrackerValue(_policyId, _prog[idx + 1], _arguments[_prog[idx + 2]], key);
+                    : _placeHolders[_prog[idx + 2]].flags != FacetUtils.FLAG_TRACKER_VALUE
+                        ? _updateMappedTrackerValue(_policyId, _prog[idx + 1], uint256(keccak256(_arguments[_prog[idx + 2]])), key)
+                        : _updateMappedTrackerValue(_policyId, _prog[idx + 1], _arguments[_prog[idx + 2]], key);
                 idx += 5;
             } else if (op == LogicalOp.NUM) {
                 v = _prog[idx + 1];
