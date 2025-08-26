@@ -271,11 +271,17 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         }
         bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
         {
+            ParamTypes[] memory pTypes = new ParamTypes[](2);
+            pTypes[0] = ParamTypes.ADDR;
+            pTypes[1] = ParamTypes.UINT;
             bytes4[] memory selectors = new bytes4[](functionAmount);
             if (functionAmount > 0)
                 // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
                 // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
-                for (uint i; i < functionAmount; i++) selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
+                for (uint i; i < functionAmount; i++) {
+                    selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
+                    RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, selectors[i], pTypes, callingFunction, "");
+                }
             uint256[][] memory _ruleIds = new uint256[][](ruleAmounts);
             uint256[] memory _ids = new uint256[](1);
             console2.log("ruleId", ruleId);
