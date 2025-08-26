@@ -66,7 +66,6 @@ abstract contract storageTest is RulesEngineCommon {
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyId,
                 callingFunctions,
-                callingFunctionIds,
                 ruleIds,
                 PolicyType.CLOSED_POLICY,
                 policyName,
@@ -86,9 +85,8 @@ abstract contract storageTest is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId;
         for (uint256 i = 0; i < index; i++) {
-            callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
                 policyIds[0],
                 bytes4(bytes4(keccak256(bytes(callingFunction)))),
                 pTypes,
@@ -96,18 +94,20 @@ abstract contract storageTest is RulesEngineCommon {
                 ""
             );
             callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-            callingFunctionIds.push(callingFunctionId);
             uint256[][] memory blankRuleIds = new uint256[][](0);
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyIds[0],
                 callingFunctions,
-                callingFunctionIds,
                 blankRuleIds,
                 PolicyType.CLOSED_POLICY,
                 policyName,
                 policyDescription
             );
-            assertTrue(RulesEngineComponentFacet(address(red)).getCallingFunction(policyIds[0], callingFunctionId).set);
+            assertTrue(
+                RulesEngineComponentFacet(address(red))
+                    .getCallingFunction(policyIds[0], bytes4(bytes4(keccak256(bytes(callingFunction)))))
+                    .set
+            );
         }
     }
 
@@ -120,17 +120,20 @@ abstract contract storageTest is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId;
         for (uint256 i = 0; i < index; i++) {
             // Save the calling function
-            callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
                 policyIds[0],
                 bytes4(bytes4(keccak256(bytes(callingFunction)))),
                 pTypes,
                 callingFunction,
                 ""
             );
-            assertTrue(RulesEngineComponentFacet(address(red)).getCallingFunction(policyIds[0], callingFunctionId).set);
+            assertTrue(
+                RulesEngineComponentFacet(address(red))
+                    .getCallingFunction(policyIds[0], bytes4(bytes4(keccak256(bytes(callingFunction)))))
+                    .set
+            );
         }
     }
 

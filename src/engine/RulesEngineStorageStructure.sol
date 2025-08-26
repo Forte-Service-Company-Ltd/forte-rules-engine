@@ -185,7 +185,7 @@ struct CallingFunctionHashMapping {
  * Mapping for the metadata for calling functions
  */
 struct CallingFunctionMetadataStruct {
-    mapping(uint256 policyId => mapping(uint256 functionId => CallingFunctionHashMapping)) callingFunctionMetadata;
+    mapping(uint256 policyId => mapping(bytes4 selector => CallingFunctionHashMapping)) callingFunctionMetadata;
 }
 
 /**

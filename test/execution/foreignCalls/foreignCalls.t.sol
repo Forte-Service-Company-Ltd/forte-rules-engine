@@ -96,7 +96,6 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         vm.skip(true);
         uint256 policyId;
         uint256 ruleId;
-        uint256 callingFunctionId;
 
         {
             vm.startPrank(policyAdmin);
@@ -166,7 +165,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
                 pTypes[2] = ParamTypes.BYTES;
-                callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                RulesEngineComponentFacet(address(red)).createCallingFunction(
                     policyId,
                     transferSelector,
                     pTypes,
@@ -176,15 +175,12 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
 
                 bytes4[] memory selectors = new bytes4[](1);
                 selectors[0] = transferSelector;
-                uint256[] memory functionIds = new uint256[](1);
-                functionIds[0] = callingFunctionId;
                 uint256[][] memory ruleIdsArr = new uint256[][](1);
                 ruleIdsArr[0] = new uint256[](1);
                 ruleIdsArr[0][0] = ruleId;
                 RulesEnginePolicyFacet(address(red)).updatePolicy(
                     policyId,
                     selectors,
-                    functionIds,
                     ruleIdsArr,
                     PolicyType.CLOSED_POLICY,
                     policyName,
@@ -231,7 +227,6 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
     {
         uint256 policyId;
         uint256 ruleId;
-        uint256 callingFunctionId;
 
         {
             vm.startPrank(policyAdmin);
@@ -357,7 +352,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
                 pTypes[2] = ParamTypes.STR;
                 pTypes[3] = ParamTypes.STR;
                 pTypes[4] = ParamTypes.UINT;
-                callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                RulesEngineComponentFacet(address(red)).createCallingFunction(
                     policyId,
                     transferSelector,
                     pTypes,
@@ -367,8 +362,6 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
 
                 bytes4[] memory selectors = new bytes4[](1);
                 selectors[0] = transferSelector;
-                uint256[] memory functionIds = new uint256[](1);
-                functionIds[0] = callingFunctionId;
                 uint256[][] memory ruleIdsArr = new uint256[][](1);
                 ruleIdsArr[0] = new uint256[](1);
                 ruleIdsArr[0][0] = ruleId;
@@ -376,7 +369,6 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
                 RulesEnginePolicyFacet(address(red)).updatePolicy(
                     policyId,
                     selectors,
-                    functionIds,
                     ruleIdsArr,
                     PolicyType.CLOSED_POLICY,
                     policyName,

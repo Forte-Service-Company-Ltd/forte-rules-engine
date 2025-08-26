@@ -25,14 +25,12 @@ library RulesEngineStorageLib {
      * @notice Checks if a calling function is set for the specified policy.
      * @dev Validates whether the calling function exists in the policy's storage.
      * @param _policyId The ID of the policy the calling function is associated with.
-     * @param _callingFunctionId The ID of the calling function to check.
+     * @param sig The selector of the function.
      * @return set True if the calling funciton is set, false otherwise.
      */
-    function _isCallingFunctionSet(uint256 _policyId, uint256 _callingFunctionId, bytes4 sig) internal view returns (bool) {
+    function _isCallingFunctionSet(uint256 _policyId, bytes4 sig) internal view returns (bool) {
         // Load the calling function data from storage
-        return
-            lib._getCallingFunctionStorage().callingFunctionStorageSets[_policyId][_callingFunctionId].set &&
-            lib._getCallingFunctionStorage().callingFunctionStorageSets[_policyId][_callingFunctionId].signature == sig;
+        return lib._getCallingFunctionStorage().callingFunctionStorageSets[_policyId][sig].set;
     }
 
     /**

@@ -127,7 +127,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
@@ -136,14 +136,12 @@ abstract contract rulesFuzz is RulesEngineCommon {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
 
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -176,7 +174,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
@@ -185,14 +183,12 @@ abstract contract rulesFuzz is RulesEngineCommon {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
 
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,

@@ -76,7 +76,7 @@ abstract contract policiesExecution is RulesEngineCommon {
 
         _addCallingFunctionToPolicy(policyIds[0]);
 
-        uint256 callingFunctionId1 = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes("transfer(address,uint256)")))),
             pTypes,
@@ -89,7 +89,7 @@ abstract contract policiesExecution is RulesEngineCommon {
         pTypes[1] = ParamTypes.ADDR;
         pTypes[2] = ParamTypes.UINT;
 
-        uint256 callingFunctionId2 = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)")))),
             pTypes,
@@ -100,9 +100,6 @@ abstract contract policiesExecution is RulesEngineCommon {
         bytes4[] memory callingFunctions = new bytes4[](2);
         callingFunctions[0] = bytes4(bytes4(keccak256(bytes("transfer(address,uint256)"))));
         callingFunctions[1] = bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))));
-        uint256[] memory callingFunctionIds = new uint256[](2);
-        callingFunctionIds[0] = callingFunctionId1;
-        callingFunctionIds[1] = callingFunctionId2;
         uint256[][] memory ruleIds = new uint256[][](2);
         ruleIds[0] = new uint256[](3);
         ruleIds[0][0] = 1;
@@ -115,7 +112,6 @@ abstract contract policiesExecution is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             "policyName",
@@ -132,7 +128,10 @@ abstract contract policiesExecution is RulesEngineCommon {
         assertEq(keccak256(abi.encodePacked(rules[1][0].instructionSet)), keccak256(abi.encodePacked(initialRules[0].instructionSet)));
         assertEq(keccak256(abi.encodePacked(rules[1][1].instructionSet)), keccak256(abi.encodePacked(initialRules[1].instructionSet)));
 
-        RulesEngineComponentFacet(address(red)).deleteCallingFunction(policy1, callingFunctionId2);
+        RulesEngineComponentFacet(address(red)).deleteCallingFunction(
+            policy1,
+            bytes4(keccak256(bytes("transferFrom(address,address,uint256)")))
+        );
         rules = RulesEngineRuleFacet(address(red)).getAllRules(policy1);
         assertEq(rules.length, 1);
         assertEq(rules[0].length, 3);
@@ -159,7 +158,7 @@ abstract contract policiesExecution is RulesEngineCommon {
 
         _addCallingFunctionToPolicy(policyIds[0]);
 
-        uint256 callingFunctionId1 = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes("transfer(address,uint256)")))),
             pTypes,
@@ -172,7 +171,7 @@ abstract contract policiesExecution is RulesEngineCommon {
         pTypes[1] = ParamTypes.ADDR;
         pTypes[2] = ParamTypes.UINT;
 
-        uint256 callingFunctionId2 = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)")))),
             pTypes,
@@ -183,9 +182,6 @@ abstract contract policiesExecution is RulesEngineCommon {
         bytes4[] memory callingFunctions = new bytes4[](2);
         callingFunctions[0] = bytes4(bytes4(keccak256(bytes("transfer(address,uint256)"))));
         callingFunctions[1] = bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))));
-        uint256[] memory callingFunctionIds = new uint256[](2);
-        callingFunctionIds[0] = callingFunctionId1;
-        callingFunctionIds[1] = callingFunctionId2;
         uint256[][] memory ruleIds = new uint256[][](2);
         ruleIds[0] = new uint256[](3);
         ruleIds[0][0] = 1;
@@ -198,7 +194,6 @@ abstract contract policiesExecution is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             "policyName",

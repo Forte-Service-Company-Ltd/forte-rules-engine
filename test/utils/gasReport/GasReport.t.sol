@@ -488,7 +488,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctionsNew,
-            callingFunctionIdsNew,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -503,7 +502,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[1],
             callingFunctionsNew,
-            callingFunctionIdsNew,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -1006,7 +1004,7 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         pTypes[4] = ParamTypes.UINT;
         pTypes[5] = ParamTypes.UINT;
 
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes("transfer(address,uint256)")))),
             pTypes,
@@ -1015,12 +1013,10 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes("transfer(address,uint256)"))));
-        callingFunctionIds.push(callingFunctionId);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -1078,7 +1074,7 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         pTypes[4] = ParamTypes.UINT;
         pTypes[5] = ParamTypes.UINT;
 
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes("transfer(address,uint256)")))),
             pTypes,
@@ -1087,12 +1083,10 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes("transfer(address,uint256)"))));
-        callingFunctionIds.push(callingFunctionId);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,

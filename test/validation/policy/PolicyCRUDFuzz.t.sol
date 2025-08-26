@@ -100,7 +100,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
                 RulesEnginePolicyFacet(address(red)).updatePolicy.selector,
                 policyId,
                 selectors,
-                functionIds,
                 _ruleIds,
                 _policyType,
                 "Test Policy",
@@ -122,24 +121,19 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         vm.startPrank(user1);
         uint policyId = _createBlankPolicy();
         bytes4[] memory selectors = new bytes4[](0);
-        uint256[] memory functionIds = new uint256[](0);
         uint256[][] memory _ruleIds = new uint256[][](0);
         if (policyId != randomPolicyId) vm.expectRevert("Not Authorized To Policy");
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             randomPolicyId,
             selectors,
-            functionIds,
             _ruleIds,
             PolicyType.OPEN_POLICY,
             "Test Policy",
             "This is a test policy"
         );
         if (policyId == randomPolicyId) {
-            (bytes4[] memory callingFunctions_, uint256[] memory callingFunctionIds_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(
-                address(red)
-            ).getPolicy(policyId);
+            (bytes4[] memory callingFunctions_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
             assertEq(callingFunctions_.length, selectors.length);
-            assertEq(callingFunctionIds_.length, functionIds.length);
             assertEq(ruleIds_.length, _ruleIds.length);
         }
     }
@@ -161,7 +155,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             selectors,
-            functionIds,
             _ruleIds,
             PolicyType.OPEN_POLICY,
             "Test Policy",
@@ -179,34 +172,22 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
-        uint functionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
-            policyId,
-            sigCallingFunction,
-            pTypes,
-            callingFunction,
-            ""
-        );
+        RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
         bytes4[] memory selectors = new bytes4[](selectorAmount);
         if (selectorAmount > 0) for (uint i; i < selectorAmount; i++) selectors[i] = sigCallingFunction;
-        uint256[] memory functionIds = new uint256[](functionIdAmount);
-        if (functionIdAmount > 0) for (uint i; i < functionIdAmount; i++) functionIds[i] = functionId;
         uint256[][] memory _ruleIds = new uint256[][](0);
         if (selectorAmount != functionIdAmount) vm.expectRevert("Signatures and signature id's are inconsistent");
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             selectors,
-            functionIds,
             _ruleIds,
             PolicyType.OPEN_POLICY,
             "Test Policy",
             "This is a test policy"
         );
         if (selectorAmount == functionIdAmount) {
-            (bytes4[] memory callingFunctions_, uint256[] memory callingFunctionIds_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(
-                address(red)
-            ).getPolicy(policyId);
+            (bytes4[] memory callingFunctions_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
             assertEq(callingFunctions_.length, selectors.length, "selector length mismatch");
-            assertEq(callingFunctionIds_.length, functionIds.length, "function id length mismatch");
             assertEq(ruleIds_.length, selectorAmount, "rule id length mismatch");
             for (uint i; i < selectorAmount; i++) assertEq(ruleIds_[i].length, 0, "rule id length mismatch");
         }
@@ -225,17 +206,9 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
-        uint functionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
-            policyId,
-            sigCallingFunction,
-            pTypes,
-            callingFunction,
-            ""
-        );
+        RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
         bytes4[] memory selectors = new bytes4[](functionAmount);
         if (functionAmount > 0) for (uint i; i < functionAmount; i++) selectors[i] = sigCallingFunction;
-        uint256[] memory functionIds = new uint256[](functionAmount);
-        if (functionAmount > 0) for (uint i; i < functionAmount; i++) functionIds[i] = functionId;
         uint256[][] memory _ruleIds = new uint256[][](functionAmount);
         uint256[] memory _ids = new uint256[](functionAmount);
         _ids[0] = ruleId;
@@ -244,7 +217,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             selectors,
-            functionIds,
             _ruleIds,
             PolicyType.OPEN_POLICY,
             "Test Policy",
@@ -303,20 +275,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
                 // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
                 // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
                 for (uint i; i < functionAmount; i++) selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
-            uint256[] memory functionIds = new uint256[](functionAmount);
-            if (functionAmount > 0)
-                for (uint i; i < functionAmount; i++) {
-                    ParamTypes[] memory pTypes = new ParamTypes[](2);
-                    pTypes[0] = ParamTypes.ADDR;
-                    pTypes[1] = ParamTypes.UINT;
-                    functionIds[i] = RulesEngineComponentFacet(address(red)).createCallingFunction(
-                        policyId,
-                        selectors[i],
-                        pTypes,
-                        callingFunction,
-                        ""
-                    );
-                }
             uint256[][] memory _ruleIds = new uint256[][](ruleAmounts);
             uint256[] memory _ids = new uint256[](1);
             console2.log("ruleId", ruleId);
@@ -328,7 +286,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyId,
                 selectors,
-                functionIds,
                 _ruleIds,
                 PolicyType.OPEN_POLICY,
                 "Test Policy",
@@ -336,11 +293,8 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             );
         }
         if (functionAmount == ruleAmounts && ruleAmounts > 0 && functionAmount > 0) {
-            (bytes4[] memory callingFunctions_, uint256[] memory callingFunctionIds_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(
-                address(red)
-            ).getPolicy(policyId);
+            (bytes4[] memory callingFunctions_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
             assertEq(callingFunctions_.length, functionAmount, "selector length mismatch");
-            assertEq(callingFunctionIds_.length, functionAmount, "function id length mismatch");
             assertEq(ruleIds_.length, ruleAmounts, "rule id length mismatch");
             for (uint i; i < ruleIds_.length; i++) {
                 console2.log("i", i);
@@ -412,21 +366,8 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
                 // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
                 // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
                 for (uint i; i < functionAmount; i++) selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
-            uint256[] memory functionIds = new uint256[](functionAmount);
             if (shouldRevert) selectors[identicalElementIndex] = selectors[copiedElementIndex]; // we duplicate a random element in a random position
-            if (functionAmount > 0)
-                for (uint i; i < functionAmount; i++) {
-                    ParamTypes[] memory pTypes = new ParamTypes[](2);
-                    pTypes[0] = ParamTypes.ADDR;
-                    pTypes[1] = ParamTypes.UINT;
-                    functionIds[i] = RulesEngineComponentFacet(address(red)).createCallingFunction(
-                        policyId,
-                        selectors[i],
-                        pTypes,
-                        callingFunction,
-                        ""
-                    );
-                }
+
             uint256[][] memory _ruleIds = new uint256[][](functionAmount);
             uint256[] memory _ids = new uint256[](1);
             _ids[0] = ruleId;
@@ -435,7 +376,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyId,
                 selectors,
-                functionIds,
                 _ruleIds,
                 PolicyType.OPEN_POLICY,
                 "Test Policy",
@@ -443,11 +383,8 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             );
         }
         if (!shouldRevert) {
-            (bytes4[] memory callingFunctions_, uint256[] memory callingFunctionIds_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(
-                address(red)
-            ).getPolicy(policyId);
+            (bytes4[] memory callingFunctions_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
             assertEq(callingFunctions_.length, functionAmount, "selector length mismatch");
-            assertEq(callingFunctionIds_.length, functionAmount, "function id length mismatch");
             assertEq(ruleIds_.length, functionAmount, "rule id length mismatch");
             for (uint i; i < ruleIds_.length; i++) {
                 console2.log("i", i);

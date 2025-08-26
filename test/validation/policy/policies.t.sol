@@ -21,9 +21,8 @@ abstract contract policies is RulesEngineCommon {
         (uint256 policyId, uint256 ruleId) = setUpRuleSimple();
         ruleId;
         // Save the calling Function
-        uint256 callingFunctionId = _addCallingFunctionToPolicy(policyId);
+        _addCallingFunctionToPolicy(policyId);
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         ruleIds.push(new uint256[](1));
@@ -34,7 +33,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -54,7 +52,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -72,7 +69,6 @@ abstract contract policies is RulesEngineCommon {
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyId,
                 callingFunctions,
-                callingFunctionIds,
                 ruleIds,
                 PolicyType.CLOSED_POLICY,
                 policyName,
@@ -87,7 +83,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -105,7 +100,6 @@ abstract contract policies is RulesEngineCommon {
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyId,
                 callingFunctions,
-                callingFunctionIds,
                 ruleIds,
                 PolicyType.CLOSED_POLICY,
                 policyName,
@@ -206,7 +200,7 @@ abstract contract policies is RulesEngineCommon {
         pTypes[1] = ParamTypes.UINT;
 
         _addCallingFunctionToPolicy(policyIds[0]);
-        (_functionSigs, _functionSigIds, _ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyIds[0]);
+        (_functionSigs, _ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyIds[0]);
         assertEq(_functionSigs.length, 1);
         assertEq(_functionSigIds.length, 1);
     }
@@ -219,7 +213,7 @@ abstract contract policies is RulesEngineCommon {
 
         policyIds[0] = setupEffectWithTrackerUpdateUint();
 
-        (_functionSigs, _functionSigIds, _ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyIds[0]);
+        (_functionSigs, _ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyIds[0]);
         assertEq(_ruleIds.length, 1);
         assertEq(_ruleIds[0].length, 1);
         assertEq(_ruleIds[0][0], 1);
@@ -233,7 +227,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -258,7 +251,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -274,7 +266,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -294,7 +285,6 @@ abstract contract policies is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId;
 
         uint256[][] memory ruleIds = new uint256[][](50);
         ruleIds[0] = new uint256[](50);
@@ -302,7 +292,7 @@ abstract contract policies is RulesEngineCommon {
         uint256[] memory functionIds = new uint256[](50);
         // This loop will create 50 calling functions with a rule on each one.
         for (uint i = 0; i < ruleCount; i++) {
-            callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
                 policyId,
                 bytes4(keccak256(bytes(callingFunction))),
                 pTypes,
@@ -310,7 +300,7 @@ abstract contract policies is RulesEngineCommon {
                 ""
             );
             selectors[i] = bytes4(keccak256(bytes(callingFunction)));
-            functionIds[i] = callingFunctionId;
+
             r = _createLTRule();
             ruleIds[i] = new uint256[](1);
             ruleIds[i][0] = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], r, "rule", "ruleDescription");
@@ -330,16 +320,14 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             selectors,
-            functionIds,
             ruleIds,
             PolicyType.OPEN_POLICY,
             policyName,
             policyDescription
         );
         // verify that only the single rule and calling function exist in this policy
-        (selectors, functionIds, ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
+        (selectors, ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
         assertEq(selectors.length, 1, "Rules delete in updatePolicy did not remove all the function selectors");
-        assertEq(functionIds.length, 1, "Rules delete in updatePolicy did not remove all the calling function records");
         assertEq(ruleIds.length, 1, "Rules delete in updatePolicy did not remove all the calling function associations");
         assertEq(ruleIds[0].length, 1, "Rules delete in updatePolicy did not remove all the rules");
 
@@ -352,7 +340,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             selectors,
-            functionIds,
             ruleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -371,7 +358,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -422,7 +408,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -445,7 +430,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -469,7 +453,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -489,7 +472,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -521,7 +503,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -545,7 +526,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -570,7 +550,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankSignatures,
-            blankFunctionSignatureIds,
             blankRuleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -594,7 +573,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankSignatures,
-            blankFunctionSignatureIds,
             blankRuleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -608,7 +586,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId2,
             blankSignatures2,
-            blankFunctionSignatureIds2,
             blankRuleIds2,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -641,7 +618,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankSignatures,
-            blankFunctionSignatureIds,
             blankRuleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -655,7 +631,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId2,
             blankSignatures2,
-            blankFunctionSignatureIds2,
             blankRuleIds2,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -692,7 +667,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankSignatures,
-            blankFunctionSignatureIds,
             blankRuleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -706,7 +680,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId2,
             blankSignatures2,
-            blankFunctionSignatureIds2,
             blankRuleIds2,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -732,7 +705,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankSignatures,
-            blankFunctionSignatureIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -781,7 +753,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -804,7 +775,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -881,7 +851,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -985,25 +954,16 @@ abstract contract policies is RulesEngineCommon {
             ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "My rule", "My way or the highway");
         }
 
-        uint functionId;
         bytes4 sigCallingFunction;
         {
             ParamTypes[] memory pTypes = new ParamTypes[](2);
             pTypes[0] = ParamTypes.ADDR;
             pTypes[1] = ParamTypes.UINT;
             sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
-            functionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
-                policyId,
-                sigCallingFunction,
-                pTypes,
-                callingFunction,
-                ""
-            );
+            RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
         }
         bytes4[] memory selectors = new bytes4[](1);
         selectors[0] = sigCallingFunction;
-        uint256[] memory functionIds = new uint256[](1);
-        functionIds[0] = functionId;
         uint256[][] memory _ruleIds = new uint256[][](1);
         uint256[] memory _ids = new uint256[](1);
         _ids[0] = ruleId;
@@ -1011,7 +971,6 @@ abstract contract policies is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             selectors,
-            functionIds,
             _ruleIds,
             PolicyType.OPEN_POLICY,
             "Test Policy",
@@ -1058,20 +1017,13 @@ abstract contract policies is RulesEngineCommon {
             pTypes[1] = ParamTypes.UINT;
             sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
             vm.expectRevert("Policy does not exist");
-            functionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
-                policyId,
-                sigCallingFunction,
-                pTypes,
-                callingFunction,
-                ""
-            );
+            RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
         }
         // we check that we can't update a deleted policy
         vm.expectRevert("Invalid Rule");
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             selectors,
-            functionIds,
             _ruleIds,
             PolicyType.OPEN_POLICY,
             "Test Policy",

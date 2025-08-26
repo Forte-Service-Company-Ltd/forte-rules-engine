@@ -638,7 +638,7 @@ contract StandardCallsForked is RulesEngineCommon {
         pTypes[1] = ParamTypes.ADDR; // to
         pTypes[2] = ParamTypes.UINT; // amount
 
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256("transferFrom(address,address,uint256)")), // 0x23b872dd
             pTypes,
@@ -674,8 +674,6 @@ contract StandardCallsForked is RulesEngineCommon {
         // Update policy with the rule
         bytes4[] memory functions = new bytes4[](1);
         functions[0] = bytes4(keccak256("transferFrom(address,address,uint256)"));
-        uint256[] memory functionIds = new uint256[](1);
-        functionIds[0] = callingFunctionId;
         uint256[][] memory ruleIdsArray = new uint256[][](1);
         ruleIdsArray[0] = new uint256[](1);
         ruleIdsArray[0][0] = ruleId;
@@ -683,7 +681,6 @@ contract StandardCallsForked is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             functions,
-            functionIds,
             ruleIdsArray,
             PolicyType.CLOSED_POLICY,
             "policyName",
@@ -705,7 +702,7 @@ contract StandardCallsForked is RulesEngineCommon {
         pTypes[1] = ParamTypes.ADDR; // to
         pTypes[2] = ParamTypes.UINT; // tokenId
 
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256("transferFrom(address,address,uint256)")),
             pTypes,
@@ -741,8 +738,6 @@ contract StandardCallsForked is RulesEngineCommon {
         // Update policy with the rule
         bytes4[] memory functions = new bytes4[](1);
         functions[0] = bytes4(keccak256("transferFrom(address,address,uint256)"));
-        uint256[] memory functionIds = new uint256[](1);
-        functionIds[0] = callingFunctionId;
         uint256[][] memory ruleIdsArray = new uint256[][](1);
         ruleIdsArray[0] = new uint256[](1);
         ruleIdsArray[0][0] = ruleId;
@@ -750,7 +745,6 @@ contract StandardCallsForked is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             functions,
-            functionIds,
             ruleIdsArray,
             PolicyType.CLOSED_POLICY,
             "policyName",
@@ -774,7 +768,7 @@ contract StandardCallsForked is RulesEngineCommon {
         pTypes[3] = ParamTypes.UINT; // amount
         pTypes[4] = ParamTypes.BYTES; // data
 
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256("safeTransferFrom(address,address,uint256,uint256,bytes)")),
             pTypes,
@@ -811,8 +805,6 @@ contract StandardCallsForked is RulesEngineCommon {
         // Update policy with the rule
         bytes4[] memory functions = new bytes4[](1);
         functions[0] = bytes4(keccak256("safeTransferFrom(address,address,uint256,uint256,bytes)"));
-        uint256[] memory functionIds = new uint256[](1);
-        functionIds[0] = callingFunctionId;
         uint256[][] memory ruleIdsArray = new uint256[][](1);
         ruleIdsArray[0] = new uint256[](1);
         ruleIdsArray[0][0] = ruleId;
@@ -820,7 +812,6 @@ contract StandardCallsForked is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             functions,
-            functionIds,
             ruleIdsArray,
             PolicyType.CLOSED_POLICY,
             "policyName",

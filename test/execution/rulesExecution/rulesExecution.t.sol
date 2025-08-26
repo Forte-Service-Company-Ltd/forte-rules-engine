@@ -107,7 +107,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         pTypes[1] = ParamTypes.UINT;
         pTypes[2] = ParamTypes.UINT;
         // Save the calling Function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
@@ -116,12 +116,10 @@ abstract contract rulesExecution is RulesEngineCommon {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        callingFunctionIds.push(callingFunctionId);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -235,7 +233,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         // Save the calling Function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingFunction3)))),
             pTypes,
@@ -244,13 +242,11 @@ abstract contract rulesExecution is RulesEngineCommon {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction3))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -344,7 +340,7 @@ abstract contract rulesExecution is RulesEngineCommon {
 
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         // Save the calling Function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingFunction3)))),
             pTypes,
@@ -354,13 +350,11 @@ abstract contract rulesExecution is RulesEngineCommon {
 
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction3))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -432,7 +426,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         // Save the calling Function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingFunctionBool)))),
             pTypes,
@@ -444,13 +438,11 @@ abstract contract rulesExecution is RulesEngineCommon {
 
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunctionBool))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -517,7 +509,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         // Save the calling Function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingFunctionWithBytes)))),
             pTypes,
@@ -528,13 +520,11 @@ abstract contract rulesExecution is RulesEngineCommon {
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunctionWithBytes))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -612,7 +602,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         // Save the calling Function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingFunctionBytes)))),
             pTypes,
@@ -623,13 +613,11 @@ abstract contract rulesExecution is RulesEngineCommon {
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunctionBytes))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -702,7 +690,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         // Save the calling Function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingFunctionWithString)))),
             pTypes,
@@ -714,13 +702,11 @@ abstract contract rulesExecution is RulesEngineCommon {
 
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunctionWithString))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -793,7 +779,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         // Save the calling Function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayStatic)))),
             pTypes,
@@ -805,13 +791,11 @@ abstract contract rulesExecution is RulesEngineCommon {
 
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunctionArrayStatic))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -884,7 +868,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         // Save the calling Function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
             pTypes,
@@ -895,13 +879,11 @@ abstract contract rulesExecution is RulesEngineCommon {
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunctionArrayDynamic))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -976,7 +958,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         // Save the calling Function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
             pTypes,
@@ -987,13 +969,11 @@ abstract contract rulesExecution is RulesEngineCommon {
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunctionArrayDynamic))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -1023,7 +1003,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         pTypes[4] = ParamTypes.UINT;
         pTypes[5] = ParamTypes.UINT;
 
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes("transfer(address,uint256)")))),
             pTypes,
@@ -1032,12 +1012,10 @@ abstract contract rulesExecution is RulesEngineCommon {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes("transfer(address,uint256)"))));
-        callingFunctionIds.push(callingFunctionId);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,

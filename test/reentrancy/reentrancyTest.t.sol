@@ -167,7 +167,7 @@ contract ReentrancyTest is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId1 = _addCallingFunctionToPolicy(policyIds[0]);
+        bytes4 callingFunctionId1 = _addCallingFunctionToPolicy(policyIds[0]);
         _addCallingFunctionToPolicy(policyIds[1]);
         // Rule: amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule;
@@ -230,13 +230,10 @@ contract ReentrancyTest is RulesEngineCommon {
         vm.startPrank(policyAdmin);
         bytes4[] memory callingFunctionsNew = new bytes4[](1);
         callingFunctionsNew[0] = bytes4(keccak256(bytes("transfer(address,uint256)")));
-        uint256[] memory callingFunctionIdsNew = new uint256[](1);
-        callingFunctionIdsNew[0] = callingFunctionId1;
 
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctionsNew,
-            callingFunctionIdsNew,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -245,7 +242,6 @@ contract ReentrancyTest is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[1],
             callingFunctionsNew,
-            callingFunctionIdsNew,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
