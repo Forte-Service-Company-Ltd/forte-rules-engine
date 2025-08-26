@@ -4,6 +4,8 @@ pragma solidity ^0.8.24;
 import "test/utils/RulesEngineCommon.t.sol";
 
 abstract contract rulesFuzz is RulesEngineCommon {
+    uint[4] lessLimitedOpCodes = [17, 18, 4, 2];
+
     /**
      *
      *
@@ -103,6 +105,36 @@ abstract contract rulesFuzz is RulesEngineCommon {
         // if the instruction set is valid, we execute the rule to make sure it won't revert due to unexpected reasons
         if (!causesOverflow) savePolicyAndExecuteInstructionSet(ruleId, policyIds);
     }
+
+    function testRulesEngine_Fuzz_createRule_LessLimitedInstructionSetLength(uint opA, uint opB, bool causesOverflow) public {
+        opA = bound(opA, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
+        opB = bound(opB, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
+
+        // we use only the less limited opcodes: PLH, PLHM, TRU, TRUM but randomize this
+        if (opA != 17 && opA != 18 && opA != 4 && opA != 2) {
+            opA = lessLimitedOpCodes[opA % lessLimitedOpCodes.length];
+        }
+        if (opB != 17 && opB != 18 && opB != 4 && opB != 2) {
+            opB = lessLimitedOpCodes[opB % lessLimitedOpCodes.length];
+        }
+        (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
+        // the instruction set will have data of 10000 or 10001 depending on the causesOverflow flag.
+        uint[] memory instructionSet = buildInstructionSetDataMax(opA, opB, opAElements, opBElements, causesOverflow, 10000);
+
+        // rule setup
+        Rule memory rule;
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        rule.instructionSet = instructionSet;
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0] = effectId_revert;
+        // test
+        if (causesOverflow) vm.expectRevert("Memory Overflow");
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+    }
+
 
     function testRulesEngine_Fuzz_createRule_simple(uint256 _ruleValue, uint256 _transferValue) public {
         // Rule: amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
@@ -239,6 +271,45 @@ abstract contract rulesFuzz is RulesEngineCommon {
         for (uint i = 0; i < instructionSetLength; i++) {
             if (isData) {
                 instructionSet[i] = data;
+                if (dataElements > 1) {
+                    --dataElements;
+                } else {
+                    isData = false;
+                }
+            } else {
+                if (isOpBTurn) {
+                    instructionSet[i] = opB;
+                    dataElements = opBElements;
+                    isOpBTurn = false;
+                } else {
+                    instructionSet[i] = opA;
+                    dataElements = opAElements;
+                    isOpBTurn = true;
+                }
+                isData = true;
+            }
+        }
+        return instructionSet;
+    }
+
+    function buildInstructionSetDataMax(
+        uint256 opA,
+        uint256 opB,
+        uint256 opAElements,
+        uint256 opBElements,
+        bool causesOverflow,
+        uint256 data
+    ) internal view returns (uint256[] memory instructionSet) {
+        uint instructionSetLength = (opAElements + opBElements + 2) *
+            (RulesEngineRuleFacet(address(red)).getMemorySize() / 2);
+        instructionSet = new uint256[](instructionSetLength);
+        // we build the instruction set by alternating opA and opB. We assign all data elements with the "data" parameter
+        bool isOpBTurn;
+        bool isData;
+        uint dataElements;
+        for (uint i = 0; i < instructionSetLength; i++) {
+            if (isData) {
+                instructionSet[i] = data+ (causesOverflow ? 1 : 0);
                 if (dataElements > 1) {
                     --dataElements;
                 } else {

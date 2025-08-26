@@ -24,5 +24,5 @@ abstract contract FacetCommonImports is AccessModifiers {
     uint constant opsSize1 = 3; // the first 3 opcodes use only one argument
     uint constant opsSizeUpTo2 = 17; // the first 16 opcodes use up to two arguments
     uint constant opsSizeUpTo3 = 18; // the first 17 opcodes use up to three arguments
-    uint constant opsTotalSize = 19; // there are a total of 18 opcode in the set LogicalOp
+    uint constant opsTotalSize = 19; // there are a total of 18 opcodes in the set LogicalOp
 }

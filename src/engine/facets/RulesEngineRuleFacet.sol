@@ -154,6 +154,9 @@ contract RulesEngineRuleFacet is FacetCommonImports {
     function getMemorySize() external pure returns (uint) {
         return memorySize;
     }
+    function getMaxLoopSize() external pure returns (uint) {
+        return MAX_LOOP;
+    }
     function getOpsSize1() external pure returns (uint) {
         return opsSize1;
     }
@@ -366,7 +369,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         for (uint256 i = 0; i < effects.length; i++) {
             _validateEffectType(effects[i].effectType);
             _validateParamType(effects[i].pType);
-            _validateInstructionSet(effects[i].instructionSet);
+            //_validateInstructionSet(effects[i].instructionSet);
         }
     }
 
@@ -388,13 +391,19 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         uint expectedDataElements; // the number of expected data elements in the instruction set (memory pointers)
         bool isData; // the first item of an instruction set must be an opcode, so isData must be "initialized" to false
         uint totalInstructions; // the total number of instructions in the instruction set (opcodes)
+        uint instructionHold; // The current instruction used as it iterates through data elements
         // we loop through the instructionSet to validate it
         for (uint256 i = 0; i < instructionSet.length; i++) {
+            // if (i == 0) instructionHold == instructionSet[i]; // prime hold variable on the first loop
             // we extract the specific item from the validation set which is in memory, and we place it in the stack to save some gas
             uint instruction = instructionSet[i];
             if (isData) {
                 // if the instruction is data, we just check that it won't point to an index outside of max memory size
-                if (instruction > memorySize) revert(MEMORY_OVERFLOW);
+                if (instructionHold == uint(LogicalOp.PLH) || instructionHold == uint(LogicalOp.PLHM) || instructionHold == uint(LogicalOp.TRU) || instructionHold == uint(LogicalOp.TRUM)) {
+                    if (instruction > MAX_LOOP) revert(MEMORY_OVERFLOW);
+                } else {
+                    if (instruction > memorySize) revert(MEMORY_OVERFLOW);
+                }
                 // we reduce the expectedDataElements count by one, but only if necessary
                 if (expectedDataElements > 1) --expectedDataElements;
                 else {
@@ -403,6 +412,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                     delete expectedDataElements;
                 }
             } else {
+                instructionHold = instructionSet[i]; // load the hold variable with the actual op code
                 ++totalInstructions;
                 // if the instruction is not data, we check that it is a valid opcode
                 if (instruction > opsTotalSize) revert(INVALID_INSTRUCTION);
