@@ -195,7 +195,7 @@ abstract contract instructionSet is RulesEngineCommon {
         rule.instructionSet[1] = 1;
         rule.instructionSet[2] = uint(LogicalOp.NUM);
         rule.instructionSet[3] = 1;
-        rule.instructionSet[4] = uint(LogicalOp.TRUM);
+        rule.instructionSet[4] = uint(LogicalOp.DIV);
         rule.instructionSet[5] = 0;
         rule.instructionSet[6] = 1;
         rule.instructionSet[7] = 1;

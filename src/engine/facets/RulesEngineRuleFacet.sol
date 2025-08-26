@@ -369,7 +369,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         for (uint256 i = 0; i < effects.length; i++) {
             _validateEffectType(effects[i].effectType);
             _validateParamType(effects[i].pType);
-            //_validateInstructionSet(effects[i].instructionSet);
+            _validateInstructionSet(effects[i].instructionSet);
         }
     }
 
@@ -394,12 +394,11 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         uint instructionHold; // The current instruction used as it iterates through data elements
         // we loop through the instructionSet to validate it
         for (uint256 i = 0; i < instructionSet.length; i++) {
-            // if (i == 0) instructionHold == instructionSet[i]; // prime hold variable on the first loop
             // we extract the specific item from the validation set which is in memory, and we place it in the stack to save some gas
             uint instruction = instructionSet[i];
             if (isData) {
                 // if the instruction is data, we just check that it won't point to an index outside of max memory size
-                if (instructionHold == uint(LogicalOp.PLH) || instructionHold == uint(LogicalOp.PLHM) || instructionHold == uint(LogicalOp.TRU) || instructionHold == uint(LogicalOp.TRUM)) {
+                if (_isLessLimitedOpCode(instructionHold)) {
                     if (instruction > MAX_LOOP) revert(MEMORY_OVERFLOW);
                 } else {
                     if (instruction > memorySize) revert(MEMORY_OVERFLOW);
@@ -436,6 +435,20 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         if (expectedDataElements > 0 || isData) revert(INVALID_INSTRUCTION_SET);
         // if the instruction set will overflow the memory size, we revert
         if (totalInstructions > memorySize) revert(INSTRUCTION_SET_TOO_LARGE);
+    }
+
+    /**
+     * @dev Determines whether the given operation code's data is considered "less limited" and can be upwards of the max loop size
+     * @param opCode The operation code to evaluate.
+     * @return bool Returns `true` if the operation code is less limited, otherwise `false`.
+     */
+    function _isLessLimitedOpCode(uint opCode) internal pure returns (bool) {
+        if (
+            opCode == uint(LogicalOp.PLH) ||
+            opCode == uint(LogicalOp.PLHM) ||
+            opCode == uint(LogicalOp.TRU) ||
+            opCode == uint(LogicalOp.TRUM)
+        ) return true;
     }
 
     /**
