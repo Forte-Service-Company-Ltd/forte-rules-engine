@@ -106,6 +106,7 @@ contract FacetUtils {
      *      the calldata keyword. This won't work if the array is stored in memory.
      */
     function _isThereDuplicatesInCalldataValueTypeArray(uint len, uint start) internal pure returns (bool duplicatesFound) {
+        if (len < 2) return false;
         assembly {
             // loop for element (a) can only go until length - 1 (last one must be (b))
             for {

@@ -9,7 +9,7 @@ import {FacetUtils} from "src/engine/facets/FacetUtils.sol";
  * from the FacetUtils. Since the function is not meant to be used directly, some example functions were created.
  */
 contract TestFacetUtils is FacetUtils {
-    function testDuplicatesBytes4(bytes4[] calldata sigs) public {
+    function checkDuplicatesBytes4(bytes4[] calldata sigs) public {
         uint start;
         assembly {
             start := sigs.offset
@@ -17,7 +17,7 @@ contract TestFacetUtils is FacetUtils {
         if (_isThereDuplicatesInCalldataValueTypeArray(sigs.length, start)) revert(DUPLICATES_NOT_ALLOWED);
     }
 
-    function testDuplicatesBytes32(bytes32[] calldata hashes) public {
+    function checkDuplicatesBytes32(bytes32[] calldata hashes) public {
         uint start;
         assembly {
             start := hashes.offset
@@ -25,7 +25,7 @@ contract TestFacetUtils is FacetUtils {
         if (_isThereDuplicatesInCalldataValueTypeArray(hashes.length, start)) revert(DUPLICATES_NOT_ALLOWED);
     }
 
-    function testDuplicatesUint256(uint256[] calldata ids) public {
+    function checkDuplicatesUint256(uint256[] calldata ids) public {
         uint start;
         assembly {
             start := ids.offset
@@ -412,7 +412,7 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             (sigs[1] == sigs[2] || sigs[1] == sigs[3]) ||
             sigs[2] == sigs[3]
         ) vm.expectRevert("Duplicates not allowed");
-        facet.testDuplicatesBytes4(sigs);
+        facet.checkDuplicatesBytes4(sigs);
     }
 
     function testPolicy_updatePolicy_identicalElementsInCalldataArrayBytes32(uint seedSig, uint multiplier) public {
@@ -430,7 +430,7 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             (sigs[1] == sigs[2] || sigs[1] == sigs[3]) ||
             sigs[2] == sigs[3]
         ) vm.expectRevert("Duplicates not allowed");
-        facet.testDuplicatesBytes32(sigs);
+        facet.checkDuplicatesBytes32(sigs);
     }
 
     function testPolicy_updatePolicy_identicalElementsInCalldataArrayUint(uint seedSig, uint multiplier) public {
@@ -448,7 +448,7 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             (sigs[1] == sigs[2] || sigs[1] == sigs[3]) ||
             sigs[2] == sigs[3]
         ) vm.expectRevert("Duplicates not allowed");
-        facet.testDuplicatesUint256(sigs);
+        facet.checkDuplicatesUint256(sigs);
     }
 }
 // NOTE for my self
