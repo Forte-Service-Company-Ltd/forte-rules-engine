@@ -63,6 +63,9 @@ abstract contract rulesFuzz is RulesEngineCommon {
         // we avoid opcode 0 as it is the only one whose element won't be checked
         uint256 opA = bound(_opA, 1, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
         uint256 opB = bound(_opB, 1, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
+        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM
+        if (opA == 17 || opA == 18 || opA == 4 || opA == 2) opA = 6;
+        if (opB == 17 || opB == 18 || opB == 4 || opB == 2) opB = 6;
 
         (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
         uint256[] memory instructionSet = buildInstructionSet2Opcodes(opA, opB, opAElements, opBElements, _data);
