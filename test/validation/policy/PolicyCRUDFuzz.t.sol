@@ -208,7 +208,8 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
         RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
         bytes4[] memory selectors = new bytes4[](functionAmount);
-        if (functionAmount > 0) for (uint i; i < functionAmount; i++) selectors[i] = sigCallingFunction;
+        if (functionAmount > 0)
+            for (uint i; i < functionAmount; i++) selectors[i] = bytes4(sigCallingFunction ^ (bytes32(i) << (256 - 8 * 4)));
         uint256[][] memory _ruleIds = new uint256[][](functionAmount);
         uint256[] memory _ids = new uint256[](functionAmount);
         _ids[0] = ruleId;
