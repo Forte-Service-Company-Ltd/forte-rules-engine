@@ -44,14 +44,15 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             rule.instructionSet[3] = 1;
             rule.instructionSet[4] = 0;
             rule.instructionSet[5] = uint(LogicalOp.NUM);
-            rule.instructionSet[6] = uint256(keccak256(abi.encode(_input)));
+            rule.instructionSet[6] = uint256(bytes32(abi.encode(keccak256(_input))));
             rule.instructionSet[7] = uint(LogicalOp.EQ);
             rule.instructionSet[8] = 1;
             rule.instructionSet[9] = 2;
 
             console.log("input:");
             console.logBytes(_input);
-            console.log("rule.instructionSet[6]:", rule.instructionSet[6]);
+            console.log("rule.instructionSet[6]:", (rule.instructionSet[6]));
+            console.logBytes32(bytes32(rule.instructionSet[6]));
 
         } else {
             rule.instructionSet = new uint256[](7);
@@ -100,7 +101,8 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             
             rule.placeHolders = new Placeholder[](2);
             rule.placeHolders[0].pType = ParamTypes.UINT;
-            rule.placeHolders[0].typeSpecificIndex = 1;
+            rule.placeHolders[0].typeSpecificIndex = 0;
+            rule.placeHolders[0].flags = 0;
             rule.placeHolders[1].pType = ParamTypes.STR;
             rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
             vm.startPrank(callingContractAdmin);
@@ -129,7 +131,8 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             
             rule.placeHolders = new Placeholder[](2);
             rule.placeHolders[0].pType = ParamTypes.UINT;
-            rule.placeHolders[0].typeSpecificIndex = 1;
+            rule.placeHolders[0].typeSpecificIndex = 0;
+            rule.placeHolders[0].flags = 0;
             rule.placeHolders[1].pType = ParamTypes.BYTES;
             rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
             vm.startPrank(callingContractAdmin);
@@ -265,7 +268,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
         bytes memory trackerValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, placeHolders[1].typeSpecificIndex, abi.encode(1));
         bytes[] memory arguments = new bytes[](2);
         arguments[0] = abi.encode(1);
-        arguments[1] = trackerValue;
+        arguments[1] = abi.encode(0);
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
         assertTrue(result);
     }
@@ -276,7 +279,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
         bytes memory trackerValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, placeHolders[1].typeSpecificIndex, abi.encode(1));
         bytes[] memory arguments = new bytes[](2);
         arguments[0] = abi.encode(1);
-        arguments[1] = trackerValue;
+        arguments[1] = abi.encode(0);
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
         assertTrue(result);
     }

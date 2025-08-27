@@ -3,7 +3,6 @@ pragma solidity ^0.8.24;
 
 import "src/engine/facets/FacetCommonImports.sol";
 import {RulesEngineProcessorLib as ProcessorLib} from "src/engine/facets/RulesEngineProcessorLib.sol";
-import {console2 as console} from "forge-std/src/console2.sol";
 /**
  * @title Rules Engine Processor Facet
  * @dev This contract serves as the core processor for evaluating rules and executing effects in the Rules Engine.
@@ -598,16 +597,12 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 } else if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {
                     // Convert string to uint256 for direct comparison using == and != operations
                     (bool isTrackerValue, , ) = _extractFlags(_placeHolders[pli]);
-                    if (isTrackerValue) {
+                    // PLHM can be assumed to always be a tracker value as it is only used in mapped trackers
+                    // Therefore we interpret the results as a tracker value
+                    if (isTrackerValue || op == LogicalOp.PLHM) {
                         v = abi.decode(value, (uint256));
-                        console.log("V in tracker value:", v);
-                        console.log("Value:");
-                        console.logBytes(value);
                     } else {
                         v = uint256(keccak256(value));
-                        console.log("V in non-tracker value:", v);
-                        console.log("Value:");
-                        console.logBytes(value);
                     }
                 } else if (typ == ParamTypes.STATIC_TYPE_ARRAY || typ == ParamTypes.DYNAMIC_TYPE_ARRAY) {
                     // length of array for direct comparison using == and != operations
