@@ -11,6 +11,7 @@ import "src/engine/facets/RulesEngineComponentFacet.sol";
 import "src/engine/facets/RulesEngineForeignCallFacet.sol";
 import "src/engine/facets/RulesEngineAdminRolesFacet.sol";
 import "src/engine/facets/RulesEngineInitialFacet.sol";
+import "test/utils/TestProcessorFacet.sol";
 import {IDiamondInit} from "diamond-std/initializers/IDiamondInit.sol";
 import {DiamondInit} from "diamond-std/initializers/DiamondInit.sol";
 import {FacetCut, FacetCutAction} from "diamond-std/core/DiamondCut/DiamondCutLib.sol";
@@ -23,6 +24,7 @@ import {FacetCut, FacetCutAction} from "diamond-std/core/DiamondCut/DiamondCutLi
  */
 contract DiamondMineNoCheatcodes is Script {
     FacetCut[] _ruleProcessorFacetCutsNoCheatcodes;
+    FacetCut[] _ruleProcessorFacetCutsWithTestProcessorFacet;
 
     /****************************** Non-cheatcode Diamond Deployment Methods ********************************************/
     function createSelectorArrayNoCheatcodes(string memory facet) internal pure returns (bytes4[] memory) {
@@ -202,5 +204,107 @@ contract DiamondMineNoCheatcodes is Script {
 
         RulesEngineInitialFacet(address(rulesEngineInternal)).initialize(owner);
         return rulesEngineInternal;
+    }
+
+    function createRulesEngineDiamondWithTestProcessorFacet(address owner) internal returns (ForteRulesEngine diamond) {
+        delete _ruleProcessorFacetCutsWithTestProcessorFacet;
+        // Start by deploying the DiamonInit contract.
+        DiamondInit diamondInit = new DiamondInit();
+
+        // Build the DiamondArgs.
+         RulesEngineDiamondArgs memory diamondArgs = RulesEngineDiamondArgs({
+            init: address(diamondInit),
+            // NOTE: "interfaceId" can be used since "init" is the only function in IDiamondInit.
+            initCalldata: abi.encode(type(IDiamondInit).interfaceId)
+        });
+
+        // Protocol Facets
+
+        // Native
+        _ruleProcessorFacetCutsWithTestProcessorFacet.push(
+            FacetCut({
+                facetAddress: address(new NativeFacet()),
+                action: FacetCutAction.Add,
+                functionSelectors: createSelectorArrayTestProcessorFacet("NativeFacet")
+            })
+        );
+
+        // Main
+        _ruleProcessorFacetCutsWithTestProcessorFacet.push(
+            FacetCut({
+                facetAddress: address(new TestProcessorFacet()),
+                action: FacetCutAction.Add,
+                functionSelectors: createSelectorArrayTestProcessorFacet("TestProcessorFacet")
+            })
+        );
+
+        // Data
+        _ruleProcessorFacetCutsWithTestProcessorFacet.push(
+            FacetCut({
+                facetAddress: address(new RulesEnginePolicyFacet()),
+                action: FacetCutAction.Add,
+                functionSelectors: createSelectorArrayTestProcessorFacet("RulesEnginePolicyFacet")
+            })
+        );
+
+        // Data
+        _ruleProcessorFacetCutsWithTestProcessorFacet.push(
+            FacetCut({
+                facetAddress: address(new RulesEngineComponentFacet()),
+                action: FacetCutAction.Add,
+                functionSelectors: createSelectorArrayTestProcessorFacet("RulesEngineComponentFacet")
+            })
+        );
+
+        // Data
+        _ruleProcessorFacetCutsWithTestProcessorFacet.push(
+            FacetCut({
+                facetAddress: address(new RulesEngineForeignCallFacet()),
+                action: FacetCutAction.Add,
+                functionSelectors: createSelectorArrayTestProcessorFacet("RulesEngineForeignCallFacet")
+            })
+        );
+
+        // Data
+        _ruleProcessorFacetCutsWithTestProcessorFacet.push(
+            FacetCut({
+                facetAddress: address(new RulesEngineAdminRolesFacet()),
+                action: FacetCutAction.Add,
+                functionSelectors: createSelectorArrayTestProcessorFacet("RulesEngineAdminRolesFacet")
+            })
+        );
+
+        // Data
+        _ruleProcessorFacetCutsWithTestProcessorFacet.push(
+            FacetCut({
+                facetAddress: address(new RulesEngineInitialFacet()),
+                action: FacetCutAction.Add,
+                functionSelectors: createSelectorArrayTestProcessorFacet("RulesEngineInitialFacet")
+            })
+        );
+
+        // Data
+        _ruleProcessorFacetCutsWithTestProcessorFacet.push(
+            FacetCut({
+                facetAddress: address(new RulesEngineRuleFacet()),
+                action: FacetCutAction.Add,
+                functionSelectors: createSelectorArrayTestProcessorFacet("RulesEngineRuleFacet")
+            })
+        );
+
+        /// Build the diamond
+        // Deploy the diamond.
+        ForteRulesEngine rulesEngineInternal = new ForteRulesEngine(_ruleProcessorFacetCutsWithTestProcessorFacet, diamondArgs);
+        RulesEngineInitialFacet(address(rulesEngineInternal)).initialize(owner);
+        return rulesEngineInternal;
+    }
+
+    function createSelectorArrayTestProcessorFacet(string memory facet) internal returns (bytes4[] memory selectors) {
+        string[] memory _inputs = new string[](3);
+        _inputs[0] = "python3";
+        _inputs[1] = "script/python/get_selectors.py";
+        _inputs[2] = facet;
+        bytes memory res = vm.ffi(_inputs);
+        return abi.decode(res, (bytes4[]));
     }
 }
