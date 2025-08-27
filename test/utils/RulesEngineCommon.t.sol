@@ -2464,7 +2464,7 @@ contract RulesEngineCommon is DiamondMine, Test {
             ""
         );
         // Save the Policy
-        callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
+        if (callingFunctions.length == 0) callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
