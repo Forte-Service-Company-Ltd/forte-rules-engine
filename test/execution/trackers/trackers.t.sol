@@ -157,6 +157,7 @@ abstract contract trackers is RulesEngineCommon {
         tracker.trackerValue = abi.encode(7);
         vm.stopPrank();
         vm.startPrank(policyAdmin);
+        console2.log("a");
         RulesEngineComponentFacet(address(red)).updateTracker(policyId, 1, tracker);
 
         vm.expectRevert(abi.encodePacked(revert_text));
