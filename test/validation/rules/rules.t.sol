@@ -232,9 +232,9 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
-        vm.expectEmit(true, false, false, false);
+        vm.expectEmit(true, true, true, true);
         emit RuleUpdated(policyId, ruleId);
-        RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, ruleName, ruleDescription);
+        RulesEngineRuleFacet(address(red)).updateRule(policyId, ruleId, rule, ruleName, ruleDescription);
     }
 
     // Delete
