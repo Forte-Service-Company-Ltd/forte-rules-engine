@@ -214,11 +214,10 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
         return (rule.instructionSet, rule.placeHolders, policyIds[0]);
     }
 
-    /// forge-config: default.fuzz.runs = 20
     function test_stringFromTracker(string memory _input) public {
-        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(abi.encode(_input), TestType.STRING_FROM_TRACKER);
+        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(bytes(_input), TestType.STRING_FROM_TRACKER);
         bytes[] memory arguments = new bytes[](1);
-        arguments[0] = abi.encode(_input);
+        arguments[0] = bytes(abi.encode(keccak256(abi.encode(_input))));
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
         assertTrue(result);
     }
@@ -227,7 +226,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
     function test_bytesFromTracker(bytes memory _input) public {
         (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(_input, TestType.BYTES_FROM_TRACKER);
         bytes[] memory arguments = new bytes[](1);
-        arguments[0] = _input;
+        arguments[0] = bytes(abi.encode(keccak256(abi.encode(_input))));
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
         assertTrue(result);
     }
