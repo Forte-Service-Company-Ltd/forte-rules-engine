@@ -1377,7 +1377,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(bytes("metadata1")));
+        assertEq(value, abi.encode(keccak256(abi.encode(bytes("metadata1")))));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path

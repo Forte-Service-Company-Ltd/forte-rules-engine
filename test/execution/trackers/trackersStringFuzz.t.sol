@@ -49,11 +49,6 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             rule.instructionSet[8] = 1;
             rule.instructionSet[9] = 2;
 
-            console.log("input:");
-            console.logBytes(_input);
-            console.log("rule.instructionSet[6]:", (rule.instructionSet[6]));
-            console.logBytes32(bytes32(rule.instructionSet[6]));
-
         } else {
             rule.instructionSet = new uint256[](7);
             rule.instructionSet[0] = uint(LogicalOp.PLH);
@@ -63,10 +58,6 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             rule.instructionSet[4] = uint(LogicalOp.EQ);
             rule.instructionSet[5] = 0;
             rule.instructionSet[6] = 1;
-
-            console.log("input:");
-            console.logBytes(_input);
-            console.log("rule.instructionSet[3]:", rule.instructionSet[3]);
         }
 
         rule.rawData.argumentTypes = new ParamTypes[](1);

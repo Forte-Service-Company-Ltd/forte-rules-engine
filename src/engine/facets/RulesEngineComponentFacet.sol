@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "src/engine/facets/FacetCommonImports.sol";
+import {console2 as console} from "forge-std/src/console2.sol";
 
 /**
  * @title Rules Engine Component Facet
@@ -202,6 +203,8 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         _tracker.mapped = false;
         _tracker.trackerIndex = _trackerIndex;
         if (_tracker.pType == ParamTypes.STR || _tracker.pType == ParamTypes.BYTES) {
+            console.log("trackerValue:");
+            console.logBytes(_tracker.trackerValue);
             _tracker.trackerValue = abi.encode(keccak256(_tracker.trackerValue));
         }
         _data.trackers[_policyId][_trackerIndex] = _tracker;

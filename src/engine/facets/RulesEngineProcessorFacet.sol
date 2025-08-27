@@ -615,7 +615,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 if (tt == TrackerTypes.MEMORY) {
                     _updateTrackerValue(_policyId, _prog[idx + 1], mem[_prog[idx + 2]]);
                 } else {
-                    if (_placeHolders[_prog[idx + 2]].flags != FacetUtils.FLAG_TRACKER_VALUE) {
+                    Placeholder memory ph = _placeHolders[_prog[idx + 2]];
+                    if (ph.flags != FacetUtils.FLAG_TRACKER_VALUE && (ph.pType == ParamTypes.STR || ph.pType == ParamTypes.BYTES)) {
                         _updateTrackerValue(_policyId, _prog[idx + 1], uint256(keccak256(_arguments[_prog[idx + 2]])));
                     } else {
                         _updateTrackerValue(_policyId, _prog[idx + 1], _arguments[_prog[idx + 2]]);
@@ -634,11 +635,12 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 // If the Tracker Type == Place Holder, pull the data from the place holder, otherwise, pull it from Memory
                 TrackerTypes tt = TrackerTypes(_prog[idx + 4]);
                 uint256 key = mem[_prog[idx + 3]];
+                uint256 pli = _prog[idx + 2];
                 tt == TrackerTypes.MEMORY
-                    ? _updateMappedTrackerValue(_policyId, _prog[idx + 1], mem[_prog[idx + 2]], key)
-                    : _placeHolders[_prog[idx + 2]].flags != FacetUtils.FLAG_TRACKER_VALUE
-                        ? _updateMappedTrackerValue(_policyId, _prog[idx + 1], uint256(keccak256(_arguments[_prog[idx + 2]])), key)
-                        : _updateMappedTrackerValue(_policyId, _prog[idx + 1], _arguments[_prog[idx + 2]], key);
+                    ? _updateMappedTrackerValue(_policyId, _prog[idx + 1], mem[pli], key)
+                    : _placeHolders[pli].flags != FacetUtils.FLAG_TRACKER_VALUE && (_placeHolders[pli].pType == ParamTypes.STR || _placeHolders[pli].pType == ParamTypes.BYTES)
+                        ? _updateMappedTrackerValue(_policyId, _prog[idx + 1], uint256(keccak256(_arguments[pli])), key)
+                        : _updateMappedTrackerValue(_policyId, _prog[idx + 1], _arguments[pli], key);
                 idx += 5;
             } else if (op == LogicalOp.NUM) {
                 v = _prog[idx + 1];
