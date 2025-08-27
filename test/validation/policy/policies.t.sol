@@ -19,10 +19,11 @@ abstract contract policies is RulesEngineCommon {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         (uint256 policyId, uint256 ruleId) = setUpRuleSimple();
-        ruleId;
-        // Save the calling Function
-        _addCallingFunctionToPolicy(policyId);
-        callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
+        // the following calling function doesn't exist in the policy yet, but the test won't reach this selector, so we skip the unnecessary setup.
+        callingFunctions.push(bytes4(keccak256(bytes(callingFunction3))));
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = 666; // we add the inexistent rule (will cause the revert)
+        ruleIds[1][0] = 1; // this is a valid rule id, but the test won't reach this value
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         vm.expectRevert("Invalid Rule");
