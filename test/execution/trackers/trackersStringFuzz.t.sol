@@ -46,8 +46,12 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             rule.instructionSet[5] = uint(LogicalOp.NUM);
             rule.instructionSet[6] = uint256(keccak256(abi.encode(_input)));
             rule.instructionSet[7] = uint(LogicalOp.EQ);
-            rule.instructionSet[8] = 0;
-            rule.instructionSet[9] = 1;
+            rule.instructionSet[8] = 1;
+            rule.instructionSet[9] = 2;
+
+            console.log("input:");
+            console.logBytes(_input);
+            console.log("rule.instructionSet[6]:", rule.instructionSet[6]);
 
         } else {
             rule.instructionSet = new uint256[](7);
@@ -59,6 +63,8 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             rule.instructionSet[5] = 0;
             rule.instructionSet[6] = 1;
 
+            console.log("input:");
+            console.logBytes(_input);
             console.log("rule.instructionSet[3]:", rule.instructionSet[3]);
         }
 
@@ -82,7 +88,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             bytes[] memory trackerKeys = new bytes[](1);
             bytes[] memory trackerValues = new bytes[](1);
             trackerKeys[0] = abi.encode(1);
-            trackerValues[0] = abi.encode(_input);
+            trackerValues[0] = _input;
             Trackers memory tracker = Trackers({
                 mapped: true,
                 pType: ParamTypes.STR,
@@ -92,11 +98,13 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
                 trackerIndex: 0
             });
             
-            rule.placeHolders = new Placeholder[](1);
-            rule.placeHolders[0].pType = ParamTypes.STR;
-            rule.placeHolders[0].flags = FLAG_TRACKER_VALUE;
+            rule.placeHolders = new Placeholder[](2);
+            rule.placeHolders[0].pType = ParamTypes.UINT;
+            rule.placeHolders[0].typeSpecificIndex = 1;
+            rule.placeHolders[1].pType = ParamTypes.STR;
+            rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
             vm.startPrank(callingContractAdmin);
-            rule.placeHolders[0].typeSpecificIndex = uint128(RulesEngineComponentFacet(address(red)).createMappedTracker(
+            rule.placeHolders[1].typeSpecificIndex = uint128(RulesEngineComponentFacet(address(red)).createMappedTracker(
                 policyIds[0], 
                 tracker, 
                 "test", 
@@ -109,7 +117,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             bytes[] memory trackerKeys = new bytes[](1);
             bytes[] memory trackerValues = new bytes[](1);
             trackerKeys[0] = abi.encode(1);
-            trackerValues[0] = abi.encode(_input);
+            trackerValues[0] = _input;
             Trackers memory tracker = Trackers({
                 mapped: true,
                 pType: ParamTypes.STR,
@@ -119,11 +127,13 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
                 trackerIndex: 0
             });
             
-            rule.placeHolders = new Placeholder[](1);
-            rule.placeHolders[0].pType = ParamTypes.BYTES;
-            rule.placeHolders[0].flags = FLAG_TRACKER_VALUE;
+            rule.placeHolders = new Placeholder[](2);
+            rule.placeHolders[0].pType = ParamTypes.UINT;
+            rule.placeHolders[0].typeSpecificIndex = 1;
+            rule.placeHolders[1].pType = ParamTypes.BYTES;
+            rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
             vm.startPrank(callingContractAdmin);
-            rule.placeHolders[0].typeSpecificIndex = uint128(RulesEngineComponentFacet(address(red)).createMappedTracker(
+            rule.placeHolders[1].typeSpecificIndex = uint128(RulesEngineComponentFacet(address(red)).createMappedTracker(
                 policyIds[0], 
                 tracker, 
                 "test", 
@@ -233,7 +243,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
 
     /// forge-config: default.fuzz.runs = 20
     function test_stringFromPlaceholder(string memory _input) public {
-        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(abi.encode(_input), TestType.STRING_FROM_PLACEHOLDER);
+        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(bytes(_input), TestType.STRING_FROM_PLACEHOLDER);
         bytes[] memory arguments = new bytes[](1);
         arguments[0] = abi.encode(_input);
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
@@ -244,7 +254,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
     function test_bytesFromPlaceholder(bytes memory _input) public {
         (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(_input, TestType.BYTES_FROM_PLACEHOLDER);
         bytes[] memory arguments = new bytes[](1);
-        arguments[0] = _input;
+        arguments[0] = abi.encode(_input);
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
         assertTrue(result);
     }
@@ -262,7 +272,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
 
     /// forge-config: default.fuzz.runs = 20
     function test_bytesFromMappedTracker(bytes memory _input) public {
-        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(abi.encode(_input), TestType.BYTES_FROM_MAPPED_TRACKER);
+        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(_input, TestType.BYTES_FROM_MAPPED_TRACKER);
         bytes memory trackerValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, placeHolders[1].typeSpecificIndex, abi.encode(1));
         bytes[] memory arguments = new bytes[](2);
         arguments[0] = abi.encode(1);

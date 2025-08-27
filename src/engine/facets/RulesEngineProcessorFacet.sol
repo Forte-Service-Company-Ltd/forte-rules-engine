@@ -606,6 +606,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     } else {
                         v = uint256(keccak256(value));
                         console.log("V in non-tracker value:", v);
+                        console.log("Value:");
+                        console.logBytes(value);
                     }
                 } else if (typ == ParamTypes.STATIC_TYPE_ARRAY || typ == ParamTypes.DYNAMIC_TYPE_ARRAY) {
                     // length of array for direct comparison using == and != operations

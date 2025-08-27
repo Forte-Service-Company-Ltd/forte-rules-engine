@@ -201,6 +201,9 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         _tracker.set = true;
         _tracker.mapped = false;
         _tracker.trackerIndex = _trackerIndex;
+        if (_tracker.pType == ParamTypes.STR || _tracker.pType == ParamTypes.BYTES) {
+            _tracker.trackerValue = abi.encode(keccak256(_tracker.trackerValue));
+        }
         _data.trackers[_policyId][_trackerIndex] = _tracker;
     }
 
