@@ -99,12 +99,10 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         PolicyStorageSet storage data = lib._getPolicyStorage().policyStorageSets[policyId];
         delete data.set;
 
-        Policy storage policy = data.policy;
-        bytes4[] memory callingFunctions = policy.callingFunctions;
-        for (uint256 i = 0; i < callingFunctions.length; i++) {
-            uint256[] memory ruleIds = policy.callingFunctionsToRuleIds[callingFunctions[i]];
-            for (uint256 j = 0; j < ruleIds.length; j++) {
-                _callAnotherFacet(0xa31c8ebb, abi.encodeWithSignature("deleteRule(uint256,uint256)", policyId, ruleIds[j]));
+        uint256 ruleCount = lib._getRuleStorage().ruleIdCounter[policyId];
+        for (uint256 i = 0; i <= ruleCount; i++) {
+            if (lib._getRuleStorage().ruleStorageSets[policyId][i].set) {
+                delete lib._getRuleStorage().ruleStorageSets[policyId][i];
             }
         }
 
@@ -355,7 +353,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
 
         // clear the calling function to rule id associations.
         bytes4[] memory oldCallingFunctions = data.callingFunctions;
-        for (uint256 i = 0; i < oldCallingFunctions.length; i ++) {
+        for (uint256 i = 0; i < oldCallingFunctions.length; i++) {
             delete data.callingFunctionsToRuleIds[oldCallingFunctions[i]];
         }
 
