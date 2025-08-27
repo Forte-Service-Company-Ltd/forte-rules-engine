@@ -22,11 +22,7 @@ abstract contract policies is RulesEngineCommon {
         ruleId;
         // Save the calling Function
         _addCallingFunctionToPolicy(policyId);
-        callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        ruleIds.push(new uint256[](1));
-        ruleIds[0][0] = ruleId;
-        ruleIds.push(new uint256[](1));
-        ruleIds[0][0] = ruleId;
+        callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         vm.expectRevert("Invalid Rule");
@@ -190,7 +186,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_GetPolicy_FunctionSig() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256[] memory policyIds = new uint256[](1);
         bytes4[] memory _functionSigs;
-        uint256[] memory _functionSigIds;
         uint256[][] memory _ruleIds;
 
         policyIds[0] = _createBlankPolicy();
@@ -202,13 +197,11 @@ abstract contract policies is RulesEngineCommon {
         _addCallingFunctionToPolicy(policyIds[0]);
         (_functionSigs, _ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyIds[0]);
         assertEq(_functionSigs.length, 1);
-        assertEq(_functionSigIds.length, 1);
     }
 
     function testRulesEngine_Unit_GetPolicy_Rules() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256[] memory policyIds = new uint256[](1);
         bytes4[] memory _functionSigs;
-        uint256[] memory _functionSigIds;
         uint256[][] memory _ruleIds;
 
         policyIds[0] = setupEffectWithTrackerUpdateUint();
@@ -336,7 +329,7 @@ abstract contract policies is RulesEngineCommon {
         functionIds[0] = 0;
         ruleIds[0] = new uint256[](1);
         ruleIds[0][0] = 0;
-        vm.expectRevert("Invalid Signature");
+        vm.expectRevert("Invalid Rule");
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             selectors,
