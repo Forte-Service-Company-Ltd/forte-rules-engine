@@ -16,7 +16,7 @@ node_modules
 
 bin/
 include/
-lib/python
+lib/python*
 pyvenv.cfg
 
 # Soldeer
