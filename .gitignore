@@ -1,2 +1,24 @@
-# Created by venv; see https://docs.python.org/3/library/venv.html
-*
+# Compiler files
+cache/
+out/
+crytic-export/
+slither_results.json
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+
+# Docs
+docs/
+
+node_modules
+
+bin/
+include/
+
+
+# Soldeer
+/dependencies
+
+.DS_Store
