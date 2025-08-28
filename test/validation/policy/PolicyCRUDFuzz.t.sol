@@ -480,6 +480,10 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
 // 7. create test that proves that we can fool the system by giving the wrong id to a sig by giving identica ids in the sig id array
 // 8. Fix this by checking for identical ids in the array
 
+// 9. Add test for CALLING_FUNCTION_ALREADY_EXISTS
+// 10. add test for foreign call already exists
+// 11. add error foreign call not set, and add test
+
 // Proposed change:
 // Main idea is to delete the id for callingFunctions since the selector MUST be the id. For this we neet to:
 

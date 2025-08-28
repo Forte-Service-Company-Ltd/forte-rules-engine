@@ -23,6 +23,7 @@ string constant INVALID_TYPE = "Invalid type";
 string constant INVALID_TRACKER_KEY_TYPE = "Invalid tracker key type";
 string constant KEY_AND_VALUE_SAME = "Tracker keys and values must have the same length";
 string constant CALLING_FUNCTION_EXISTS = "Delete calling function before updating to a new one";
+string constant CALLING_FUNCTION_NOT_SET = "Calling function not set";
 string constant CALLING_FUNCTION_ALREADY_EXISTS = "calling function already exists. Use or update";
 string constant PARM_GT_EQ = "New parameter types must be of greater or equal length to the original";
 string constant PARM_NOT_SAME_TYPE = "New parameter types must be of the same type as the original";

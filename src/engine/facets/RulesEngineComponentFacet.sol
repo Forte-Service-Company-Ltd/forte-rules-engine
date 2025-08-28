@@ -325,7 +325,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         // return trackers for contract address at speficic index
         return data.mappedTrackerValues[policyId][index][trackerKey];
     }
-    event Log(string, uint);
+
     /**
      * @notice Updates an existing tracker in the tracker storage mapping.
      * @dev Modifies the tracker associated with the specified policy ID and tracker index.
@@ -433,7 +433,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         CallingFunctionStruct storage data = lib._getCallingFunctionStorage();
         // increment the callingFunctionId if necessary
         CallingFunctionStorageSet storage callingFunction = data.callingFunctionStorageSets[policyId][functionSignature];
-        require(callingFunction.set, CALLING_FUNCTION_EXISTS);
+        require(callingFunction.set, CALLING_FUNCTION_NOT_SET);
         require(callingFunction.parameterTypes.length <= pTypes.length, PARM_GT_EQ);
         for (uint256 i = 0; i < callingFunction.parameterTypes.length; i++) {
             require(pTypes[i] == callingFunction.parameterTypes[i], PARM_NOT_SAME_TYPE);

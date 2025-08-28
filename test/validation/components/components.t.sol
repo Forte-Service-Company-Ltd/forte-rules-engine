@@ -135,7 +135,7 @@ abstract contract components is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         _addCallingFunctionToPolicy(policyId);
-        vm.expectRevert("Delete calling function before updating to a new one");
+        vm.expectRevert("Calling function not set");
         RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction2))), pTypes);
     }
 
