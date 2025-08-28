@@ -36,7 +36,7 @@ abstract contract components is RulesEngineCommon {
         assertEq(uint8(sig.parameterTypes[0]), uint8(ParamTypes.ADDR));
         assertEq(uint8(sig.parameterTypes[1]), uint8(ParamTypes.UINT));
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        vm.expectRevert();
+        vm.expectRevert("Duplicates not allowed");
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,

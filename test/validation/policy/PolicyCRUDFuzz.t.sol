@@ -5,7 +5,7 @@ import "test/utils/RulesEngineCommon.t.sol";
 import {FacetUtils} from "src/engine/facets/FacetUtils.sol";
 
 /**
- * @dev this is a test facet contract that exposes the uses the internal _isThereDuplicatesInCalldataValueTypeArray function
+ * @dev this is a test facet contract that uses the internal _isThereDuplicatesInCalldataValueTypeArray function
  * from the FacetUtils. Since the function is not meant to be used directly, some example functions were created.
  */
 contract TestFacetUtils is FacetUtils {
@@ -166,37 +166,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             "This is a test policy"
         );
     }
-
-    // function testPolicy_updatePolicy_arrayLengthWithoutRules(uint selectorAmount, uint functionIdAmount) public {
-    //     uint maxSizeArray = 7;
-    //     selectorAmount = selectorAmount % maxSizeArray;
-    //     functionIdAmount = functionIdAmount % maxSizeArray;
-    //     vm.startPrank(user1);
-    //     uint policyId = _createBlankPolicy();
-    //     ParamTypes[] memory pTypes = new ParamTypes[](2);
-    //     pTypes[0] = ParamTypes.ADDR;
-    //     pTypes[1] = ParamTypes.UINT;
-    //     bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
-    //     RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
-    //     bytes4[] memory selectors = new bytes4[](selectorAmount);
-    //     if (selectorAmount > 0) for (uint i; i < selectorAmount; i++) selectors[i] = sigCallingFunction;
-    //     uint256[][] memory _ruleIds = new uint256[][](0);
-    //     if (selectorAmount != functionIdAmount) vm.expectRevert("Signatures and signature id's are inconsistent");
-    //     RulesEnginePolicyFacet(address(red)).updatePolicy(
-    //         policyId,
-    //         selectors,
-    //         _ruleIds,
-    //         PolicyType.OPEN_POLICY,
-    //         "Test Policy",
-    //         "This is a test policy"
-    //     );
-    //     if (selectorAmount == functionIdAmount) {
-    //         (bytes4[] memory callingFunctions_, uint256[][] memory ruleIds_) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
-    //         assertEq(callingFunctions_.length, selectors.length, "selector length mismatch");
-    //         assertEq(ruleIds_.length, selectorAmount, "rule id length mismatch");
-    //         for (uint i; i < selectorAmount; i++) assertEq(ruleIds_[i].length, 0, "rule id length mismatch");
-    //     }
-    // }
 
     function testPolicy_updatePolicy_InvalidRule(uint functionAmount) public {
         uint maxSizeArray = 7;
