@@ -161,7 +161,6 @@ contract NonCustodialMarketplaceTestERC721 is RulesEngineCommon {
         uint256[] memory ids = new uint256[](1);
         ids[0] = ruleId;
         _ruleIds[0] = ids;
-        _addRuleIdsToPolicy(policyIds[0], _ruleIds);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             functions,

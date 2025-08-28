@@ -346,10 +346,9 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         bytes4[] memory oldCallingFunctions = data.callingFunctions;
         for (uint256 i = 0; i < oldCallingFunctions.length; i++) {
             delete data.callingFunctionsToRuleIds[oldCallingFunctions[i]];
+            // Clear the iterator array
+            data.callingFunctions.pop();
         }
-
-        // Clear the iterator array
-        delete data.callingFunctions;
 
         // Validate input lengths
         require(_ruleIds.length < MAX_LOOP, MAX_RULES);
@@ -379,7 +378,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         uint256[][] calldata _ruleIds,
         Policy storage data
     ) private {
-        if (_ruleIds.length != _callingFunctions.length && _callingFunctions.length > 0) revert(INVALID_RULE_LENGTH);
+        if (_ruleIds.length != _callingFunctions.length) revert(INVALID_RULE_LENGTH);
         for (uint256 i = 0; i < _callingFunctions.length; i++) {
             // Validate calling function
             if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctions[i])) revert(INVALID_SIGNATURE);
