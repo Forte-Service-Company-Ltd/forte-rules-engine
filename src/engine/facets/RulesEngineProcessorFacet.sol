@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import "src/engine/facets/FacetCommonImports.sol";
 import {RulesEngineProcessorLib as ProcessorLib} from "src/engine/facets/RulesEngineProcessorLib.sol";
-import {console2 as console} from "forge-std/src/console2.sol";
+
 /**
  * @title Rules Engine Processor Facet
  * @dev This contract serves as the core processor for evaluating rules and executing effects in the Rules Engine.
@@ -617,12 +617,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     _updateTrackerValue(_policyId, _prog[idx + 1], mem[_prog[idx + 2]]);
                 } else {
                     Placeholder memory ph = _placeHolders[_prog[idx + 2]];
-                    console.log("placeholder index: ", _prog[idx + 2]);
-                    console.log("type specific index: ", ph.typeSpecificIndex);
-                    console.log("ph.flags:");
-                    console.log(ph.flags);
-                    console.log("ph.pType:");
-                    console.log(uint8(ph.pType));
                     if (ph.flags != FacetUtils.FLAG_TRACKER_VALUE && (ph.pType == ParamTypes.STR || ph.pType == ParamTypes.BYTES)) {
                         _updateTrackerValue(_policyId, _prog[idx + 1], _arguments[_prog[idx + 2]], true);
                     } else {
