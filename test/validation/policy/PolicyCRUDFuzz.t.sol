@@ -442,28 +442,10 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
 
 // 1. create test exclusively for the algorithm that checks for no identical items in array (done)
 // 2. create negative path test for identical elements in an array (done)
-// 3. create test to demonstrate that identical signatures can have different Ids
-// 4. fix the identical functioins with different ids by checking for the set flag at creation time
-// 5. Create test that proves that there is no check updating policy with rules without function sigs and ids
-// 6. Fix this
-// 7. create test that proves that we can fool the system by giving the wrong id to a sig by giving identica ids in the sig id array
-// 8. Fix this by checking for identical ids in the array
-
-// 9. Add test for CALLING_FUNCTION_ALREADY_EXISTS
-// 10. add test for foreign call already exists
-// 11. add test for foreign call not set
-// 12. can I update an inexistent policy?
-// 13. Check if calling function is set when creating so we don't override a function. Add test
-// 13. Check if foreign call is set when creating so we don't override a foreign call. Add test
-
-// Proposed change:
-// Main idea is to delete the id for callingFunctions since the selector MUST be the id. For this we neet to:
-
-// 1.
-// 2. delete the functionIdCounter.
-// 3. callingFunctionStorageSets MUST be ` mapping(uint256 policyId => mapping(bytes4 selector => CallingFunctionStorageSet))`.
-// 4. CallingFunctionStorageSet MUST not have the signature field.
-// 5. Policy MUST keep the callingFunctions array.
-// 6. delete callingFunctionIdMap from Policy
-
-// Same goes for foreign calls
+// 3. Add test for CALLING_FUNCTION_ALREADY_EXISTS (done)
+// 4. add test for foreign call already exists (Gordon)
+// 5. add test for foreign call not set (Gordon)
+// 6. can I update an inexistent policy?
+// 7. Check if calling function is set when creating so we don't override a function. Add test (duplicate of 3)
+// 8. Check if foreign call is set when creating so we don't override a foreign call. Add test (duplicate of 4)
+// 9. Do all the TODOs in the tests.
