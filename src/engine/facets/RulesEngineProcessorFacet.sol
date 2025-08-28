@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import "src/engine/facets/FacetCommonImports.sol";
 import {RulesEngineProcessorLib as ProcessorLib} from "src/engine/facets/RulesEngineProcessorLib.sol";
+import {console2 as console} from "forge-std/src/console2.sol";
 /**
  * @title Rules Engine Processor Facet
  * @dev This contract serves as the core processor for evaluating rules and executing effects in the Rules Engine.
@@ -616,10 +617,16 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     _updateTrackerValue(_policyId, _prog[idx + 1], mem[_prog[idx + 2]]);
                 } else {
                     Placeholder memory ph = _placeHolders[_prog[idx + 2]];
+                    console.log("placeholder index: ", _prog[idx + 2]);
+                    console.log("type specific index: ", ph.typeSpecificIndex);
+                    console.log("ph.flags:");
+                    console.log(ph.flags);
+                    console.log("ph.pType:");
+                    console.log(uint8(ph.pType));
                     if (ph.flags != FacetUtils.FLAG_TRACKER_VALUE && (ph.pType == ParamTypes.STR || ph.pType == ParamTypes.BYTES)) {
-                        _updateTrackerValue(_policyId, _prog[idx + 1], uint256(keccak256(_arguments[_prog[idx + 2]])));
+                        _updateTrackerValue(_policyId, _prog[idx + 1], _arguments[_prog[idx + 2]], true);
                     } else {
-                        _updateTrackerValue(_policyId, _prog[idx + 1], _arguments[_prog[idx + 2]]);
+                        _updateTrackerValue(_policyId, _prog[idx + 1], _arguments[_prog[idx + 2]], false);
                     }
                 }
                 idx += 4;
@@ -639,7 +646,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 tt == TrackerTypes.MEMORY
                     ? _updateMappedTrackerValue(_policyId, _prog[idx + 1], mem[pli], key)
                     : _placeHolders[pli].flags != FacetUtils.FLAG_TRACKER_VALUE && (_placeHolders[pli].pType == ParamTypes.STR || _placeHolders[pli].pType == ParamTypes.BYTES)
-                        ? _updateMappedTrackerValue(_policyId, _prog[idx + 1], uint256(keccak256(_arguments[pli])), key)
+                        ? _updateMappedTrackerValue(_policyId, _prog[idx + 1], abi.encode(keccak256(_arguments[pli])), key)
                         : _updateMappedTrackerValue(_policyId, _prog[idx + 1], _arguments[pli], key);
                 idx += 5;
             } else if (op == LogicalOp.NUM) {
@@ -724,10 +731,14 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _trackerId The ID of the tracker whose value is being updated.
      * @param _trackerValue The new value to be assigned to the tracker, encoded as bytes.
      */
-    function _updateTrackerValue(uint256 _policyId, uint256 _trackerId, bytes memory _trackerValue) internal {
+    function _updateTrackerValue(uint256 _policyId, uint256 _trackerId, bytes memory _trackerValue, bool _mightNeedHashing) internal {
         // retrieve the tracker
         Trackers storage trk = lib._getTrackerStorage().trackers[_policyId][_trackerId];
-        trk.trackerValue = _trackerValue;
+        if (_mightNeedHashing && (trk.pType == ParamTypes.STR || trk.pType == ParamTypes.BYTES)) {
+            trk.trackerValue = abi.encode(keccak256(_trackerValue));
+        } else {
+            trk.trackerValue = _trackerValue;
+        }   
     }
 
     /**
