@@ -1214,9 +1214,9 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyIds[0], 1, abi.encode(address(0x7654321)));
         assertEq(
             value,
-            abi.encode(
+            abi.encode(keccak256(abi.encode(
                 "This is a string to test that the value string is above a bytes32 and does not get sliced weirdly. If you are seeing this we win!"
-            )
+            )))
         );
 
         // vm.expectRevert();
