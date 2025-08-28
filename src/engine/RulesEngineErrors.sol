@@ -9,6 +9,7 @@ string constant VERIFIED_SUBSCRIBER_ONLY = "Only verified policy subscriber can 
 string constant INVALID_RULE = "Invalid Rule";
 string constant INVALID_SIGNATURE = "Invalid Signature";
 string constant FOREIGN_CALL_NOT_SET = "Foreign Call referenced in rule not set";
+string constant FOREIGN_CALL_ALREADY_SET = "Foreign Call referenced in rule already set";
 string constant TRACKER_NOT_SET = "Tracker referenced in rule not set";
 string constant INVALID_PARAM_TYPE = "Invalid Param Type";
 string constant INVALID_EFFECT_TYPE = "Invalid Effect Type";

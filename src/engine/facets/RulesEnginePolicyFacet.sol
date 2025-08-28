@@ -104,11 +104,12 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
             }
         }
 
-        uint256 foreignCallCount = lib._getForeignCallStorage().foreignCallIdxCounter[policyId];
-        for (uint256 i = 0; i <= foreignCallCount; i++) {
-            if (lib._getForeignCallStorage().foreignCalls[policyId][i].set) {
-                delete lib._getForeignCallStorage().foreignCalls[policyId][i];
-                emit ForeignCallDeleted(policyId, i);
+        uint256[] memory foreignCallIds = lib._getForeignCallStorage().foreignCallIds[policyId];
+        for (uint256 i = 0; i < foreignCallIds.length; i++) {
+            if (lib._getForeignCallStorage().foreignCalls[policyId][foreignCallIds[i]].set) {
+                delete lib._getForeignCallStorage().foreignCalls[policyId][foreignCallIds[i]];
+                delete lib._getForeignCallStorage().foreignCallIds[policyId][i];
+                emit ForeignCallDeleted(policyId, foreignCallIds[i]);
             }
         }
 

@@ -476,11 +476,13 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(testContract);
-        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "simpleCheck(uint256)",
+            _generateForeignCallId(address(testContract), bytes4(keccak256(bytes("simpleCheck(uint256)"))))
+        );
 
         vm.stopPrank();
         vm.startPrank(callingContractAdmin);
@@ -540,11 +542,13 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(testContract);
-        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "simpleCheck(uint256)",
+            _generateForeignCallId(address(testContract), bytes4(keccak256(bytes("simpleCheck(uint256)"))))
+        );
 
         vm.stopPrank();
         vm.startPrank(callingContractAdmin);
@@ -648,11 +652,13 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(testContract);
-        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "simpleCheck(uint256)",
+            _generateForeignCallId(address(testContract), bytes4(keccak256(bytes("simpleCheck(uint256)"))))
+        );
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -703,22 +709,26 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(testContract);
-        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "simpleCheck(uint256)",
+            _generateForeignCallId(address(testContract), bytes4(keccak256(bytes("simpleCheck(uint256)"))))
+        );
 
         ForeignCall memory fc2;
         fc2.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc2.encodedIndices[0].index = 1;
         fc2.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
         fc2.parameterTypes = fcArgs;
-        fc2.foreignCallAddress = address(testContract);
-        fc2.signature = bytes4(keccak256(bytes("square(uint256)")));
         fc2.returnType = ParamTypes.UINT;
-        fc2.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc2, "square(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc2,
+            "square(uint256)",
+            _generateForeignCallId(address(testContract), bytes4(keccak256(bytes("square(uint256)"))))
+        );
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -778,11 +788,13 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.TRACKER;
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(testContract);
-        fc.signature = bytes4(keccak256(bytes("square(uint256)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "square(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "square(uint256)",
+            _generateForeignCallId(address(testContract), bytes4(keccak256(bytes("square(uint256)"))))
+        );
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -3197,5 +3209,11 @@ contract RulesEngineCommon is DiamondMine, Test {
         vm.stopPrank();
         vm.startPrank(newAdmin);
         RulesEngineAdminRolesFacet(address(red)).confirmNewCallingContractAdmin(_userContract);
+    }
+
+    function _generateForeignCallId(address _foreignCallAddress, bytes4 _selector) public pure returns (uint256 id) {
+        assembly {
+            id := or(_selector, _foreignCallAddress)
+        }
     }
 }

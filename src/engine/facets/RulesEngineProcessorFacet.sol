@@ -47,21 +47,21 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      *      and security checks are in place when interacting with foreign calls.
      * @param policyId Id of the policy.
      * @param callingFunctionArgs representation of the calling function arguments
-     * @param foreignCallIndex Index of the foreign call.
+     * @param foreignCallId Index of the foreign call.
      * @param retVals array of return values from previous foreign calls, trackers, etc.
      * @return retVal The output of the foreign call.
      */
     function evaluateForeignCalls(
         uint256 policyId,
         bytes calldata callingFunctionArgs,
-        uint256 foreignCallIndex,
+        uint256 foreignCallId,
         bytes[] memory retVals,
         ForeignCallEncodedIndex[] memory metadata
     ) internal returns (ForeignCallReturnValue memory retVal) {
         // Load the Foreign Call data from storage
-        ForeignCall memory foreignCall = lib._getForeignCallStorage().foreignCalls[policyId][foreignCallIndex];
+        ForeignCall memory foreignCall = lib._getForeignCallStorage().foreignCalls[policyId][foreignCallId];
         if (foreignCall.set) {
-            retVal = evaluateForeignCallForRule(foreignCall, callingFunctionArgs, retVals, metadata, policyId);
+            retVal = evaluateForeignCallForRule(foreignCall, callingFunctionArgs, retVals, metadata, policyId, foreignCallId);
         }
     }
 
@@ -76,10 +76,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes calldata functionArguments,
         bytes[] memory retVals,
         ForeignCallEncodedIndex[] memory metadata,
-        uint256 policyId
+        uint256 policyId,
+        uint256 foreignCallId
     ) internal returns (ForeignCallReturnValue memory retVal) {
         // First, calculate total size needed and positions of dynamic data
-        bytes memory encodedCall = bytes.concat(bytes4(fc.signature));
+        bytes memory encodedCall = bytes.concat(bytes4(bytes32(foreignCallId)));
         bytes memory dynamicData = "";
 
         uint256 lengthToAppend = 0;
@@ -131,7 +132,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
 
         bytes memory callData = bytes.concat(encodedCall, dynamicData);
         // Place the foreign call
-        (bool response, bytes memory data) = fc.foreignCallAddress.call(callData);
+        (bool response, bytes memory data) = address(uint160(foreignCallId)).call(callData);
         // Verify that the foreign call was successful
         if (response) {
             // Decode the return value based on the specified return value parameter type in the foreign call structure

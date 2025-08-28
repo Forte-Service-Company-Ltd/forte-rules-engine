@@ -301,29 +301,33 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
     function grantForeignCallAdminRole(
         address _foreignCallContract,
         address _account,
-        bytes4 _functionSignature
+        bytes4 _functionSelector
     ) public nonReentrant returns (bytes32) {
         if (_account == address(0)) revert(ZERO_ADDRESS);
         if (msg.sender != _foreignCallContract) revert(ONLY_FOREIGN_CALL_CONTRACT);
         if (_foreignCallContract.code.length == 0) revert(ONLY_FOREIGN_CALL_CONTRACT);
-        if (_functionSignature == bytes4(0)) revert(FOREIGN_CALL_SELECTOR_NOT_SET);
+        if (_functionSelector == bytes4(0)) revert(FOREIGN_CALL_SELECTOR_NOT_SET);
         // Create Admin Role for Foreign Call Admin Role: concat the calling contract address and adminRole key together and keccak them. Cast to bytes32 for Admin Role identifier
-        bytes32 adminRoleId = _generateForeignCallAdminRoleId(_foreignCallContract, _functionSignature, FOREIGN_CALL_ADMIN);
+        bytes32 adminRoleId = _generateForeignCallAdminRoleId(_foreignCallContract, _functionSelector, FOREIGN_CALL_ADMIN);
         if (getRoleMemberCount(adminRoleId) > 0) revert(FOREIGN_CALL_ADMIN_ALREADY_GRANTED);
         // grant the admin role to the calling address of the createPolicy function from RulesEnginePolicyFacet
         _grantRole(adminRoleId, _account);
+
+        uint256 foreignCallId;
+        assembly {
+            foreignCallId := or(_functionSelector, _foreignCallContract)
+        }
         // set up FC register lists
         // first add to master Permissioned FC map and list
         ForeignCallStorage storage foreignCallData = lib._getForeignCallStorage();
-        foreignCallData.isPermissionedForeignCall[_foreignCallContract][_functionSignature] = true;
+        foreignCallData.isPermissionedForeignCall[foreignCallId] = true;
 
         PermissionedForeignCallStorage storage permissionedForeignCallData = lib._getPermissionedForeignCallStorage();
-        permissionedForeignCallData.permissionedForeignCallAddresses.push(_foreignCallContract);
-        permissionedForeignCallData.permissionedForeignCallSignatures.push(_functionSignature);
+        permissionedForeignCallData.permissionedForeignCallIds.push(foreignCallId);
 
         // second add to the specific PFC lists and maps
-        foreignCallData.permissionedForeignCallAdminsList[_foreignCallContract][_functionSignature].push(_account);
-        foreignCallData.permissionedForeignCallAdmins[_foreignCallContract][_functionSignature][_account] = true;
+        foreignCallData.permissionedForeignCallAdminsList[foreignCallId].push(_account);
+        foreignCallData.permissionedForeignCallAdmins[foreignCallId][_account] = true;
         emit ForeignCallAdminRoleGranted(_foreignCallContract, _account);
         return adminRoleId;
     }
@@ -349,22 +353,28 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
     /**
      * @dev This function confirms the proposed admin role
      * @param foreignCallContract address of the calling contract.
+     * @param functionSelector the function selector of the foreign call.
      */
-    function confirmNewForeignCallAdmin(address foreignCallContract, bytes4 functionSignature) public {
+    function confirmNewForeignCallAdmin(address foreignCallContract, bytes4 functionSelector) public {
         address oldForeignCallAdmin = getRoleMember(
-            _generateForeignCallAdminRoleId(foreignCallContract, functionSignature, FOREIGN_CALL_ADMIN),
+            _generateForeignCallAdminRoleId(foreignCallContract, functionSelector, FOREIGN_CALL_ADMIN),
             0
         );
-        if (!hasRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSignature, PROPOSED_FOREIGN_CALL_ADMIN), msg.sender))
+        if (!hasRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSelector, PROPOSED_FOREIGN_CALL_ADMIN), msg.sender))
             revert(NOT_PROPOSED_FOREIGN_CALL_ADMIN);
-        _revokeRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSignature, PROPOSED_FOREIGN_CALL_ADMIN), msg.sender);
-        _revokeRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSignature, FOREIGN_CALL_ADMIN), oldForeignCallAdmin);
-        _grantRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSignature, FOREIGN_CALL_ADMIN), msg.sender);
+        _revokeRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSelector, PROPOSED_FOREIGN_CALL_ADMIN), msg.sender);
+        _revokeRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSelector, FOREIGN_CALL_ADMIN), oldForeignCallAdmin);
+        _grantRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSelector, FOREIGN_CALL_ADMIN), msg.sender);
+
+        uint256 foreignCallId;
+        assembly {
+            foreignCallId := or(functionSelector, foreignCallContract)
+        }
 
         ForeignCallStorage storage foreignCallData = lib._getForeignCallStorage();
-        foreignCallData.permissionedForeignCallAdmins[foreignCallContract][functionSignature][oldForeignCallAdmin] = false;
-        foreignCallData.permissionedForeignCallAdminsList[foreignCallContract][functionSignature].push(msg.sender);
-        foreignCallData.permissionedForeignCallAdmins[foreignCallContract][functionSignature][msg.sender] = true;
+        foreignCallData.permissionedForeignCallAdmins[foreignCallId][oldForeignCallAdmin] = false;
+        foreignCallData.permissionedForeignCallAdminsList[foreignCallId].push(msg.sender);
+        foreignCallData.permissionedForeignCallAdmins[foreignCallId][msg.sender] = true;
         emit ForeignCallAdminRoleConfirmed(foreignCallContract, msg.sender);
     }
 

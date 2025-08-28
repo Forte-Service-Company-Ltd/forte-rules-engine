@@ -125,11 +125,11 @@ struct Effect {
  * Foreign Call Structures
  */
 struct ForeignCallStorage {
-    mapping(uint256 policyId => uint256) foreignCallIdxCounter;
-    mapping(uint256 policyId => mapping(uint256 foreignCallIndex => ForeignCall)) foreignCalls;
-    mapping(address foreignCallAddress => mapping(bytes4 signature => bool)) isPermissionedForeignCall; // Store all permissioned foreign calls within the rules engine
-    mapping(address foreignCallContractAddress => mapping(bytes4 => mapping(address permissionedAdmin => bool))) permissionedForeignCallAdmins; // This is used to store the addresses of all permissioned foreign call admins for look ups
-    mapping(address foreignCallContractAddress => mapping(bytes4 selector => address[])) permissionedForeignCallAdminsList; // This is used to store the addresses of all permissioned foreign call admins for look ups
+    mapping(uint256 policyId => uint256[]) foreignCallIds;
+    mapping(uint256 policyId => mapping(uint256 foreignCallId => ForeignCall)) foreignCalls;
+    mapping(uint256 foreignCallId => bool) isPermissionedForeignCall; // Store all permissioned foreign calls within the rules engine
+    mapping(uint256 foreignCallId => mapping(address permissionedAdmin => bool)) permissionedForeignCallAdmins; // This is used to store the addresses of all permissioned foreign call admins for look ups
+    mapping(uint256 foreignCallId => address[]) permissionedForeignCallAdminsList; // This is used to store the addresses of all permissioned foreign call admins for look ups
 }
 
 /**
@@ -137,15 +137,16 @@ struct ForeignCallStorage {
  * This is used to store the addresses and signatures of all permissioned foreign calls for look ups
  */
 struct PermissionedForeignCallStorage {
-    address[] permissionedForeignCallAddresses; // This is used to store the addresses of all permissioned foreign call contracts for look ups
-    bytes4[] permissionedForeignCallSignatures; // This is used to store the signatures of all permissioned foreign calls for look ups
+    uint256[] permissionedForeignCallIds;
+    //address[] permissionedForeignCallAddresses; // This is used to store the addresses of all permissioned foreign call contracts for look ups
+    //bytes4[] permissionedForeignCallSignatures; // This is used to store the signatures of all permissioned foreign calls for look ups
 }
 
 /**
  * Structure used to hold the metadata for foreign calls
  */
 struct ForeignCallMetadataStruct {
-    mapping(uint256 policyId => mapping(uint256 foreignCallIndex => string)) foreignCallMetadata;
+    mapping(uint256 policyId => mapping(uint256 foreignCallId => string)) foreignCallMetadata;
 }
 
 /**
@@ -206,21 +207,20 @@ struct Arguments {
 struct ForeignCall {
     bool set;
     // Address of the contract to make the call to
-    address foreignCallAddress;
+    //address foreignCallAddress;
     // The function signature of the foreign call
-    bytes4 signature;
+    // Maybe just remove this as itll be mapped based on this anyway
+    //bytes4 signature;
     // The parameter type of the foreign calls return
     ParamTypes returnType;
     // Unique identifier for the foreign contract structure (used by the rule to reference it)
-    uint256 foreignCallIndex;
+    //uint256 foreignCallIndex;
     // The parameter types of the arguments the foreign call takes
     ParamTypes[] parameterTypes;
     // A list of type specific indices to use for the foreign call and where they sit in the calldata
     ForeignCallEncodedIndex[] encodedIndices;
     // Tracks the index of the arguments that are mapped to a tracker
     ForeignCallEncodedIndex[] mappedTrackerKeyIndices;
-    // Index of the Calling Function this foreign call is tied to
-    uint256 callingFunctionIndex;
 }
 
 /**
