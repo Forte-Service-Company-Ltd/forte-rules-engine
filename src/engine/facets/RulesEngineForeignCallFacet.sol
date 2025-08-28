@@ -30,10 +30,14 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
         uint256 _policyId,
         ForeignCall calldata _foreignCall,
         string calldata foreignCallName,
-        uint256 foreignCallId
-    ) external returns (bytes4) {
+        address foreignCallAddress,
+        bytes4 foreignCallSelector
+    ) external returns (uint256 foreignCallId) {
         _policyAdminOnly(_policyId, msg.sender);
         _notCemented(_policyId);
+        assembly {
+            foreignCallId := or(foreignCallSelector, foreignCallAddress)
+        }
         _isForeignCallPermissioned(foreignCallId);
         if (StorageLib._isForeignCallSet(_policyId, foreignCallId)) revert(FOREIGN_CALL_ALREADY_SET);
 
@@ -46,8 +50,7 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
         // Step 3: Store metadata
         _storeForeignCallMetadata(_policyId, foreignCallId, foreignCallName);
 
-        emit ForeignCallCreated(_policyId, foreignCallId);
-        return bytes4(bytes32(foreignCallId));
+        emit ForeignCallCreated(_policyId, foreignCallId);;
     }
 
     /**
