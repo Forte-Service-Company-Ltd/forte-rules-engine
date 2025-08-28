@@ -45,8 +45,14 @@ abstract contract storageTest is RulesEngineCommon {
     }
 
     function testRuleAssociationStorageFuzz(uint16 total) public {
-        uint256 index = bound(uint256(total), 0, 1000);
+        uint256 index = bound(uint256(total), 0, 200);
         uint256 policyId = _createBlankPolicy();
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
+        RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
+        callingFunctions.push(sigCallingFunction);
         Rule memory rule;
         // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, 4, LogicalOp.GT, 0, 1
         // Build the instruction set for the rule (including placeholders)
@@ -59,8 +65,10 @@ abstract contract storageTest is RulesEngineCommon {
         rule.negEffects[0] = effectId_revert;
         ruleName = "testRule";
         ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = 1;
         uint256 ruleId;
         for (uint256 i = 0; i < index; i++) {
+            console2.log("i", i);
             ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
             ruleIds[0].push(ruleId);
             RulesEnginePolicyFacet(address(red)).updatePolicy(

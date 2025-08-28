@@ -260,9 +260,7 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             uint256[] memory _ids = new uint256[](1);
             console2.log("ruleId", ruleId);
             _ids[0] = ruleId;
-            console2.log("_ids[0]", _ids[0]);
             if (ruleAmounts > 0) for (uint i; i < ruleAmounts; i++) _ruleIds[i] = _ids;
-            // console2.log("_ruleIds[0][0]", _ruleIds[0][0]);
             if (functionAmount != ruleAmounts && ruleAmounts > 0 && functionAmount > 0) vm.expectRevert("Invalid rule array length");
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyId,
@@ -440,14 +438,7 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
 }
 // NOTE for my self
 
-// 1. create test exclusively for the algorithm that checks for no identical items in array (done)
-// 2. create negative path test for identical elements in an array (done)
 // 3. Add test for CALLING_FUNCTION_ALREADY_EXISTS (done)
 // 4. add test for foreign call already exists (Gordon)
 // 5. add test for foreign call not set (Gordon)
-// 6. can I update an inexistent policy?
-// 7. Check if calling function is set when creating so we don't override a function. Add test (duplicate of 3)
-// 8. Check if foreign call is set when creating so we don't override a foreign call. Add test (duplicate of 4)
 // 9. Do all the TODOs in the tests.
-// 5. Create test that proves that there is no check updating policy with rules without function sigs and ids
-// 6. Fix this

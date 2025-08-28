@@ -37,6 +37,29 @@ abstract contract policies is RulesEngineCommon {
         );
     }
 
+    function testRulesEngine_Unit_UpdatePolicy_NoCallingFunctions() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.stopPrank();
+        vm.startPrank(policyAdmin);
+        (uint256 policyId, uint256 ruleId) = setUpRuleSimple();
+        // the following calling function doesn't exist in the policy yet, but the test won't reach this selector, so we skip the unnecessary setup.
+        callingFunctions.push(bytes4(keccak256(bytes(callingFunction3))));
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = 1; // we add the inexistent rule (will cause the revert)
+        ruleIds[1][0] = 1; // this is a valid rule id, but the test won't reach this value
+        bytes4[] memory noSelectors = new bytes4[](0);
+        vm.stopPrank();
+        vm.startPrank(policyAdmin);
+        vm.expectRevert("Invalid rule array length");
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            noSelectors,
+            ruleIds,
+            PolicyType.CLOSED_POLICY,
+            policyName,
+            policyDescription
+        );
+    }
+
     // Test attempt to add a policy with no callingFunctions saved.
     function testRulesEngine_Unit_UpdatePolicy_InvalidCallingFunction() public ifDeploymentTestsEnabled endWithStopPrank {
         // setUpRuleSimple helper not used as test does not set the calling Function ID intentionally
