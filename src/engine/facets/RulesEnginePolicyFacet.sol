@@ -38,6 +38,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         // only the admin of the policy can update. This covers policyId == 0 case.
         _policyAdminOnly(policyId, msg.sender);
         StorageLib._notCemented(policyId);
+        // if (!lib._getPolicyStorage().policyStorageSets[policyId].set) revert(POLICY_DOES_NOT_EXIST);
         // Update the policy type
         return _storePolicyData(policyId, callingFunctions, ruleIds, policyType, policyName, policyDescription);
     }
