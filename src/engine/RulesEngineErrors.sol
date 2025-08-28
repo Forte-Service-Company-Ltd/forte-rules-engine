@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 // Rules Engine Error Constants
-string constant SIGNATURES_INCONSISTENT = "Signatures and signature id's are inconsistent";
 string constant POLICY_ID_0 = "Policy ID cannot be 0. Create policy before updating";
 string constant POLICY_DOES_NOT_EXIST = "Policy does not exist";
 string constant POLICY_CEMENTED = "Not allowed for cemented policy";
@@ -22,7 +21,6 @@ string constant ZERO_ADDRESS_NOT_ALLOWED = "Zero Address Is Not Allowed";
 string constant INVALID_TYPE = "Invalid type";
 string constant INVALID_TRACKER_KEY_TYPE = "Invalid tracker key type";
 string constant KEY_AND_VALUE_SAME = "Tracker keys and values must have the same length";
-string constant CALLING_FUNCTION_EXISTS = "Delete calling function before updating to a new one";
 string constant CALLING_FUNCTION_NOT_SET = "Calling function not set";
 string constant CALLING_FUNCTION_ALREADY_EXISTS = "calling function already exists. Use or update";
 string constant PARM_GT_EQ = "New parameter types must be of greater or equal length to the original";

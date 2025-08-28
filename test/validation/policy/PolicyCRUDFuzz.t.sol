@@ -484,6 +484,8 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
 // 10. add test for foreign call already exists
 // 11. add test for foreign call not set
 // 12. can I update an inexistent policy?
+// 13. Check if calling function is set when creating so we don't override a function. Add test
+// 13. Check if foreign call is set when creating so we don't override a foreign call. Add test
 
 // Proposed change:
 // Main idea is to delete the id for callingFunctions since the selector MUST be the id. For this we neet to:
