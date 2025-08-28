@@ -286,14 +286,9 @@ abstract contract policies is RulesEngineCommon {
         uint256[] memory functionIds = new uint256[](50);
         // This loop will create 50 calling functions with a rule on each one.
         for (uint i = 0; i < ruleCount; i++) {
-            RulesEngineComponentFacet(address(red)).createCallingFunction(
-                policyId,
-                bytes4(keccak256(bytes(callingFunction))),
-                pTypes,
-                callingFunction,
-                ""
-            );
-            selectors[i] = bytes4(keccak256(bytes(callingFunction)));
+            bytes4 selector = bytes4(keccak256(bytes(callingFunction)) ^ (bytes32(i) << (256 - 4 * 8)));
+            RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, selector, pTypes, callingFunction, "");
+            selectors[i] = selector;
 
             r = _createLTRule();
             ruleIds[i] = new uint256[](1);

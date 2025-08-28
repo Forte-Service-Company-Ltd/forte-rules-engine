@@ -115,14 +115,14 @@ abstract contract storageTest is RulesEngineCommon {
             // Save the calling function
             RulesEngineComponentFacet(address(red)).createCallingFunction(
                 policyIds[0],
-                bytes4(bytes4(keccak256(bytes(callingFunction)))),
+                bytes4(bytes4(keccak256(bytes(callingFunction))) ^ (bytes32(i) << (256 - 8 * 4))),
                 pTypes,
                 callingFunction,
                 ""
             );
             assertTrue(
                 RulesEngineComponentFacet(address(red))
-                    .getCallingFunction(policyIds[0], bytes4(bytes4(keccak256(bytes(callingFunction)))))
+                    .getCallingFunction(policyIds[0], bytes4(bytes4(keccak256(bytes(callingFunction))) ^ (bytes32(i) << (256 - 8 * 4))))
                     .set
             );
         }
