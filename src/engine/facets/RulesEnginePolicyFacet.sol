@@ -119,9 +119,9 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
             }
         }
 
-        for (uint256 i = 0; i < data.policy.callingFunctions.length; i++) {
-            delete data.policy.callingFunctionsToRuleIds[data.policy.callingFunctions[i]];
-            // TODO find out if we also need to clear callingFunctions
+        for (uint256 i = 0; i < callingFunctions.length; i++) {
+            delete data.policy.callingFunctionsToRuleIds[callingFunctions[i]];
+            data.policy.callingFunctions.pop();
         }
         emit PolicyDeleted(policyId);
     }

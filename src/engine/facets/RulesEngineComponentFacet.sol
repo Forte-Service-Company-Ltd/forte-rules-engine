@@ -533,7 +533,6 @@ contract RulesEngineComponentFacet is FacetCommonImports {
     function getAllCallingFunctions(uint256 policyId) public view returns (CallingFunctionStorageSet[] memory) {
         // Load the calling function data from storage
         CallingFunctionStruct storage data = lib._getCallingFunctionStorage();
-        // uint256 functionIdCount = data.functionIdCounter[policyId]; // replace with callingFunctions from Policy
         bytes4[] memory sigs = lib._getPolicyStorage().policyStorageSets[policyId].policy.callingFunctions;
         uint256 functionIdCount = sigs.length;
         CallingFunctionStorageSet[] memory callingFunctionStorageSets = new CallingFunctionStorageSet[](functionIdCount);
@@ -546,15 +545,6 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         }
         return callingFunctionStorageSets;
     }
-
-    /**
-     * @dev Helper function to increment function ID
-     * @param _policyId The policy ID the calling function is associated with.
-     */
-    // function _incrementFunctionId(uint256 _policyId) private returns (uint256) {
-    //     CallingFunctionStruct storage data = lib._getCallingFunctionStorage();
-    //     return ++data.functionIdCounter[_policyId];
-    // }
 
     /**
      * @dev Helper function to store calling function data
