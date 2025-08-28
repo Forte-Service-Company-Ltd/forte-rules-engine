@@ -48,6 +48,24 @@ abstract contract components is RulesEngineCommon {
         );
     }
 
+    function testRulesEngine_Unit_createCallingFunction_AlredyExists() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256 policyId = _createBlankPolicy();
+        bytes4 callingFunctionId = _addCallingFunctionToPolicy(policyId);
+        assertEq(callingFunctionId, bytes4(keccak256(bytes(callingFunction))));
+        vm.startPrank(policyAdmin);
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        vm.expectRevert("calling function already exists");
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            bytes4(bytes4(keccak256(bytes(callingFunction)))),
+            pTypes,
+            callingFunction,
+            ""
+        );
+    }
+
     function testRulesEngine_Unit_createCallingFunction_Negative_Non_PolicyAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         ParamTypes[] memory pTypes = new ParamTypes[](2);

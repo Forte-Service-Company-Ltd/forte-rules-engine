@@ -377,6 +377,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
         if (!lib._getPolicyStorage().policyStorageSets[policyId].set) revert(POLICY_DOES_NOT_EXIST);
+        if (StorageLib._isCallingFunctionSet(policyId, functionSignature)) revert(CALLING_FUNCTION_ALREADY_EXISTS);
 
         // Step 2: Store calling function data
         _storeCallingFunctionData(policyId, functionSignature, pTypes);
