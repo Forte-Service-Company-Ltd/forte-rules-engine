@@ -1008,13 +1008,14 @@ abstract contract policies is RulesEngineCommon {
             vm.expectRevert("Policy does not exist");
             RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
         }
+        uint[][] memory noRules = new uint[][](0);
         // we check that we can't update a deleted policy
-        vm.expectRevert("Invalid Rule");
+        vm.expectRevert("Policy does not exist");
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             selectors,
-            _ruleIds,
-            PolicyType.OPEN_POLICY,
+            noRules,
+            PolicyType.CLOSED_POLICY,
             "Test Policy",
             "This is a test policy"
         );
