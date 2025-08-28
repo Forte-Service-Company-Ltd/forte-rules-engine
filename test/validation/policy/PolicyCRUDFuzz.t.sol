@@ -449,3 +449,5 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
 // 7. Check if calling function is set when creating so we don't override a function. Add test (duplicate of 3)
 // 8. Check if foreign call is set when creating so we don't override a foreign call. Add test (duplicate of 4)
 // 9. Do all the TODOs in the tests.
+// 5. Create test that proves that there is no check updating policy with rules without function sigs and ids
+// 6. Fix this
