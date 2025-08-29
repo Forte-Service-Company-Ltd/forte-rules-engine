@@ -64,6 +64,7 @@
   "StaticArrayTracker_EmptyArray": "79182",
   "StaticArrayTracker_LargeArray": "73500",
   "StaticArrayTracker_UintArray": "101842",
+  "checkRule_ForeignCall": "57276",
   "checkRule_simpleGTEQL": "26062",
   "checkRule_simpleLTEQL": "26091",
   "checkRule_simple_GT": "25903"
