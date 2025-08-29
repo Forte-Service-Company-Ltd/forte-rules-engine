@@ -81,12 +81,32 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     ) internal returns (ForeignCallReturnValue memory retVal) {
         // First, calculate total size needed and positions of dynamic data
         bytes memory encodedCall = bytes.concat(bytes4(bytes32(foreignCallId)));
-        bytes memory dynamicData = "";
+        bytes memory dynamicData = getDynamicData(fc, functionArguments, retVals, metadata, policyId, encodedCall);
 
-        uint256 lengthToAppend = 0;
-        uint256 mappedTrackerKeyIndex = 0;
         // calculate sizes
         // Data validation will always ensure fc.parameterTypes.length will be less than MAX_LOOP
+
+        bytes memory callData = bytes.concat(encodedCall, dynamicData);
+        // Place the foreign call
+        (bool response, bytes memory data) = address(uint160(foreignCallId)).call(callData);
+        // Verify that the foreign call was successful
+        if (response) {
+            // Decode the return value based on the specified return value parameter type in the foreign call structure
+            retVal.pType = fc.returnType;
+            retVal.value = data;
+        }
+    }
+
+    function getDynamicData(
+        ForeignCall memory fc,
+        bytes calldata functionArguments,
+        bytes[] memory retVals,
+        ForeignCallEncodedIndex[] memory metadata,
+        uint256 policyId,
+        bytes memory encodedCall
+    ) internal returns (bytes memory dynamicData) {
+        uint256 lengthToAppend;
+        uint256 mappedTrackerKeyIndex;
         for (uint256 i = 0; i < fc.parameterTypes.length; i++) {
             ParamTypes argType = fc.parameterTypes[i];
             ForeignCallEncodedIndex memory encodedIndex = fc.encodedIndices[i];
@@ -128,16 +148,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     i
                 );
             }
-        }
-
-        bytes memory callData = bytes.concat(encodedCall, dynamicData);
-        // Place the foreign call
-        (bool response, bytes memory data) = address(uint160(foreignCallId)).call(callData);
-        // Verify that the foreign call was successful
-        if (response) {
-            // Decode the return value based on the specified return value parameter type in the foreign call structure
-            retVal.pType = fc.returnType;
-            retVal.value = data;
         }
     }
 

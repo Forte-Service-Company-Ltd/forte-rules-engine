@@ -3,7 +3,6 @@
   "Additional_Encoding_Bool_Value": "26413",
   "Additional_Encoding_Bytes_Value": "23445",
   "Additional_Encoding_DynamicArray_Value": "29643",
-  "Additional_Encoding_ForeignCall_Value": "31310",
   "Additional_Encoding_StaticArray_Value": "27569",
   "Additional_Encoding_String_Value": "27866",
   "Additional_Encoding_Uint_Value": "30341",
@@ -64,9 +63,6 @@
   "StaticArrayTracker_EmptyArray": "78928",
   "StaticArrayTracker_LargeArray": "73246",
   "StaticArrayTracker_UintArray": "101588",
-  "checkRule_ForeignCall": "57464",
-  "checkRule_ForeignCall_ForeignCallReferenced": "57672",
-  "checkRule_ForeignCall_TrackerValuesUsed": "30954",
   "checkRule_simpleGTEQL": "26021",
   "checkRule_simpleLTEQL": "26050",
   "checkRule_simple_GT": "25862"
