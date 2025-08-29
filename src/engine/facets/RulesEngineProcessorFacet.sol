@@ -80,8 +80,15 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 foreignCallId
     ) internal returns (ForeignCallReturnValue memory retVal) {
         // First, calculate total size needed and positions of dynamic data
-        bytes memory encodedCall = bytes.concat(bytes4(bytes32(foreignCallId)));
-        bytes memory dynamicData = getDynamicData(fc, functionArguments, retVals, metadata, policyId, encodedCall);
+
+        (bytes memory encodedCall, uint256 lengthToAppend, bytes memory dynamicData) = getDynamicData(
+            fc,
+            functionArguments,
+            retVals,
+            metadata,
+            policyId,
+            bytes.concat(bytes4(bytes32(foreignCallId)))
+        );
 
         // calculate sizes
         // Data validation will always ensure fc.parameterTypes.length will be less than MAX_LOOP
@@ -103,14 +110,15 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes[] memory retVals,
         ForeignCallEncodedIndex[] memory metadata,
         uint256 policyId,
-        bytes memory encodedCall
-    ) internal returns (bytes memory dynamicData) {
-        uint256 lengthToAppend;
+        bytes memory _encodedCall
+    ) internal returns (bytes memory encodedCall, uint256 lengthToAppend, bytes memory dynamicData) {
         uint256 mappedTrackerKeyIndex;
+        encodedCall = _encodedCall;
+
         for (uint256 i = 0; i < fc.parameterTypes.length; i++) {
             ParamTypes argType = fc.parameterTypes[i];
-            ForeignCallEncodedIndex memory encodedIndex = fc.encodedIndices[i];
 
+            ForeignCallEncodedIndex memory encodedIndex = fc.encodedIndices[i];
             if (encodedIndex.eType == EncodedIndexType.MAPPED_TRACKER_KEY) {
                 ForeignCallEncodedIndex memory mappedTrackerKeyEI = fc.mappedTrackerKeyIndices[mappedTrackerKeyIndex];
                 uint256 parameterTypesLength = fc.parameterTypes.length;
@@ -235,7 +243,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 i
     ) internal pure returns (bytes memory, uint256, bytes memory) {
         uint256 typeSpecificIndex = fc.encodedIndices[i].index;
+
         bytes32 value = bytes32(functionArguments[typeSpecificIndex * 32:(typeSpecificIndex + 1) * 32]);
+
         if (argType == ParamTypes.STR || argType == ParamTypes.BYTES) {
             // Add offset to head
             uint256 dynamicOffset = 32 * (fc.parameterTypes.length) + lengthToAppend;
