@@ -504,7 +504,13 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         uint256 policyID = _createBlankPolicy();
         ForeignCall memory fc;
         fc = _setUpForeignCallSimple(policyID);
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyID,
+            fc,
+            "simpleCheck(uint256)",
+            address(testContract),
+            bytes4(keccak256(bytes("simpleCheck(uint256)")))
+        );
         address foreignCallAddress = address(userContractAddress);
         vm.expectEmit(true, false, false, false);
         emit ForeignCallUpdated(policyID, foreignCallId);
@@ -655,9 +661,8 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         permissionedForeignCallContract.setForeignCallAdmin(address(0x66667777), foreignCallSelector2);
         assertTrue(
             RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
-                address(permissionedForeignCallContract),
-                address(0x66667777),
-                foreignCallSelector2
+                _generateForeignCallId(address(permissionedForeignCallContract), foreignCallSelector2),
+                address(0x66667777)
             )
         );
 
@@ -713,7 +718,10 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         // set oldAdmin as foreign call admin
         permissionedForeignCallContract.setForeignCallAdmin(oldAdmin, selector);
         assertTrue(
-            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(address(permissionedForeignCallContract), oldAdmin, selector)
+            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
+                _generateForeignCallId(address(permissionedForeignCallContract), selector),
+                oldAdmin
+            )
         );
 
         // oldAdmin can add permissions
@@ -739,7 +747,13 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.returnType = ParamTypes.UINT;
 
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "simpleCheck(uint256)",
+            foreignCallAddress,
+            selector
+        );
 
         // Propose new admin
         RulesEngineAdminRolesFacet(address(red)).proposeNewForeignCallAdmin(address(permissionedForeignCallContract), newAdmin, selector);
