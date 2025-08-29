@@ -674,7 +674,13 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setMsgData(bytes)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setMsgData(bytes)",
+                    foreignCallAddress,
+                    signature
+                );
             }
 
             // Effect for the foreign call
@@ -800,7 +806,13 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setMsgData(bytes)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setMsgData(bytes)",
+                    foreignCallAddress,
+                    signature
+                );
             }
 
             // Effect for the foreign call
@@ -926,7 +938,13 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setUserAddress(address)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setUserAddress(address)",
+                    foreignCallAddress,
+                    signature
+                );
             }
 
             Rule memory rule;
@@ -1036,7 +1054,13 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setNumber(uint256)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setNumber(uint256)",
+                    foreignCallAddress,
+                    signature
+                );
             }
 
             Rule memory rule;
@@ -1151,7 +1175,13 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setNumber(uint256)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setNumber(uint256)",
+                    foreignCallAddress,
+                    signature
+                );
             }
 
             Rule memory rule;
@@ -1266,7 +1296,13 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setUserAddress(address)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setUserAddress(address)",
+                    foreignCallAddress,
+                    signature
+                );
             }
 
             Rule memory rule;

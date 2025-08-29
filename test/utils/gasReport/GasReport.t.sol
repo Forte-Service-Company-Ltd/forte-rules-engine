@@ -234,7 +234,13 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         address foreignCallAddress = _contractAddress;
         bytes4 signature = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.UINT;
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "getNaughty(address)",
+            foreignCallAddress,
+            signature
+        );
 
         // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule;
@@ -295,7 +301,13 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         address foreignCallAddress = _contractAddress;
         bytes4 signature = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.UINT;
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "getNaughty(address)",
+            foreignCallAddress,
+            signature
+        );
 
         // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule1;
@@ -361,7 +373,13 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         address foreignCallAddress = _contractAddress;
         bytes4 signature = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.UINT;
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "getNaughty(address)",
+            foreignCallAddress,
+            signature
+        );
 
         // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule1;
@@ -428,7 +446,13 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         address foreignCallAddress = _contractAddress;
         bytes4 signature = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.UINT;
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "getNaughty(address)",
+            foreignCallAddress,
+            signature
+        );
 
         // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule1;
@@ -517,7 +541,13 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         fc.returnType = ParamTypes.UINT;
         uint256 foreignCallId;
         {
-            foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
+            foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                policyIds[0],
+                fc,
+                "getNaughty(address)",
+                foreignCallAddress,
+                signature
+            );
         }
 
         {
@@ -924,7 +954,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         address newForeignCallAddress = _contractAddress;
         bytes4 newSignature = bytes4(keccak256(bytes("getNaughty(address)")));
         newfc.returnType = ParamTypes.BOOL;
-        newfc.foreignCallIndex = 1;
         uint256 foreignCallId2 = RulesEngineForeignCallFacet(address(red)).createForeignCall(
             policyIds[0],
             newfc,

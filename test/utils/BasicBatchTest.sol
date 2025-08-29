@@ -32,7 +32,14 @@ contract BasicBatchTest is RulesEngineCommon {
         address foreignCallAddress = _address;
         bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
-        calls[1] = abi.encodeWithSelector(RulesEngineForeignCallFacet.createForeignCall.selector, 1, fc, "simpleCheck(uint256)");
+        calls[1] = abi.encodeWithSelector(
+            RulesEngineForeignCallFacet.createForeignCall.selector,
+            1,
+            fc,
+            "simpleCheck(uint256)",
+            foreignCallAddress,
+            signature
+        );
         calls[2] = abi.encodeWithSelector(
             RulesEnginePolicyFacet.updatePolicy.selector,
             1,

@@ -661,8 +661,9 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         permissionedForeignCallContract.setForeignCallAdmin(address(0x66667777), foreignCallSelector2);
         assertTrue(
             RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
-                _generateForeignCallId(address(permissionedForeignCallContract), foreignCallSelector2),
-                address(0x66667777)
+                address(permissionedForeignCallContract),
+                address(0x66667777),
+                foreignCallSelector2
             )
         );
 
@@ -672,8 +673,7 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         vm.expectRevert("Not An Authorized Foreign Call Admin");
         RulesEngineForeignCallFacet(address(red)).addAdminToPermissionList(
             _generateForeignCallId(pfcContractAddress, foreignCallSelector),
-            address(0x66666666),
-            foreignCallSelector2
+            address(0x66666666)
         );
 
         // check that the other admin cannot apply to the first foreign call selector
@@ -718,17 +718,13 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         // set oldAdmin as foreign call admin
         permissionedForeignCallContract.setForeignCallAdmin(oldAdmin, selector);
         assertTrue(
-            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
-                _generateForeignCallId(address(permissionedForeignCallContract), selector),
-                oldAdmin
-            )
+            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(address(permissionedForeignCallContract), oldAdmin, selector)
         );
 
         // oldAdmin can add permissions
         RulesEngineForeignCallFacet(address(red)).addAdminToPermissionList(
-            address(permissionedForeignCallContract),
-            address(0x3333),
-            selector
+            _generateForeignCallId(address(permissionedForeignCallContract), selector),
+            address(0x3333)
         );
 
         vm.stopPrank();

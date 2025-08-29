@@ -596,7 +596,13 @@ abstract contract components is RulesEngineCommon {
         ForeignCall memory fc;
         fc = _setUpForeignCallSimple(policyID);
 
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyID,
+            fc,
+            "simpleCheck(uint256)",
+            address(testContract),
+            bytes4(keccak256(bytes("simpleCheck(uint256)")))
+        );
         address foreignCallAddress = address(userContractAddress);
 
         //Prank a random, non-policy admin address
@@ -664,7 +670,7 @@ abstract contract components is RulesEngineCommon {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.returnType = ParamTypes.UINT;
         vm.expectRevert("Address not allowed to be a foreign call");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)", foreignCallAddress, signature);
     }
 
     function testRulesEngine_Unit_PermissionedForeignCall_SetGeneratePolicyAdminRole_Negative()
@@ -689,7 +695,13 @@ abstract contract components is RulesEngineCommon {
         bytes4 signature = bytes4(keccak256(bytes("generatePolicyAdminRole(uint256,address)")));
         fc.returnType = ParamTypes.UINT;
         vm.expectRevert("Address not allowed to be a foreign call");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "generatePolicyAdminRole(uint256,address)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "generatePolicyAdminRole(uint256,address)",
+            foreignCallAddress,
+            signature
+        );
         vm.stopPrank();
     }
 
@@ -974,7 +986,13 @@ abstract contract components is RulesEngineCommon {
         bytes4 signature = bytes4(keccak256(bytes("")));
         fc.returnType = ParamTypes.UINT;
         vm.expectRevert(abi.encodePacked(SIG_REQ));
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "simpleCheck(uint256)",
+            foreignCallAddress,
+            signature
+        );
     }
 
     function testRulesEngine_Unit_Function_Signature_Name_Validation_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -992,7 +1010,7 @@ abstract contract components is RulesEngineCommon {
         bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
         vm.expectRevert(abi.encodePacked(NAME_REQ));
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "", foreignCallAddress, signature);
     }
 
     function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -1015,7 +1033,13 @@ abstract contract components is RulesEngineCommon {
         address foreignCallAddress = address(pfcContractAddress);
         bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
         fc.returnType = ParamTypes.UINT;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "simpleCheck(uint256,uint256)",
+            foreignCallAddress,
+            signature
+        );
     }
 
     function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -1039,7 +1063,13 @@ abstract contract components is RulesEngineCommon {
         bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
         fc.returnType = ParamTypes.UINT;
         vm.expectRevert("Mapped tracker key indices length mismatch.");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "simpleCheck(uint256,uint256)",
+            foreignCallAddress,
+            signature
+        );
     }
 
     function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Negative_ExtraMappedTrackerKey()
@@ -1070,7 +1100,13 @@ abstract contract components is RulesEngineCommon {
         bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
 
         vm.expectRevert("Mapped tracker key indices length mismatch.");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "simpleCheck(uint256,uint256)",
+            foreignCallAddress,
+            signature
+        );
     }
 
     function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Negative_DoubleNestedMappedTrackerKey()
@@ -1100,7 +1136,13 @@ abstract contract components is RulesEngineCommon {
         fc.returnType = ParamTypes.UINT;
 
         vm.expectRevert("Mapped tracker key cannot be double nested");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "simpleCheck(uint256,uint256)",
+            foreignCallAddress,
+            signature
+        );
     }
 
     function testRulesEngine_Unit_Tracker_Name_Validation_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
