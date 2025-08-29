@@ -50,7 +50,7 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
         // Step 3: Store metadata
         _storeForeignCallMetadata(_policyId, foreignCallId, foreignCallName);
 
-        emit ForeignCallCreated(_policyId, foreignCallId);;
+        emit ForeignCallCreated(_policyId, foreignCallId);
     }
 
     /**

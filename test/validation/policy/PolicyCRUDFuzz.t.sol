@@ -438,7 +438,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
 }
 // NOTE for my self
 
-// 3. Add test for CALLING_FUNCTION_ALREADY_EXISTS (done)
 // 4. add test for foreign call already exists (Gordon)
 // 5. add test for foreign call not set (Gordon)
 // 9. Do all the TODOs in the tests.
