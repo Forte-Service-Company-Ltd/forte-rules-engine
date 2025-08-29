@@ -3074,18 +3074,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         _addCallingFunctionToPolicy(policyIds[0]);
-        // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
-        Rule memory rule;
-        // Build the foreign call placeholder
-        rule.placeHolders = new Placeholder[](1);
-        rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[0].typeSpecificIndex = 1;
-        // Build the instruction set for the rule (including placeholders)
-        rule.instructionSet = _createInstructionSet(_transferValue);
-        rule.negEffects = new Effect[](1);
-        rule.negEffects[0] = effectId_revert;
-        // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
         fcArgs[0] = ParamTypes.UINT;
@@ -3096,13 +3084,26 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         fc.parameterTypes = fcArgs;
         fc.returnType = ParamTypes.UINT;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+        uint fcId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
             policyIds[0],
             fc,
             "simpleCheck(uint256)",
             address(testContract),
             bytes4(keccak256(bytes("simpleCheck(uint256)")))
         );
+        // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
+        Rule memory rule;
+        // Build the foreign call placeholder
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
+        rule.placeHolders[0].typeSpecificIndex = fcId;
+        // Build the instruction set for the rule (including placeholders)
+        rule.instructionSet = _createInstructionSet(_transferValue);
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+        // Save the rule
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicyOpen(policyIds[0], ruleIds);
@@ -3134,7 +3135,7 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         fc.parameterTypes = fcArgs;
         fc.returnType = ParamTypes.UINT;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+        uint fcId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
             policyIds[0],
             fc,
             "simpleCheck(uint256)",
@@ -3147,7 +3148,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         // Build the foreign call placeholder
         rule.placeHolders = new Placeholder[](1);
         rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[0].typeSpecificIndex = 1;
+        rule.placeHolders[0].typeSpecificIndex = fcId;
         // Build the instruction set for the rule (including placeholders)
         rule.instructionSet = _createInstructionSet(_transferValue);
         rule.negEffects = new Effect[](1);
