@@ -88,6 +88,21 @@ contract ReentrancyTest is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         _addCallingFunctionToPolicy(policyIds[0]);
+
+        ForeignCallEncodedIndex[] memory encodedIndices = new ForeignCallEncodedIndex[](2);
+        encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+        encodedIndices[0].index = 0;
+        encodedIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
+        encodedIndices[1].index = 1;
+
+        ForeignCall memory fc;
+        fc.encodedIndices = encodedIndices;
+        fc.parameterTypes = pTypes;
+        address foreignCallAddress = address(reentrancy);
+        bytes4 signature = bytes4(keccak256(bytes("transfer(address,uint256)")));
+        fc.returnType = ParamTypes.BOOL;
+        uint fcId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "fcName", foreignCallAddress, signature);
+
         // Rule: amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule;
 
@@ -104,7 +119,7 @@ contract ReentrancyTest is RulesEngineCommon {
         rule.placeHolders[0].pType = ParamTypes.UINT;
         rule.placeHolders[0].typeSpecificIndex = 1;
         rule.placeHolders[1].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[1].typeSpecificIndex = 1;
+        rule.placeHolders[1].typeSpecificIndex = fcId;
         rule.placeHolders[2].flags = FLAG_TRACKER_VALUE;
         rule.placeHolders[2].typeSpecificIndex = 1;
 
@@ -126,20 +141,6 @@ contract ReentrancyTest is RulesEngineCommon {
 
         // Create a tracker for the rule
         RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker1, "totalVolume");
-
-        ForeignCallEncodedIndex[] memory encodedIndices = new ForeignCallEncodedIndex[](2);
-        encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
-        encodedIndices[0].index = 0;
-        encodedIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
-        encodedIndices[1].index = 1;
-
-        ForeignCall memory fc;
-        fc.encodedIndices = encodedIndices;
-        fc.parameterTypes = pTypes;
-        address foreignCallAddress = address(reentrancy);
-        bytes4 signature = bytes4(keccak256(bytes("transfer(address,uint256)")));
-        fc.returnType = ParamTypes.BOOL;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "fcName", foreignCallAddress, signature);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;

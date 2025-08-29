@@ -73,7 +73,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         uint foreignCallId;
         assembly {
-            foreignCallId := or(foreignCallAddress, signature)
+            foreignCallId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, foreignCallId);
         assertEq(foreignCall.getDecodedIntOne(), 4);
@@ -132,7 +132,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         retVals[0] = abi.encode(4);
         retVals[1] = abi.encode(3);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -181,7 +181,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](1);
         retVals[0] = abi.encode(0x567890);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -220,7 +220,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(address(0x1234567), address(0x7654321));
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -255,7 +255,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         retVals[0] = abi.encode(0x567890);
         retVals[1] = abi.encode(0x111111);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -283,7 +283,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode("test");
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -311,7 +311,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](1);
         retVals[0] = abi.encode("tset");
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -343,7 +343,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode("test", "superduper");
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -378,7 +378,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         retVals[0] = abi.encode("tset");
         retVals[1] = abi.encode("rupersuper");
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -412,7 +412,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(array);
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -456,7 +456,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         retArray[4] = 15;
         retVals[0] = abi.encode(retArray);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -518,7 +518,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         retVals[0] = abi.encode(retArray);
         retVals[1] = abi.encode(retArrayTwo);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -571,7 +571,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(array, arrayTwo);
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -624,7 +624,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(array, arrayTwo);
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -691,7 +691,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         retArrayTwo[4] = "dankitycrankitydankitydankitydankity";
         retVals[1] = abi.encode(retArrayTwo);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -733,7 +733,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(array);
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -770,7 +770,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(array);
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -811,7 +811,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(array);
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -853,7 +853,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(bytes("test"));
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -925,7 +925,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(array1, array2, array3, array4);
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1035,7 +1035,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         retVals[0] = abi.encode(array2);
         retVals[1] = abi.encode(array4);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1110,7 +1110,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(array3, array1);
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1165,7 +1165,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(array1, array3);
         bytes[] memory retVals = new bytes[](0);
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1232,7 +1232,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallReturnValue memory retVal;
 
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1299,7 +1299,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory retVal;
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, arguments, retVals, typeSpecificIndices, 1, fcId);
@@ -1327,7 +1327,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1356,7 +1356,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1385,7 +1385,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1414,7 +1414,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1539,7 +1539,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1581,7 +1581,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1623,7 +1623,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1665,7 +1665,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1703,7 +1703,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1739,7 +1739,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1775,7 +1775,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
@@ -1811,7 +1811,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         ForeignCallReturnValue memory result;
         assembly {
-            fcId := or(foreignCallAddress, signature)
+            fcId := or(foreignCallAddress, and(signature, 0xffffffff00000000000000000000000000000000000000000000000000000000))
         }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
