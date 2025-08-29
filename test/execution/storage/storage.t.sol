@@ -154,7 +154,7 @@ abstract contract storageTest is RulesEngineCommon {
 
             fc.parameterTypes = fcArgs;
             address foreignCallAddress = address(pfcContractAddress);
-            bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
+            bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256)")) ^ (bytes32(i) << (256 - 8 * 4)));
             fc.returnType = ParamTypes.UINT;
             id = RulesEngineForeignCallFacet(address(red)).createForeignCall(
                 policyIds[0],
