@@ -248,7 +248,7 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         // Build the foreign call placeholder
         rule.placeHolders = new Placeholder[](2);
         rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
+        rule.placeHolders[0].typeSpecificIndex = foreignCallId;
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1;
 
@@ -315,7 +315,7 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         // Build the foreign call placeholder
         rule1.placeHolders = new Placeholder[](2);
         rule1.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule1.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
+        rule1.placeHolders[0].typeSpecificIndex = foreignCallId;
         rule1.placeHolders[1].pType = ParamTypes.UINT;
         rule1.placeHolders[1].typeSpecificIndex = 1;
         // Build the instruction set for the rule (including placeholders)
@@ -386,7 +386,7 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         // Build the foreign call placeholder
         rule1.placeHolders = new Placeholder[](2);
         rule1.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule1.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
+        rule1.placeHolders[0].typeSpecificIndex = foreignCallId;
         rule1.placeHolders[1].pType = ParamTypes.UINT;
         rule1.placeHolders[1].typeSpecificIndex = 1;
 
@@ -460,7 +460,7 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         // Build the foreign call placeholder
         rule1.placeHolders = new Placeholder[](2);
         rule1.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule1.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
+        rule1.placeHolders[0].typeSpecificIndex = foreignCallId;
         rule1.placeHolders[1].pType = ParamTypes.UINT;
         rule1.placeHolders[1].typeSpecificIndex = 1;
         // Build the instruction set for the rule (including placeholders)
@@ -558,7 +558,7 @@ contract GasReports is GasHelpers, RulesEngineCommon {
             // Build the foreign call placeholder
             rule1.placeHolders = new Placeholder[](2);
             rule1.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-            rule1.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
+            rule1.placeHolders[0].typeSpecificIndex = foreignCallId;
             rule1.placeHolders[1].pType = ParamTypes.UINT;
             rule1.placeHolders[1].typeSpecificIndex = 1;
             // Build the instruction set for the rule (including placeholders)
@@ -968,11 +968,11 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         // Build the foreign call placeholder
         rule.placeHolders = new Placeholder[](4);
         rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
+        rule.placeHolders[0].typeSpecificIndex = foreignCallId;
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1;
         rule.placeHolders[2].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[2].typeSpecificIndex = uint128(foreignCallId2);
+        rule.placeHolders[2].typeSpecificIndex = foreignCallId2;
         rule.placeHolders[3].pType = ParamTypes.UINT;
         rule.placeHolders[3].typeSpecificIndex = 1;
 

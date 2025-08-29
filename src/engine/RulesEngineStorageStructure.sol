@@ -89,7 +89,7 @@ struct Placeholder {
     // The type of parameter the placeholder represents
     ParamTypes pType;
     // The index in the specific array for the specified type;
-    uint128 typeSpecificIndex;
+    uint256 typeSpecificIndex;
     // Packed flags/type:
     // - Bit 0: foreignCall flag
     // - Bit 1: trackerValue flag

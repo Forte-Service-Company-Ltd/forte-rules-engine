@@ -135,7 +135,7 @@ contract NonCustodialMarketplaceTestERC721 is RulesEngineCommon {
             // Build the foreign call placeholder
             rule.placeHolders = new Placeholder[](2);
             rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-            rule.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
+            rule.placeHolders[0].typeSpecificIndex = foreignCallId;
             rule.placeHolders[1].pType = ParamTypes.UINT;
             rule.placeHolders[1].typeSpecificIndex = 1;
 

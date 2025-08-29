@@ -150,7 +150,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
 
             // Placeholder 1: foreign call
             rule.placeHolders[1].pType = ParamTypes.BOOL;
-            rule.placeHolders[1].typeSpecificIndex = uint128(foreignCallId);
+            rule.placeHolders[1].typeSpecificIndex = foreignCallId;
             rule.placeHolders[1].flags = uint8(FLAG_FOREIGN_CALL);
 
             rule.effectPlaceHolders = new Placeholder[](1);
@@ -325,11 +325,11 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
             rule.placeHolders = new Placeholder[](3);
             // Placeholder 0: msg.data
             rule.placeHolders[0].flags = uint8(FLAG_TRACKER_VALUE);
-            rule.placeHolders[0].typeSpecificIndex = uint128(1);
+            rule.placeHolders[0].typeSpecificIndex = 1;
             rule.placeHolders[1].flags = uint8(FLAG_TRACKER_VALUE);
-            rule.placeHolders[1].typeSpecificIndex = uint128(2);
+            rule.placeHolders[1].typeSpecificIndex = 2;
             rule.placeHolders[2].flags = uint8(FLAG_FOREIGN_CALL);
-            rule.placeHolders[2].typeSpecificIndex = uint128(foreignCallId);
+            rule.placeHolders[2].typeSpecificIndex = foreignCallId;
 
             rule.negEffects = new Effect[](1);
             rule.negEffects[0] = effectId_revert;

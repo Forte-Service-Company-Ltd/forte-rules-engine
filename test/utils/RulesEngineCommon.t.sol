@@ -850,7 +850,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         // placeholder for foreign call we just created
         rule.effectPlaceHolders = new Placeholder[](1);
         rule.effectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule.effectPlaceHolders[0].typeSpecificIndex = uint128(foreignCallId);
+        rule.effectPlaceHolders[0].typeSpecificIndex = foreignCallId;
 
         // positive effect
         uint256[] memory effectBytecode = new uint256[](0);
@@ -925,7 +925,7 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         rule.placeHolders = new Placeholder[](1);
         rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
+        rule.placeHolders[0].typeSpecificIndex = foreignCallId;
 
         // instruction set: is "expectedValue" == returned value from foreign call at index 0 ?
         rule.instructionSet = new uint[](7);
@@ -997,7 +997,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         // placeholder for the foreign call
         rule.effectPlaceHolders = new Placeholder[](1);
         rule.effectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule.effectPlaceHolders[0].typeSpecificIndex = uint128(foreignCallId);
+        rule.effectPlaceHolders[0].typeSpecificIndex = foreignCallId;
 
         // positive effect
         uint256[] memory effectBytecode = new uint256[](0);
@@ -1205,9 +1205,9 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         rule.effectPlaceHolders = new Placeholder[](2);
         rule.effectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule.effectPlaceHolders[0].typeSpecificIndex = uint128(mintCallId);
+        rule.effectPlaceHolders[0].typeSpecificIndex = mintCallId;
         rule.effectPlaceHolders[1].flags = FLAG_FOREIGN_CALL;
-        rule.effectPlaceHolders[1].typeSpecificIndex = uint128(banCallId);
+        rule.effectPlaceHolders[1].typeSpecificIndex = banCallId;
 
         {
             // positive effect

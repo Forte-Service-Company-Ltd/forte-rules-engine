@@ -337,7 +337,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[2].pType = ParamTypes.ADDR;
         rule.placeHolders[2].typeSpecificIndex = 2; // additional address param
         rule.placeHolders[2].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[2].typeSpecificIndex = uint128(foreignCallId);
+        rule.placeHolders[2].typeSpecificIndex = foreignCallId;
 
         // Add a negative/positive effects
         rule.negEffects = new Effect[](1);

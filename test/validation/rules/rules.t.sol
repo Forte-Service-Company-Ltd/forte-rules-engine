@@ -707,7 +707,7 @@ abstract contract rules is RulesEngineCommon {
 
             // Placeholder 1: foreign call
             rule.placeHolders[1].pType = ParamTypes.BOOL;
-            rule.placeHolders[1].typeSpecificIndex = uint128(foreignCallId);
+            rule.placeHolders[1].typeSpecificIndex = foreignCallId;
             rule.placeHolders[1].flags = uint8(FLAG_FOREIGN_CALL);
 
             rule.effectPlaceHolders = new Placeholder[](1);
@@ -838,7 +838,7 @@ abstract contract rules is RulesEngineCommon {
 
             // Placeholder 1: foreign call
             rule.placeHolders[1].pType = ParamTypes.BOOL;
-            rule.placeHolders[1].typeSpecificIndex = uint128(foreignCallId);
+            rule.placeHolders[1].typeSpecificIndex = foreignCallId;
             rule.placeHolders[1].flags = uint8(FLAG_FOREIGN_CALL);
 
             rule.effectPlaceHolders = new Placeholder[](1);
@@ -959,7 +959,7 @@ abstract contract rules is RulesEngineCommon {
 
             // Placeholder 1: foreign call
             rule.placeHolders[1].pType = ParamTypes.BOOL;
-            rule.placeHolders[1].typeSpecificIndex = uint128(foreignCallId);
+            rule.placeHolders[1].typeSpecificIndex = foreignCallId;
             rule.placeHolders[1].flags = uint8(FLAG_FOREIGN_CALL);
 
             rule.effectPlaceHolders = new Placeholder[](0);
@@ -1075,7 +1075,7 @@ abstract contract rules is RulesEngineCommon {
 
             // Placeholder 1: foreign call
             rule.placeHolders[1].pType = ParamTypes.BOOL;
-            rule.placeHolders[1].typeSpecificIndex = uint128(foreignCallId);
+            rule.placeHolders[1].typeSpecificIndex = foreignCallId;
             rule.placeHolders[1].flags = uint8(FLAG_FOREIGN_CALL);
 
             rule.effectPlaceHolders = new Placeholder[](0);
@@ -1196,7 +1196,7 @@ abstract contract rules is RulesEngineCommon {
 
             // Placeholder 1: foreign call
             rule.placeHolders[1].pType = ParamTypes.BOOL;
-            rule.placeHolders[1].typeSpecificIndex = uint128(foreignCallId);
+            rule.placeHolders[1].typeSpecificIndex = foreignCallId;
             rule.placeHolders[1].flags = uint8(FLAG_FOREIGN_CALL);
 
             rule.effectPlaceHolders = new Placeholder[](0);
@@ -1317,7 +1317,7 @@ abstract contract rules is RulesEngineCommon {
 
             // Placeholder 1: foreign call
             rule.placeHolders[1].pType = ParamTypes.BOOL;
-            rule.placeHolders[1].typeSpecificIndex = uint128(foreignCallId);
+            rule.placeHolders[1].typeSpecificIndex = foreignCallId;
             rule.placeHolders[1].flags = uint8(FLAG_FOREIGN_CALL);
 
             rule.effectPlaceHolders = new Placeholder[](0);
