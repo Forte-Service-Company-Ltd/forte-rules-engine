@@ -5,22 +5,8 @@ import "test/utils/RulesEngineCommon.t.sol";
 import "test/clientContractExamples/ExampleUserContract.sol";
 import {RulesEngineProcessorLib as ProcessorLib} from "src/engine/facets/RulesEngineProcessorLib.sol";
 import {RulesEngineProcessorFacet as ProcessorFacet} from "src/engine/facets/RulesEngineProcessorFacet.sol";
+import "test/utils/TestProcessorFacet.sol";
 
-/**
- * @dev this is a test facet contract that exposes the internal evaluateForeignCallForRuleExternal function
- * from the RulesEngineProcessorFacet since this function can be tested as a stand-alone function/contract
- */
-contract TestProcessorFacet is ProcessorFacet {
-    function evaluateForeignCallForRuleExternal(
-        ForeignCall memory fc,
-        bytes calldata functionArguments,
-        bytes[] memory retVals,
-        ForeignCallEncodedIndex[] memory metadata,
-        uint256 policyId
-    ) public returns (ForeignCallReturnValue memory retVal) {
-        return super.evaluateForeignCallForRule(fc, functionArguments, retVals, metadata, policyId);
-    }
-}
 
 abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
     ExampleUserContract userContractInternal;

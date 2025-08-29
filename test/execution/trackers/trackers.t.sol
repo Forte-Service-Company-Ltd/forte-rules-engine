@@ -103,7 +103,7 @@ abstract contract trackers is RulesEngineCommon {
         vm.stopSnapshotGas();
         tracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, 1);
         bytes memory comparison = abi.encode("post");
-        assertEq(tracker.trackerValue, comparison);
+        assertEq(tracker.trackerValue, abi.encode(keccak256(comparison)));
     }
 
     function testRulesEngine_Unit_CheckRules_Explicit_WithTrackerUpdateEffectString() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -126,7 +126,7 @@ abstract contract trackers is RulesEngineCommon {
         vm.stopSnapshotGas();
         tracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, 1);
         bytes memory comparison = abi.encode("post");
-        assertEq(tracker.trackerValue, comparison);
+        assertEq(tracker.trackerValue, abi.encode(keccak256(comparison)));
     }
 
     function testRulesEngine_Unit_CheckRules_WithTrackerValue() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -720,11 +720,11 @@ abstract contract trackers is RulesEngineCommon {
 
         // Verify mapping: 0x7654321 → "trackerValue1"
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode("trackerValue1"));
+        assertEq(value, abi.encode(keccak256(abi.encode("trackerValue1"))));
 
         // Verify mapping: 0x1234567 → "trackerValue2"
         value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x1234567)));
-        assertEq(value, abi.encode("trackerValue2"));
+        assertEq(value, abi.encode(keccak256(abi.encode("trackerValue2"))));
 
         assertEq(trackerIndex, 1);
 
@@ -918,7 +918,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertEq(value, abi.encode(string("value1")));
+        assertEq(value, abi.encode(keccak256(abi.encode(string("value1")))));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1049,7 +1049,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(true));
-        assertEq(value, abi.encode(string("enabled")));
+        assertEq(value, abi.encode(keccak256(abi.encode(string("enabled")))));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1119,7 +1119,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(string("user1")));
-        assertEq(value, abi.encode(string("admin")));
+        assertEq(value, abi.encode(keccak256(abi.encode(string("admin")))));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1255,7 +1255,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertEq(value, abi.encode(bytes("response1")));
+        assertEq(value, abi.encode(keccak256(abi.encode(bytes("response1")))));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1377,7 +1377,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
-        assertEq(value, abi.encode(bytes("metadata1")));
+        assertEq(value, abi.encode(keccak256(abi.encode(bytes("metadata1")))));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1511,7 +1511,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(true));
-        assertEq(value, abi.encode(bytes("success")));
+        assertEq(value, abi.encode(keccak256(abi.encode(bytes("success")))));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1579,7 +1579,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(bytes("key1")));
-        assertEq(value, abi.encode(string("name1")));
+        assertEq(value, abi.encode(keccak256(abi.encode(string("name1")))));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1649,7 +1649,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(string("config1")));
-        assertEq(value, abi.encode(bytes("data1")));
+        assertEq(value, abi.encode(keccak256(abi.encode(bytes("data1")))));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1720,7 +1720,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(bytes("hash1")));
-        assertEq(value, abi.encode(bytes("signature1")));
+        assertEq(value, abi.encode(keccak256(abi.encode(bytes("signature1")))));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
