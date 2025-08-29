@@ -2256,6 +2256,8 @@ abstract contract trackers is RulesEngineCommon {
         RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker2, trackerName2);
 
         ForeignCallTestContract foreignCallTestContract = new ForeignCallTestContract();
+        ForeignCallTestContract foreignCallTestContract2 = new ForeignCallTestContract();
+        uint fcId;
         {
             ForeignCall memory foreignCall;
             bytes4 signature = bytes4(keccak256(bytes("testSig(uint256,uint256)")));
@@ -2270,7 +2272,7 @@ abstract contract trackers is RulesEngineCommon {
             foreignCall.encodedIndices[1].eType = EncodedIndexType.TRACKER;
             foreignCall.encodedIndices[1].index = 2;
 
-            RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            fcId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
                 policyIds[0],
                 foreignCall,
                 "testSig",
@@ -2278,10 +2280,11 @@ abstract contract trackers is RulesEngineCommon {
                 signature
             );
         }
+        uint fcId2;
         {
             ForeignCall memory foreignCall2;
-            bytes4 signature2 = bytes4(keccak256(bytes("testSig(uint256,uint256)")));
-            address foreignCallAddress2 = address(foreignCallTestContract);
+            bytes4 signature2 = bytes4(keccak256(bytes("testSig(uint256,uint256)"))); // same sig
+            address foreignCallAddress2 = address(foreignCallTestContract2); // different contract
             foreignCall2.returnType = ParamTypes.UINT;
             foreignCall2.parameterTypes = new ParamTypes[](2);
             foreignCall2.parameterTypes[0] = ParamTypes.UINT;
@@ -2292,7 +2295,7 @@ abstract contract trackers is RulesEngineCommon {
             foreignCall2.encodedIndices[1].eType = EncodedIndexType.TRACKER;
             foreignCall2.encodedIndices[1].index = 2;
 
-            RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            fcId2 = RulesEngineForeignCallFacet(address(red)).createForeignCall(
                 policyIds[0],
                 foreignCall2,
                 "testSig2",
@@ -2331,10 +2334,10 @@ abstract contract trackers is RulesEngineCommon {
             rule.placeHolders[1].typeSpecificIndex = 2;
             rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
             rule.placeHolders[2].pType = ParamTypes.UINT;
-            rule.placeHolders[2].typeSpecificIndex = 1;
+            rule.placeHolders[2].typeSpecificIndex = fcId;
             rule.placeHolders[2].flags = FLAG_FOREIGN_CALL;
             rule.placeHolders[3].pType = ParamTypes.UINT;
-            rule.placeHolders[3].typeSpecificIndex = 2;
+            rule.placeHolders[3].typeSpecificIndex = fcId2;
             rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
 
             rule.effectPlaceHolders = new Placeholder[](4);
@@ -2345,10 +2348,10 @@ abstract contract trackers is RulesEngineCommon {
             rule.effectPlaceHolders[1].typeSpecificIndex = 2;
             rule.effectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
             rule.effectPlaceHolders[2].pType = ParamTypes.UINT;
-            rule.effectPlaceHolders[2].typeSpecificIndex = 1;
+            rule.effectPlaceHolders[2].typeSpecificIndex = fcId;
             rule.effectPlaceHolders[2].flags = FLAG_FOREIGN_CALL;
             rule.effectPlaceHolders[3].pType = ParamTypes.UINT;
-            rule.effectPlaceHolders[3].typeSpecificIndex = 2;
+            rule.effectPlaceHolders[3].typeSpecificIndex = fcId2;
             rule.effectPlaceHolders[3].flags = FLAG_FOREIGN_CALL;
 
             uint256[] memory negInstructionSet = new uint256[](14);

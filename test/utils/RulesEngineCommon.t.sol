@@ -633,19 +633,6 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         _addCallingFunctionToPolicy(policyIds[0]);
 
-        // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
-        Rule memory rule;
-
-        // Build the foreign call placeholder
-        rule.placeHolders = new Placeholder[](1);
-        rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[0].typeSpecificIndex = 1;
-
-        // Build the instruction set for the rule (including placeholders)
-        rule.instructionSet = _createInstructionSet(_amount);
-
-        rule = _setUpEffect(rule, _effectType, isPositive);
-
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
         fcArgs[0] = ParamTypes.UINT;
         ForeignCall memory fc;
@@ -655,13 +642,27 @@ contract RulesEngineCommon is DiamondMine, Test {
 
         fc.parameterTypes = fcArgs;
         fc.returnType = ParamTypes.UINT;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+        uint fcId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
             policyIds[0],
             fc,
             "simpleCheck(uint256)",
             address(testContract),
             bytes4(keccak256(bytes("simpleCheck(uint256)")))
         );
+
+        // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
+        Rule memory rule;
+
+        // Build the foreign call placeholder
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
+        rule.placeHolders[0].typeSpecificIndex = fcId;
+
+        // Build the instruction set for the rule (including placeholders)
+        rule.instructionSet = _createInstructionSet(_amount);
+
+        rule = _setUpEffect(rule, _effectType, isPositive);
+
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
