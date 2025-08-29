@@ -136,11 +136,10 @@ contract ReentrancyTest is RulesEngineCommon {
         ForeignCall memory fc;
         fc.encodedIndices = encodedIndices;
         fc.parameterTypes = pTypes;
-        fc.foreignCallAddress = address(reentrancy);
-        fc.signature = bytes4(keccak256(bytes("transfer(address,uint256)")));
+        address foreignCallAddress = address(reentrancy);
+        bytes4 signature = bytes4(keccak256(bytes("transfer(address,uint256)")));
         fc.returnType = ParamTypes.BOOL;
-        fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "fcName");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "fcName", foreignCallAddress, signature);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
@@ -218,12 +217,11 @@ contract ReentrancyTest is RulesEngineCommon {
         ForeignCall memory fc;
         fc.encodedIndices = encodedIndices;
         fc.parameterTypes = pTypes;
-        fc.foreignCallAddress = address(reentrancy);
-        fc.signature = bytes4(keccak256(bytes("transfer(address,uint256)")));
+        address foreignCallAddress = address(reentrancy);
+        bytes4 signature = bytes4(keccak256(bytes("transfer(address,uint256)")));
         fc.returnType = ParamTypes.BOOL;
-        fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "fcName");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[1], fc, "fcName");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "fcName", foreignCallAddress, signature);
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[1], fc, "fcName", foreignCallAddress, signature);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;

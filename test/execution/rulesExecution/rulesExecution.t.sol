@@ -302,11 +302,16 @@ abstract contract rulesExecution is RulesEngineCommon {
         fc.encodedIndices[0].index = 2;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(testContract2);
-        fc.signature = bytes4(keccak256(bytes("getNaughty(address)")));
+        address foreignCallAddress = address(testContract2);
+        bytes4 signature = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 1;
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "getNaughty(address)",
+            foreignCallAddress,
+            signature
+        );
 
         rule.instructionSet = new uint256[](7);
         rule.instructionSet[0] = uint(LogicalOp.PLH);

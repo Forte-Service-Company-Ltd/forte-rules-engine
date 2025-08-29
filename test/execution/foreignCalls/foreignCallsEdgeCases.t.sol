@@ -24,8 +24,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -36,7 +36,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         typeSpecificIndices[0].index = 0;
         typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig, 1);
+        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, foreignCallAddress, arrayCallingFunction, functionSig, 1);
         // Create array with 5,000 elements
         uint256[] memory extremeArray = new uint256[](5000);
         for (uint256 i = 0; i < 5000; i++) {
@@ -70,8 +70,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -88,7 +88,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             largeStringArray[i] = string(abi.encodePacked("Element_", vm.toString(i)));
         }
 
-        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig, 1);
+        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, foreignCallAddress, arrayCallingFunction, functionSig, 1);
         bytes[] memory retVals = new bytes[](0);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(arrayCallingFunction))), largeStringArray);
 
@@ -117,8 +117,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
@@ -143,7 +143,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             array2[i] = i + 5000;
         }
 
-        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig, 2);
+        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, foreignCallAddress, arrayCallingFunction, functionSig, 2);
         bytes[] memory retVals = new bytes[](0);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(arrayCallingFunction))), array1, array2);
 
@@ -172,8 +172,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -187,7 +187,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         // Create empty array
         uint256[] memory emptyArray = new uint256[](0);
 
-        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig, 1);
+        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, foreignCallAddress, arrayCallingFunction, functionSig, 1);
         bytes[] memory retVals = new bytes[](0);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(arrayCallingFunction))), emptyArray);
 
@@ -210,8 +210,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -228,7 +228,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             maxValueArray[i] = type(uint256).max;
         }
 
-        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, arrayCallingFunction, functionSig, 1);
+        _setUpForeignCallWithAlwaysTrueRuleDynamicArrayArg(fc, foreignCallAddress, arrayCallingFunction, functionSig, 1);
         bytes[] memory retVals = new bytes[](0);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(arrayCallingFunction))), maxValueArray);
 
@@ -259,8 +259,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         // Direct evaluation test - EvmError: Revert silently
         {
             ForeignCall memory fc;
-            fc.foreignCallAddress = address(foreignCall);
-            fc.signature = bytes4(keccak256(bytes(nonExistentFunctionSig)));
+            address foreignCallAddress = address(foreignCall);
+            bytes4 signature = bytes4(keccak256(bytes(nonExistentFunctionSig)));
             fc.parameterTypes = new ParamTypes[](1);
             fc.parameterTypes[0] = ParamTypes.UINT;
             fc.returnType = ParamTypes.BOOL;
@@ -273,7 +273,13 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
             uint256 testValue = 1337;
-            _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, arrayCallingFunction, nonExistentFunctionSig, ParamTypes.UINT);
+            _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(
+                fc,
+                foreignCallAddress,
+                arrayCallingFunction,
+                nonExistentFunctionSig,
+                ParamTypes.UINT
+            );
             bytes[] memory retVals = new bytes[](0);
             bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(arrayCallingFunction))), testValue);
 
@@ -290,8 +296,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             _setupEffectProcessor();
 
             ForeignCall memory fc;
-            fc.foreignCallAddress = address(foreignCall);
-            fc.signature = bytes4(keccak256(bytes(nonExistentFunctionSig)));
+            address foreignCallAddress = address(foreignCall);
+            bytes4 signature = bytes4(keccak256(bytes(nonExistentFunctionSig)));
             fc.parameterTypes = new ParamTypes[](1);
             fc.parameterTypes[0] = ParamTypes.UINT;
             fc.returnType = ParamTypes.BOOL;
@@ -299,7 +305,13 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             fc.encodedIndices[0].index = 1; // Use the amount parameter from transfer function
             fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-            uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, nonExistentFunctionSig);
+            uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                policyId,
+                fc,
+                nonExistentFunctionSig,
+                foreignCallAddress,
+                signature
+            );
 
             Rule memory rule;
             rule.instructionSet = new uint256[](2);
@@ -376,17 +388,14 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         vm.startPrank(policyAdmin);
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(factory);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.returnType = ParamTypes.ADDR;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-        fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         // Calling function evaluation setup
-        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, callingFunc, functionSig, ParamTypes.UINT);
+        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, address(factory), callingFunc, functionSig, ParamTypes.UINT);
 
         // Calling function execution test
         vm.startPrank(address(userContract));
@@ -420,16 +429,21 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
 
             string memory functionSig = "aggressiveRecursiveCall(uint256)";
             ForeignCall memory fc;
-            fc.foreignCallAddress = address(recursiveContract);
-            fc.signature = bytes4(keccak256(bytes(functionSig)));
+            address foreignCallAddress = address(recursiveContract);
+            bytes4 signature = bytes4(keccak256(bytes(functionSig)));
             fc.parameterTypes = new ParamTypes[](1);
             fc.parameterTypes[0] = ParamTypes.UINT;
             fc.returnType = ParamTypes.UINT;
             fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-            fc.encodedIndices[0].index = 1;
             fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-            uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig);
+            uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                policyId,
+                fc,
+                functionSig,
+                foreignCallAddress,
+                signature
+            );
 
             Rule memory rule;
             rule.instructionSet = new uint256[](2);
@@ -499,8 +513,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes("testSig(uint256)"))); // This returns bool
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes("testSig(uint256)"))); // This returns bool
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.returnType = ParamTypes.VOID; // Expecting no return data
@@ -515,7 +529,13 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
 
         // Modify foreign call to use transfer amount parameter
         fc.encodedIndices[0].index = 1;
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "testSig(uint256)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "testSig(uint256)",
+            foreignCallAddress,
+            signature
+        );
 
         Rule memory rule;
         rule.instructionSet = new uint256[](2);
@@ -585,8 +605,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         string memory functionSig = "testSig(string)"; // Returns bool
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.STR;
         fc.returnType = ParamTypes.UINT; // Expecting uint256 but function returns bool
@@ -611,7 +631,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         rule.placeHolders = new Placeholder[](1);
         rule.placeHolders[0].pType = ParamTypes.UINT; // Expecting uint but will get bool
         rule.placeHolders[0].typeSpecificIndex = uint128(
-            RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig)
+            RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig, foreignCallAddress, signature)
         );
         rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
 
@@ -681,8 +701,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         string memory functionSig = "deepRecursiveCall(uint256)";
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(deepContract);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(deepContract);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.returnType = ParamTypes.UINT;
@@ -701,7 +721,13 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
 
         // Modify foreign call to use transfer amount parameter
         fc.encodedIndices[0].index = 1; // Use amount parameter from transfer
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig);
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            functionSig,
+            foreignCallAddress,
+            signature
+        );
 
         Rule memory rule;
         rule.instructionSet = new uint256[](2);
@@ -770,8 +796,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         string memory functionSig = "testSig(uint256)";
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.STR; // Function expects UINT
         fc.returnType = ParamTypes.BOOL;
@@ -797,7 +823,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         rule.placeHolders = new Placeholder[](1);
         rule.placeHolders[0].pType = ParamTypes.BOOL;
         rule.placeHolders[0].typeSpecificIndex = uint128(
-            RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig)
+            RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig, foreignCallAddress, signature)
         );
         rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
 

@@ -16,9 +16,10 @@ contract TestProcessorFacet is ProcessorFacet {
         bytes calldata functionArguments,
         bytes[] memory retVals,
         ForeignCallEncodedIndex[] memory metadata,
-        uint256 policyId
+        uint256 policyId,
+        uint256 foreignCallId
     ) public returns (ForeignCallReturnValue memory retVal) {
-        return super.evaluateForeignCallForRule(fc, functionArguments, retVals, metadata, policyId);
+        return super.evaluateForeignCallForRule(fc, functionArguments, retVals, metadata, policyId, foreignCallId);
     }
 }
 
@@ -34,15 +35,12 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-        fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, callingFuncSig, functionSig, ParamTypes.UINT);
+        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, address(foreignCall), callingFuncSig, functionSig, ParamTypes.UINT);
         bytes memory vals = abi.encode(1);
         bytes[] memory retVals = new bytes[](0);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))), 1);
@@ -59,8 +57,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -73,7 +71,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](1);
         retVals[0] = abi.encode(4);
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        uint foreignCallId;
+        assembly {
+            foreignCallId := or(foreignCallAddress, signature)
+        }
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, foreignCallId);
         assertEq(foreignCall.getDecodedIntOne(), 4);
     }
 
@@ -83,8 +85,6 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.parameterTypes[1] = ParamTypes.UINT;
@@ -95,7 +95,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.encodedIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
 
         uint testValue = 4;
-        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, callingFuncSig, functionSig, ParamTypes.UINT);
+        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, address(foreignCall), callingFuncSig, functionSig, ParamTypes.UINT);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))), testValue, testValue + 1);
 
         vm.startPrank(address(userContract));
@@ -111,8 +111,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.parameterTypes[1] = ParamTypes.UINT;
@@ -130,8 +131,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](2);
         retVals[0] = abi.encode(4);
         retVals[1] = abi.encode(3);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getDecodedIntOne(), 4);
         assertEq(foreignCall.getDecodedIntTwo(), 3);
     }
@@ -142,15 +146,12 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.ADDR;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-        fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         address testValue = address(0x1234567);
-        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, callingFuncSig, functionSig, ParamTypes.ADDR);
+        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, address(foreignCall), callingFuncSig, functionSig, ParamTypes.ADDR);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))), testValue);
 
         vm.startPrank(address(userContract));
@@ -165,8 +166,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.ADDR;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -178,11 +180,14 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(address(0x1234567));
         bytes[] memory retVals = new bytes[](1);
         retVals[0] = abi.encode(0x567890);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         address testValue = address(0x1234567);
-        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, callingFuncSig, functionSig, ParamTypes.ADDR);
+        _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, foreignCallAddress, callingFuncSig, functionSig, ParamTypes.ADDR);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))), testValue);
 
         vm.startPrank(address(userContract));
@@ -196,8 +201,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.ADDR;
         fc.parameterTypes[1] = ParamTypes.ADDR;
@@ -213,8 +219,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         typeSpecificIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
         bytes memory vals = abi.encode(address(0x1234567), address(0x7654321));
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getDecodedAddr(), address(0x1234567));
         assertEq(foreignCall.getDecodedAddrTwo(), address(0x7654321));
@@ -225,8 +234,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.ADDR;
         fc.parameterTypes[1] = ParamTypes.ADDR;
@@ -244,8 +254,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](2);
         retVals[0] = abi.encode(0x567890);
         retVals[1] = abi.encode(0x111111);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getDecodedAddr(), address(0x567890));
         assertEq(foreignCall.getDecodedAddrTwo(), address(0x111111));
@@ -256,8 +269,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.STR;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -268,8 +282,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         typeSpecificIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         bytes memory vals = abi.encode("test");
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getDecodedStrOne(), "test");
     }
@@ -279,8 +296,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.STR;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -292,8 +310,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode("test");
         bytes[] memory retVals = new bytes[](1);
         retVals[0] = abi.encode("tset");
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getDecodedStrOne(), "tset");
     }
@@ -303,8 +324,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.STR;
         fc.parameterTypes[1] = ParamTypes.STR;
@@ -320,8 +342,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         typeSpecificIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
         bytes memory vals = abi.encode("test", "superduper");
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getDecodedStrOne(), "test");
         assertEq(foreignCall.getDecodedStrTwo(), "superduper");
@@ -332,8 +357,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.STR;
         fc.parameterTypes[1] = ParamTypes.STR;
@@ -351,8 +377,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](2);
         retVals[0] = abi.encode("tset");
         retVals[1] = abi.encode("rupersuper");
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getDecodedStrOne(), "tset");
         assertEq(foreignCall.getDecodedStrTwo(), "rupersuper");
@@ -363,8 +392,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -381,8 +411,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         array[4] = 5;
         bytes memory vals = abi.encode(array);
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getInternalArrayUint()[0], 1);
         assertEq(foreignCall.getInternalArrayUint()[1], 2);
@@ -396,8 +429,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -421,8 +455,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         retArray[3] = 14;
         retArray[4] = 15;
         retVals[0] = abi.encode(retArray);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getInternalArrayUint()[0], 11);
         assertEq(foreignCall.getInternalArrayUint()[1], 12);
@@ -436,8 +473,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
@@ -479,8 +517,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         retArrayTwo[4] = 20;
         retVals[0] = abi.encode(retArray);
         retVals[1] = abi.encode(retArrayTwo);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getInternalArrayUint()[0], 11);
         assertEq(foreignCall.getInternalArrayUint()[1], 12);
@@ -499,8 +540,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
@@ -528,8 +570,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         arrayTwo[4] = 10;
         bytes memory vals = abi.encode(array, arrayTwo);
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getInternalArrayUint()[0], 1);
         assertEq(foreignCall.getInternalArrayUint()[1], 2);
@@ -548,8 +593,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
         fc.parameterTypes[1] = ParamTypes.DYNAMIC_TYPE_ARRAY;
@@ -577,8 +623,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         arrayTwo[4] = "muperduperduperduperduperduperduperduperduperduperduperduperlongstring";
         bytes memory vals = abi.encode(array, arrayTwo);
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getInternalArrayStr()[0], "test");
         assertEq(foreignCall.getInternalArrayStr()[1], "superduper");
@@ -597,8 +646,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
         fc.parameterTypes[1] = ParamTypes.DYNAMIC_TYPE_ARRAY;
@@ -640,8 +690,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         retArrayTwo[3] = "dankitycrankitydankitydankity";
         retArrayTwo[4] = "dankitycrankitydankitydankitydankity";
         retVals[1] = abi.encode(retArrayTwo);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getInternalArrayStr()[0], "crank");
         assertEq(foreignCall.getInternalArrayStr()[1], "crankitydankity");
@@ -660,8 +713,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -678,8 +732,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         array[4] = address(0x3333333);
         bytes memory vals = abi.encode(array);
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(foreignCall.getInternalArrayAddr()[0], address(0x1234567));
         assertEq(foreignCall.getInternalArrayAddr()[1], address(0x7654321));
@@ -693,8 +750,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -711,9 +769,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         array[4] = "superduperduperduperduperduperduperduperduperlongstring";
         bytes memory vals = abi.encode(array);
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getInternalArrayStr()[0], "test");
         assertEq(foreignCall.getInternalArrayStr()[1], "superduper");
         assertEq(foreignCall.getInternalArrayStr()[2], "superduperduper");
@@ -726,8 +786,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -749,9 +810,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         );
         bytes memory vals = abi.encode(array);
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getInternalArrayBytes()[0], abi.encodeWithSelector(bytes4(keccak256(bytes("test(uint256)"))), 1));
         assertEq(foreignCall.getInternalArrayBytes()[1], abi.encodeWithSelector(bytes4(keccak256(bytes("superduper(uint256)"))), 2));
         assertEq(foreignCall.getInternalArrayBytes()[2], abi.encodeWithSelector(bytes4(keccak256(bytes("superduperduper(uint256)"))), 3));
@@ -775,8 +838,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.BYTES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -788,9 +852,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         bytes memory vals = abi.encode(bytes("test"));
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getDecodedBytes(), bytes("test"));
     }
 
@@ -799,8 +865,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](4);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
@@ -857,9 +924,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         );
         bytes memory vals = abi.encode(array1, array2, array3, array4);
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getInternalArrayUint()[0], 1);
         assertEq(foreignCall.getInternalArrayUint()[1], 2);
         assertEq(foreignCall.getInternalArrayUint()[2], 3);
@@ -902,8 +971,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](4);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
@@ -964,9 +1034,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](2);
         retVals[0] = abi.encode(array2);
         retVals[1] = abi.encode(array4);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getInternalArrayUint()[0], 1);
         assertEq(foreignCall.getInternalArrayUint()[1], 2);
         assertEq(foreignCall.getInternalArrayUint()[2], 3);
@@ -1005,8 +1077,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
         fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
@@ -1036,9 +1109,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         array1[4] = 5;
         bytes memory vals = abi.encode(array3, array1);
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getInternalArrayStr()[0], "test");
         assertEq(foreignCall.getInternalArrayStr()[1], "superduper");
         assertEq(foreignCall.getInternalArrayStr()[2], "superduperduper");
@@ -1056,8 +1131,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](2);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.parameterTypes[1] = ParamTypes.DYNAMIC_TYPE_ARRAY;
@@ -1088,9 +1164,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         bytes memory vals = abi.encode(array1, array3);
         bytes[] memory retVals = new bytes[](0);
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getInternalArrayUint()[0], 1);
         assertEq(foreignCall.getInternalArrayUint()[1], 2);
         assertEq(foreignCall.getInternalArrayUint()[2], 3);
@@ -1109,8 +1187,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
 
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](5);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.parameterTypes[1] = ParamTypes.STR;
@@ -1152,9 +1231,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
         ForeignCallReturnValue memory retVal;
 
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getDecodedIntOne(), 1);
         assertEq(foreignCall.getDecodedIntTwo(), 2);
         assertEq(foreignCall.getDecodedStrOne(), "test");
@@ -1168,9 +1249,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         string memory functionSig = "testSig(uint256,string,uint256,string,address)";
 
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
-        fc.foreignCallIndex = 0;
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.returnType = ParamTypes.BOOL;
 
         fc.parameterTypes = new ParamTypes[](5);
@@ -1217,8 +1298,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         // Build the mapping between calling function arguments and foreign call arguments
 
         ForeignCallReturnValue memory retVal;
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, arguments, retVals, typeSpecificIndices, 1);
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, arguments, retVals, typeSpecificIndices, 1, fcId);
         console2.logBytes(retVal.value);
     }
 
@@ -1226,8 +1310,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         string memory functionSig = "testSigWithBool(bool)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.BOOL;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -1241,9 +1326,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(true);
         bytes[] memory retVals = new bytes[](0);
 
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getDecodedBool(), true);
     }
 
@@ -1251,8 +1338,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         string memory functionSig = "testSigWithUint128(uint128)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -1267,9 +1355,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(testValue);
         bytes[] memory retVals = new bytes[](0);
 
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getDecodedUint128(), testValue);
     }
 
@@ -1277,8 +1367,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         string memory functionSig = "testSigWithUint64(uint64)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -1293,9 +1384,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(testValue);
         bytes[] memory retVals = new bytes[](0);
 
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         assertEq(foreignCall.getDecodedUint64(), testValue);
     }
 
@@ -1303,8 +1396,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         string memory functionSig = "testSigWithEmptyArray(uint256[])";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -1319,9 +1413,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(emptyArray);
         bytes[] memory retVals = new bytes[](0);
 
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
-
+        testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
         // Validate the array is indeed empty after execution
         uint256[] memory resultArray = foreignCall.getInternalArrayUint();
         assertEq(resultArray.length, 0, "Internal array should be empty");
@@ -1338,14 +1434,22 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         // test the getter as a foreign call
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](0); // No parameters
         fc.returnType = ParamTypes.ADDR; // Returning address
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFuncSig))));
 
-        _setUpForeignCallAndCompareAgainstExpected(fc, callingFuncSig, functionSig, ParamTypes.ADDR, uint(uint160(testAddress)));
+        _setUpForeignCallAndCompareAgainstExpected(
+            fc,
+            foreignCallAddress,
+            callingFuncSig,
+            functionSig,
+            ParamTypes.ADDR,
+            uint(uint160(testAddress))
+        );
         // This does NOT revert - it will execute but the foreign call will fail gracefully
         vm.startPrank(address(userContract));
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
@@ -1371,8 +1475,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         string memory functionSig = "testSigReturningString(uint256)";
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.returnType = ParamTypes.STR;
@@ -1386,6 +1491,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         _setUpForeignCallAndCompareAgainstExpected(
             fc,
+            foreignCallAddress,
             callingFuncSig,
             functionSig,
             ParamTypes.UINT,
@@ -1419,8 +1525,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         // test the getter as a foreign call
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](0); // No parameters
         fc.returnType = ParamTypes.STATIC_TYPE_ARRAY; // Returning uint256 array
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
@@ -1431,9 +1538,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         ForeignCallReturnValue memory result;
-        // =
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.STATIC_TYPE_ARRAY));
 
@@ -1458,8 +1567,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         // test the getter as a foreign call
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](0); // No parameters
         fc.returnType = ParamTypes.STATIC_TYPE_ARRAY; // Returning address array
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
@@ -1470,9 +1580,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         ForeignCallReturnValue memory result;
-
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.STATIC_TYPE_ARRAY));
 
@@ -1497,8 +1609,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         // test the getter as a foreign call
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](0); // No parameters
         fc.returnType = ParamTypes.DYNAMIC_TYPE_ARRAY; // Returning string array
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
@@ -1509,8 +1622,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         ForeignCallReturnValue memory result;
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.DYNAMIC_TYPE_ARRAY));
 
@@ -1535,8 +1651,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         // test the getter as a foreign call
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](0); // No parameters
         fc.returnType = ParamTypes.DYNAMIC_TYPE_ARRAY; // Returning bytes array
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
@@ -1547,8 +1664,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         ForeignCallReturnValue memory result;
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.DYNAMIC_TYPE_ARRAY));
 
@@ -1569,8 +1689,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         // test the getter as a foreign call
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](0); // No parameters
         fc.returnType = ParamTypes.BOOL; // Returning bool
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
@@ -1581,8 +1702,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         ForeignCallReturnValue memory result;
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.BOOL));
 
@@ -1601,8 +1725,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         // test the getter as a foreign call
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](0); // No parameters
         fc.returnType = ParamTypes.BYTES; // Returning bytes
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
@@ -1613,8 +1738,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         ForeignCallReturnValue memory result;
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.BYTES));
 
@@ -1633,8 +1761,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         // test the getter as a foreign call
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](0); // No parameters
         fc.returnType = ParamTypes.UINT; // Returning uint128 (treated as UINT)
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
@@ -1645,8 +1774,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         ForeignCallReturnValue memory result;
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.UINT));
 
@@ -1665,8 +1797,9 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         // test the getter as a foreign call
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes(functionSig)));
+        address foreignCallAddress = address(foreignCall);
+        bytes4 signature = bytes4(keccak256(bytes(functionSig)));
+        uint fcId;
         fc.parameterTypes = new ParamTypes[](0); // No parameters
         fc.returnType = ParamTypes.UINT; // Returning uint64 (treated as UINT)
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
@@ -1677,8 +1810,11 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes[] memory retVals = new bytes[](0);
 
         ForeignCallReturnValue memory result;
+        assembly {
+            fcId := or(foreignCallAddress, signature)
+        }
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
-        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
+        result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1, fcId);
 
         assertEq(uint256(result.pType), uint256(ParamTypes.UINT));
 

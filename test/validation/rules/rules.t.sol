@@ -669,8 +669,8 @@ abstract contract rules is RulesEngineCommon {
                 encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES; // Regular parameter
                 encodedIndices[0].index = 2;
                 ForeignCall memory fc;
-                fc.foreignCallAddress = foreignCallTarget;
-                fc.signature = setMsgDataSelector;
+                address foreignCallAddress = foreignCallTarget;
+                bytes4 signature = setMsgDataSelector;
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
@@ -795,8 +795,8 @@ abstract contract rules is RulesEngineCommon {
                 encodedIndices[0].eType = EncodedIndexType.GLOBAL_VAR;
                 encodedIndices[0].index = GLOBAL_MSG_DATA;
                 ForeignCall memory fc;
-                fc.foreignCallAddress = foreignCallTarget;
-                fc.signature = setMsgDataSelector;
+                address foreignCallAddress = foreignCallTarget;
+                bytes4 signature = setMsgDataSelector;
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
@@ -921,8 +921,8 @@ abstract contract rules is RulesEngineCommon {
                 encodedIndices[0].eType = EncodedIndexType.GLOBAL_VAR;
                 encodedIndices[0].index = GLOBAL_MSG_SENDER;
                 ForeignCall memory fc;
-                fc.foreignCallAddress = foreignCallTarget;
-                fc.signature = setUserAddressSelector;
+                address foreignCallAddress = foreignCallTarget;
+                bytes4 signature = setUserAddressSelector;
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
@@ -1031,8 +1031,8 @@ abstract contract rules is RulesEngineCommon {
                 encodedIndices[0].eType = EncodedIndexType.GLOBAL_VAR;
                 encodedIndices[0].index = GLOBAL_BLOCK_TIMESTAMP;
                 ForeignCall memory fc;
-                fc.foreignCallAddress = foreignCallTarget;
-                fc.signature = setNumberSelector;
+                address foreignCallAddress = foreignCallTarget;
+                bytes4 signature = setNumberSelector;
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
@@ -1146,8 +1146,8 @@ abstract contract rules is RulesEngineCommon {
                 encodedIndices[0].eType = EncodedIndexType.GLOBAL_VAR;
                 encodedIndices[0].index = GLOBAL_BLOCK_NUMBER;
                 ForeignCall memory fc;
-                fc.foreignCallAddress = foreignCallTarget;
-                fc.signature = setNumberSelector;
+                address foreignCallAddress = foreignCallTarget;
+                bytes4 signature = setNumberSelector;
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
@@ -1261,8 +1261,8 @@ abstract contract rules is RulesEngineCommon {
                 encodedIndices[0].eType = EncodedIndexType.GLOBAL_VAR;
                 encodedIndices[0].index = GLOBAL_TX_ORIGIN;
                 ForeignCall memory fc;
-                fc.foreignCallAddress = foreignCallTarget;
-                fc.signature = setUserAddressSelector;
+                address foreignCallAddress = foreignCallTarget;
+                bytes4 signature = setUserAddressSelector;
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;

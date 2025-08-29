@@ -545,15 +545,14 @@ abstract contract components is RulesEngineCommon {
         uint256 policyID = _createBlankPolicy();
         uint256 foreignCallId = 1;
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(testContract);
-        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
+        address foreignCallAddress = address(testContract);
+        bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
         vm.expectEmit(true, false, false, false);
         emit ForeignCallCreated(policyID, foreignCallId);
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
@@ -567,7 +566,7 @@ abstract contract components is RulesEngineCommon {
         fc = _setUpForeignCallSimple(policyID);
 
         uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
-        fc.foreignCallAddress = address(userContractAddress);
+        address foreignCallAddress = address(userContractAddress);
         RulesEnginePolicyFacet(address(red)).cementPolicy(policyID);
         vm.expectRevert("Not allowed for cemented policy");
         RulesEngineForeignCallFacet(address(red)).updateForeignCall(policyID, foreignCallId, fc);
@@ -580,7 +579,7 @@ abstract contract components is RulesEngineCommon {
         fc = _setUpForeignCallSimple(policyID);
 
         uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
-        fc.foreignCallAddress = address(userContractAddress);
+        address foreignCallAddress = address(userContractAddress);
 
         //Prank a random, non-policy admin address
         vm.startPrank(address(0x1337));
@@ -637,15 +636,14 @@ abstract contract components is RulesEngineCommon {
         vm.startPrank(policyAdmin);
         uint256 policyID = _createBlankPolicy();
         ForeignCall memory fc;
-        fc.foreignCallAddress = address(red);
-        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
+        address foreignCallAddress = address(red);
+        bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
         vm.expectRevert("Address not allowed to be a foreign call");
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
     }
@@ -668,10 +666,9 @@ abstract contract components is RulesEngineCommon {
         fc.encodedIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(red);
-        fc.signature = bytes4(keccak256(bytes("generatePolicyAdminRole(uint256,address)")));
+        address foreignCallAddress = address(red);
+        bytes4 signature = bytes4(keccak256(bytes("generatePolicyAdminRole(uint256,address)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
         vm.expectRevert("Address not allowed to be a foreign call");
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "generatePolicyAdminRole(uint256,address)");
         vm.stopPrank();
@@ -954,10 +951,9 @@ abstract contract components is RulesEngineCommon {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(testContract);
-        fc.signature = bytes4(keccak256(bytes("")));
+        address foreignCallAddress = address(testContract);
+        bytes4 signature = bytes4(keccak256(bytes("")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
         vm.expectRevert(abi.encodePacked(SIG_REQ));
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
     }
@@ -973,10 +969,9 @@ abstract contract components is RulesEngineCommon {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(testContract);
-        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
+        address foreignCallAddress = address(testContract);
+        bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
         vm.expectRevert(abi.encodePacked(NAME_REQ));
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "");
     }
@@ -998,10 +993,9 @@ abstract contract components is RulesEngineCommon {
         fc.mappedTrackerKeyIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(pfcContractAddress);
-        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
+        address foreignCallAddress = address(pfcContractAddress);
+        bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
     }
 
@@ -1022,10 +1016,9 @@ abstract contract components is RulesEngineCommon {
         fc.mappedTrackerKeyIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(pfcContractAddress);
-        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
+        address foreignCallAddress = address(pfcContractAddress);
+        bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 0;
         vm.expectRevert("Mapped tracker key indices length mismatch.");
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
     }
@@ -1054,8 +1047,8 @@ abstract contract components is RulesEngineCommon {
         fc.mappedTrackerKeyIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(pfcContractAddress);
-        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
+        address foreignCallAddress = address(pfcContractAddress);
+        bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
 
         vm.expectRevert("Mapped tracker key indices length mismatch.");
         RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
@@ -1083,8 +1076,8 @@ abstract contract components is RulesEngineCommon {
         fc.mappedTrackerKeyIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = address(pfcContractAddress);
-        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
+        address foreignCallAddress = address(pfcContractAddress);
+        bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
         fc.returnType = ParamTypes.UINT;
 
         vm.expectRevert("Mapped tracker key cannot be double nested");

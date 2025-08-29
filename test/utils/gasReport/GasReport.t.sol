@@ -231,10 +231,9 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = _contractAddress;
-        fc.signature = bytes4(keccak256(bytes("getNaughty(address)")));
+        address foreignCallAddress = _contractAddress;
+        bytes4 signature = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 1;
         uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
 
         // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
@@ -293,10 +292,9 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = _contractAddress;
-        fc.signature = bytes4(keccak256(bytes("getNaughty(address)")));
+        address foreignCallAddress = _contractAddress;
+        bytes4 signature = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 1;
         uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
 
         // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
@@ -360,10 +358,9 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = _contractAddress;
-        fc.signature = bytes4(keccak256(bytes("getNaughty(address)")));
+        address foreignCallAddress = _contractAddress;
+        bytes4 signature = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 1;
         uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
 
         // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
@@ -428,10 +425,9 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = _contractAddress;
-        fc.signature = bytes4(keccak256(bytes("getNaughty(address)")));
+        address foreignCallAddress = _contractAddress;
+        bytes4 signature = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 1;
         uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
 
         // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
@@ -516,10 +512,9 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = _contractAddress;
-        fc.signature = bytes4(keccak256(bytes("getNaughty(address)")));
+        address foreignCallAddress = _contractAddress;
+        bytes4 signature = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.UINT;
-        fc.foreignCallIndex = 1;
         uint256 foreignCallId;
         {
             foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
@@ -906,28 +901,37 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         fcArgs[0] = ParamTypes.ADDR;
         ForeignCall memory fc;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-        fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         fc.parameterTypes = fcArgs;
-        fc.foreignCallAddress = _contractAddress;
-        fc.signature = bytes4(keccak256(bytes("getNaughty(address)")));
+        address foreignCallAddress = _contractAddress;
+        bytes4 signatureNaughty = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.BOOL;
-        fc.foreignCallIndex = 1;
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "getNaughty(address)",
+            foreignCallAddress,
+            signatureNaughty
+        );
 
         // Add additional check for second address
         ForeignCall memory newfc;
         newfc.encodedIndices = new ForeignCallEncodedIndex[](1);
-        newfc.encodedIndices[0].index = 2;
         newfc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
         newfc.parameterTypes = fcArgs;
-        newfc.foreignCallAddress = _contractAddress;
-        newfc.signature = bytes4(keccak256(bytes("getNaughty(address)")));
+        address newForeignCallAddress = _contractAddress;
+        bytes4 newSignature = bytes4(keccak256(bytes("getNaughty(address)")));
         newfc.returnType = ParamTypes.BOOL;
         newfc.foreignCallIndex = 1;
-        uint256 foreignCallId2 = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], newfc, "getNaughty(address)");
+        uint256 foreignCallId2 = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            newfc,
+            "getNaughty(address)",
+            newForeignCallAddress,
+            newSignature
+        );
 
         // Rule: FC:OFAClist(address) > bool -> revert -> transfer(address _to, uint256 amount) returns (bool)
         Rule memory rule;

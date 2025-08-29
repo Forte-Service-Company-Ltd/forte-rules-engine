@@ -2257,8 +2257,8 @@ abstract contract trackers is RulesEngineCommon {
 
         ForeignCallTestContract foreignCallTestContract = new ForeignCallTestContract();
         ForeignCall memory foreignCall;
-        foreignCall.signature = bytes4(keccak256(bytes("testSig(uint256,uint256)")));
-        foreignCall.foreignCallAddress = address(foreignCallTestContract);
+        bytes4 signature = bytes4(keccak256(bytes("testSig(uint256,uint256)")));
+        address foreignCallAddress = address(foreignCallTestContract);
         foreignCall.returnType = ParamTypes.UINT;
         foreignCall.parameterTypes = new ParamTypes[](2);
         foreignCall.parameterTypes[0] = ParamTypes.UINT;
@@ -2269,11 +2269,11 @@ abstract contract trackers is RulesEngineCommon {
         foreignCall.encodedIndices[1].eType = EncodedIndexType.TRACKER;
         foreignCall.encodedIndices[1].index = 2;
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], foreignCall, "testSig");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], foreignCall, "testSig", foreignCallAddress, signature);
 
         ForeignCall memory foreignCall2;
-        foreignCall2.signature = bytes4(keccak256(bytes("testSig(uint256,uint256)")));
-        foreignCall2.foreignCallAddress = address(foreignCallTestContract);
+        bytes4 signature2 = bytes4(keccak256(bytes("testSig(uint256,uint256)")));
+        address foreignCallAddress2 = address(foreignCallTestContract);
         foreignCall2.returnType = ParamTypes.UINT;
         foreignCall2.parameterTypes = new ParamTypes[](2);
         foreignCall2.parameterTypes[0] = ParamTypes.UINT;
@@ -2284,7 +2284,13 @@ abstract contract trackers is RulesEngineCommon {
         foreignCall2.encodedIndices[1].eType = EncodedIndexType.TRACKER;
         foreignCall2.encodedIndices[1].index = 2;
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], foreignCall2, "testSig2");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            foreignCall2,
+            "testSig2",
+            foreignCallAddress2,
+            signature2
+        );
 
         Rule memory rule;
         // PLH 2, NUM 1234, EQ 0, 1, PLH 3, NUM 1234, EQ 4, 5, AND 3, 6

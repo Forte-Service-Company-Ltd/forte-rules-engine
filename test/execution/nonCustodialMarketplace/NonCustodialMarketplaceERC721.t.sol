@@ -101,14 +101,15 @@ contract NonCustodialMarketplaceTestERC721 is RulesEngineCommon {
             fc.encodedIndices[0].index = uint(_ruleCheckTarget);
             fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES; // the from, to, and msg.sender are all part of the regular encoded values (calldata)
             fc.parameterTypes = fcArgs;
-            fc.foreignCallAddress = _contractAddress;
-            fc.signature = sig;
+            address foreignCallAddress = _contractAddress;
+            bytes4 signature = sig;
             fc.returnType = ParamTypes.UINT;
-            fc.foreignCallIndex = 1;
             foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
                 policyIds[0],
                 fc,
-                checkingAddress ? "getNaughty(address)" : "onTheNaughtyIdList(uint256)"
+                checkingAddress ? "getNaughty(address)" : "onTheNaughtyIdList(uint256)",
+                foreignCallAddress,
+                signature
             );
         }
 

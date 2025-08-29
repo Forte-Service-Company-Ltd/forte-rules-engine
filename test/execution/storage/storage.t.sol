@@ -153,11 +153,16 @@ abstract contract storageTest is RulesEngineCommon {
             fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
             fc.parameterTypes = fcArgs;
-            fc.foreignCallAddress = address(pfcContractAddress);
-            fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
+            address foreignCallAddress = address(pfcContractAddress);
+            bytes4 signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
             fc.returnType = ParamTypes.UINT;
-            fc.foreignCallIndex = 0;
-            id = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+            id = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                policyIds[0],
+                fc,
+                "simpleCheck(uint256)",
+                foreignCallAddress,
+                signature
+            );
             assertEq(uint(RulesEngineForeignCallFacet(address(red)).getForeignCall(policyIds[0], id).parameterTypes[0]), uint(fcArgs[0]));
         }
     }

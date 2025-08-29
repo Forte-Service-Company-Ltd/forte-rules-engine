@@ -24,7 +24,9 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
      * @param _policyId The policy ID the foreign call will be mapped to.
      * @param _foreignCall The definition of the foreign call to create.
      * @param foreignCallName The name of the foreign call
-     * @return The index of the created foreign call.
+     * @param foreignCallAddress address to make the external to
+     * @param foreignCallSelector the selector of the function to call in the contract at the foreignCallAddress
+     * @return foreignCallId The index of the created foreign call.
      */
     function createForeignCall(
         uint256 _policyId,
