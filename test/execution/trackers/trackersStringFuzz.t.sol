@@ -60,17 +60,11 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             rule.instructionSet[6] = 1;
         }
 
-        rule.rawData.argumentTypes = new ParamTypes[](1);
-        rule.rawData.dataValues = new bytes[](1);
-        rule.rawData.instructionSetIndex = new uint256[](1);
-        rule.rawData.argumentTypes[0] = ParamTypes.STR;
-        rule.rawData.dataValues[0] = abi.encode(_input);
-        rule.rawData.instructionSetIndex[0] = 3;
-
         // Build the calling function argument placeholder
         if (_testType == TestType.STRING_FROM_PLACEHOLDER) {
             rule.placeHolders = new Placeholder[](1);
             rule.placeHolders[0].pType = ParamTypes.STR;
+            // We're using the type specific index of the calldata that's pointed to by the string in calling function 2
             rule.placeHolders[0].typeSpecificIndex = 1;
         } else if (_testType == TestType.BYTES_FROM_PLACEHOLDER) {
             rule.placeHolders = new Placeholder[](1);
