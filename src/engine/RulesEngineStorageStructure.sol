@@ -18,7 +18,7 @@ struct InitializedStorage {
 /**
  * NUM - a static value will be in the next slot in the instruction set
  * NOT - perform a logical NOT with the value at the memory address denoted by the next slot in the instruction set
- * PLH - insert a placeholder value into the next memory slot
+ * PLH - insert the placeholder value at the index indicated in the next slot in the instruction set into the next memory slot
  * ASSIGN - assign the value at the memory address denoted by the next slot in the instruction set to the memory address denoted by the slot after that
  * PLHM - insert a mapped placeholder value into the next memory slot
  * ADD - add the values at the memory addresses denoted by the next two slots in the instruction set
