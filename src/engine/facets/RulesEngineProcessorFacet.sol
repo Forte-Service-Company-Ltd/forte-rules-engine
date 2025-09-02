@@ -470,11 +470,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         // Data validation will always ensure ruleCount will be less than MAX_LOOP
         for (uint256 i = 0; i < ruleCount; i++) {
             Rule storage rule = _ruleData[_applicableRules[i]].rule;
-            if (!_evaluateIndividualRule(rule, _policyId, _callingFunctionArgs)) {
+            if (!_evaluateIndividualRule(rule, _policyId, _callingFunctionArgs, BuildArgumentsPlaceholders.CONDITIONAL)) {
                 _retVal = false;
-                _doEffects(rule, _policyId, rule.negEffects, _callingFunctionArgs);
+                _doEffects(rule, _policyId, rule.negEffects, _callingFunctionArgs, BuildArgumentsPlaceholders.NEGATIVE_EFFECT);
             } else {
-                _doEffects(rule, _policyId, rule.posEffects, _callingFunctionArgs);
+                _doEffects(rule, _policyId, rule.posEffects, _callingFunctionArgs, BuildArgumentsPlaceholders.POSITIVE_EFFECT);
             }
         }
     }
@@ -484,14 +484,16 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _policyId Policy id being evaluated.
      * @param _rule the rule structure containing the instruction set, with placeholders, to execute
      * @param _callingFunctionArgs the values to replace the placeholders in the instruction set with.
+     * @param _kind the type of placeholders to build
      * @return response the result of the rule condition evaluation
      */
     function _evaluateIndividualRule(
         Rule storage _rule,
         uint256 _policyId,
-        bytes calldata _callingFunctionArgs
+        bytes calldata _callingFunctionArgs,
+        BuildArgumentsPlaceholders _kind
     ) internal returns (bool response) {
-        (bytes[] memory ruleArgs, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, false);
+        (bytes[] memory ruleArgs, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, _kind);
         response = _run(_rule.instructionSet, placeholders, _policyId, ruleArgs);
     }
 
@@ -500,7 +502,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _rule The storage reference to the Rule struct containing the rule's details.
      * @param _policyId The unique identifier of the policy associated with the rule.
      * @param _callingFunctionArgs The calldata containing the arguments for the calling function.
-     * @param _effect A boolean indicating whether the rule has an effect or not.
+     * @param _kind the type of placeholders to build
      * @return A tuple containing:
      *         - An array of bytes representing the constructed arguments.
      *         - An array of Placeholder structs used for argument substitution.
@@ -509,14 +511,17 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         Rule storage _rule,
         uint256 _policyId,
         bytes calldata _callingFunctionArgs,
-        bool _effect
+        BuildArgumentsPlaceholders _kind
     ) internal returns (bytes[] memory, Placeholder[] memory) {
         Placeholder[] memory placeHolders;
-        if (_effect) {
-            placeHolders = _rule.effectPlaceHolders;
-        } else {
+        if (_kind == BuildArgumentsPlaceholders.CONDITIONAL) {
             placeHolders = _rule.placeHolders;
+        } else if (_kind == BuildArgumentsPlaceholders.POSITIVE_EFFECT) {
+            placeHolders = _rule.positiveEffectPlaceHolders;
+        } else {
+            placeHolders = _rule.negativeEffectPlaceHolders;
         }
+
         bytes[] memory retVals = new bytes[](placeHolders.length);
         // Data validation will alway ensure ruleCount will be less than MAX_LOOP
         ForeignCallEncodedIndex[] memory metadata = new ForeignCallEncodedIndex[](placeHolders.length);
@@ -948,7 +953,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _effects An array of effects to be applied as part of the rule execution.
      * @param _callingFunctionArgs Encoded calldata containing arguments for the calling function.
      */
-    function _doEffects(Rule storage _rule, uint256 _policyId, Effect[] memory _effects, bytes calldata _callingFunctionArgs) internal {
+    function _doEffects(Rule storage _rule, uint256 _policyId, Effect[] memory _effects, bytes calldata _callingFunctionArgs, BuildArgumentsPlaceholders _kind) internal {
         // Load the Effect data from storage
         // Data validation will always ensure _effects.length will be less than MAX_LOOP
         for (uint256 i = 0; i < _effects.length; i++) {
@@ -959,7 +964,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 } else if (effect.effectType == EffectTypes.EVENT) {
                     _buildEvent(_rule, _effects[i].dynamicParam, _policyId, _effects[i].text, _effects[i], _callingFunctionArgs);
                 } else {
-                    _evaluateExpression(_rule, _policyId, _callingFunctionArgs, effect.instructionSet);
+                    _evaluateExpression(_rule, _policyId, _callingFunctionArgs, effect.instructionSet, _kind);
                 }
             }
         }
@@ -1061,7 +1066,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes calldata _callingFunctionArgs,
         uint256[] memory _instructionSet
     ) internal {
-        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, true);
+        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, BuildArgumentsPlaceholders.POSITIVE_EFFECT);
         if (_instructionSet.length > 1) {
             _run(_instructionSet, placeholders, _policyId, effectArguments);
         }

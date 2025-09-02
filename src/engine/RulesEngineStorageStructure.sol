@@ -90,6 +90,12 @@ enum EffectTypes {
     EXPRESSION
 }
 
+enum BuildArgumentsPlaceholders {
+    CONDITIONAL,
+    POSITIVE_EFFECT,
+    NEGATIVE_EFFECT
+}
+
 /**
  * Structure used to represent the placeholders in the rule instruction set
  * provides the information needed to fill them in with values at run time.
@@ -347,7 +353,8 @@ struct Rule {
     // For example if the argument in question is the 2nd address in the calling function the placeHolder would be:
     // pType = parameterType.ADDR index = 1
     Placeholder[] placeHolders;
-    Placeholder[] effectPlaceHolders;
+    Placeholder[] positiveEffectPlaceHolders;
+    Placeholder[] negativeEffectPlaceHolders;
     // List of all positive effects
     Effect[] posEffects;
     // List of all negative effects

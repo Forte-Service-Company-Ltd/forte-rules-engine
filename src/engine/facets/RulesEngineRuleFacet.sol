@@ -219,7 +219,8 @@ contract RulesEngineRuleFacet is FacetCommonImports {
     function _updateTrackerIdMapping(RuleStorage storage _data, uint256 _policyId, uint256 _ruleId) internal {
         TrackerStorage storage trackerData = lib._getTrackerStorage();
         Placeholder[] memory placeHolders = _data.ruleStorageSets[_policyId][_ruleId].rule.placeHolders;
-        Placeholder[] memory effectPlaceHolders = _data.ruleStorageSets[_policyId][_ruleId].rule.effectPlaceHolders;
+        Placeholder[] memory positiveEffectPlaceHolders = _data.ruleStorageSets[_policyId][_ruleId].rule.positiveEffectPlaceHolders;
+        Placeholder[] memory negativeEffectPlaceHolders = _data.ruleStorageSets[_policyId][_ruleId].rule.negativeEffectPlaceHolders;
         // check if a tracker is used in the instruction set of the rule
         // if so, we update the mapping to point to the rule ID
         for (uint256 i = 0; i < placeHolders.length; i++) {
@@ -242,11 +243,11 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         }
 
         // repeat for effectPlaceHolders
-        for (uint256 k = 0; k < effectPlaceHolders.length; k++) {
+        for (uint256 k = 0; k < positiveEffectPlaceHolders.length; k++) {
             // check for tracker flag on placeholder
-            if (FacetUtils._isTrackerValue(effectPlaceHolders[k])) {
+            if (FacetUtils._isTrackerValue(positiveEffectPlaceHolders[k])) {
                 // retrieve the tracker ID from the placeholder
-                uint256 trackerId = effectPlaceHolders[k].typeSpecificIndex;
+                uint256 trackerId = positiveEffectPlaceHolders[k].typeSpecificIndex;
                 // check if the rule ID is already in the array
                 bool exists = false;
                 for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][trackerId].length; l++) {
@@ -259,6 +260,25 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                 if (!exists) {
                     trackerData.trackerIdToRuleIds[_policyId][trackerId].push(_ruleId);
                 }
+            }
+        }
+        for (uint256 k = 0; k < negativeEffectPlaceHolders.length; k++) {
+            // check for tracker flag on placeholder
+            if (FacetUtils._isTrackerValue(negativeEffectPlaceHolders[k])) {
+                // retrieve the tracker ID from the placeholder
+                uint256 trackerId = negativeEffectPlaceHolders[k].typeSpecificIndex;
+            }
+            // check if the rule ID is already in the array
+            bool exists = false;
+            for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][trackerId].length; l++) {
+                // check if the rule ID is already in the array
+                if (trackerData.trackerIdToRuleIds[_policyId][trackerId][l] == _ruleId) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                trackerData.trackerIdToRuleIds[_policyId][trackerId].push(_ruleId);
             }
         }
     }
