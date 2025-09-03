@@ -19,3 +19,7 @@ node_modules
 /dependencies
 
 .DS_Store
+
+bin/
+pyvenv.cfg
+lib/python*

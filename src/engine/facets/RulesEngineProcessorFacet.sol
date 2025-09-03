@@ -556,6 +556,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         return (retVals, placeHolders);
     }
 
+    event Log(string, uint);
+    event Log(string, bytes);
+
     /**
      * @dev Internal function to decode the arguments and do the comparisons.
      * @param _prog An array of uint256 representing the program to be executed.
@@ -580,19 +583,21 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
 
             if (op == LogicalOp.PLH || op == LogicalOp.PLHM) {
                 // Placeholder format is: get the index of the argument in the array. For example, PLH 0 is the first argument in the arguments array and its type and value
-                uint256 pli;
+                uint256 pli = _prog[idx + 1];
+                emit Log("pli", pli);
                 bytes memory value;
                 ParamTypes typ;
                 if (op == LogicalOp.PLHM) {
                     uint key = mem[_prog[idx + 2]];
-                    (value, typ) = _getMappedTrackerValue(_policyId, _prog[idx + 1], key);
+                    (value, typ) = _getMappedTrackerValue(_policyId, pli, key);
                     idx += 3;
                 } else {
-                    pli = _prog[idx + 1];
+                    // pli = _prog[idx + 1];
                     value = _arguments[pli];
                     typ = _placeHolders[pli].pType;
                     idx += 2;
                 }
+                emit Log("value", value);
                 if (typ == ParamTypes.UINT || typ == ParamTypes.ADDR || typ == ParamTypes.BOOL) {
                     v = abi.decode(value, (uint256));
                 } else if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {
@@ -693,6 +698,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             } else {
                 revert(INVALID_INSTRUCTION);
             }
+            emit Log("opi", opi);
+            emit Log("v", v);
             mem[opi] = v;
             opi += 1;
         }
