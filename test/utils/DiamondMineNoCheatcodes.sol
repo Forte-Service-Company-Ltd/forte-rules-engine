@@ -123,8 +123,12 @@ contract DiamondMineNoCheatcodes is Script {
             selectors[4] = RulesEngineRuleFacet.getAllRules.selector;
             selectors[5] = RulesEngineRuleFacet.getRuleMetadata.selector;
             return selectors;
+        } else if (keccak256(abi.encodePacked(facet)) == keccak256(abi.encodePacked("NativeFacet"))) {
+            bytes4[] memory selectors = new bytes4[](2);
+            selectors[0] = ERC173Facet.owner.selector;
+            selectors[1] = ERC173Facet.transferOwnership.selector;
+            return selectors;
         }
-
         // Default return for unknown facets - empty array
         return new bytes4[](0);
     }
@@ -196,6 +200,14 @@ contract DiamondMineNoCheatcodes is Script {
                 facetAddress: address(new RulesEngineRuleFacet()),
                 action: FacetCutAction.Add,
                 functionSelectors: createSelectorArrayNoCheatcodes("RulesEngineRuleFacet")
+            })
+        );
+
+        _ruleProcessorFacetCutsNoCheatcodes.push(
+            FacetCut({
+                facetAddress: address(new NativeFacet()),
+                action: FacetCutAction.Add,
+                functionSelectors: createSelectorArrayNoCheatcodes("NativeFacet")
             })
         );
 
