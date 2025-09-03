@@ -2678,6 +2678,102 @@ abstract contract trackers is RulesEngineCommon {
         assertEq(nonEmptyResultArray[1], 2);
     }
 
+    function testRulesEngine_Unit_TrackerAsConditional_String() public ifDeploymentTestsEnabled resetsGlobalVariables {
+        /// create tracker value (string value)
+        string memory val1 = "trackerValue1";
+        bytes memory trackerValue = abi.encode(val1); // value for 0x7654321
+
+        uint256 policyId = _createBlankPolicy();
+        _addCallingFunctionToPolicy(policyId);
+        /// create tracker struct for address→string mapping
+        Trackers memory tracker;
+        tracker.pType = ParamTypes.STR; // tracker stores string values
+        tracker.trackerValue = trackerValue;
+
+        /// create tracker name
+        string memory trackerName = "tracker1";
+
+        /// set up rule
+        uint256 trackerIndex = RulesEngineComponentFacet(address(red)).createTracker(
+            policyId,
+            tracker,
+            trackerName,
+            TrackerArrayTypes.VOID
+        );
+        {
+            // validate tracker
+            Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
+            assertFalse(returnedTracker.mapped);
+            assertEq(returnedTracker.trackerValue, abi.encode(val1));
+            assertEq(trackerIndex, 1);
+        }
+
+        // Rule execution
+        // setup
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+
+        Rule memory rule;
+        uint256 ruleId;
+        {
+            rule.placeHolders = new Placeholder[](2);
+            // placeholder zero is the address of the receipient
+            rule.placeHolders[0].pType = ParamTypes.STR;
+            rule.placeHolders[0].typeSpecificIndex = 2; // data
+            // placeholder 1 is the mapped tracker value of the _to_ address
+            rule.placeHolders[1].pType = ParamTypes.STR;
+            rule.placeHolders[1].typeSpecificIndex = uint128(trackerIndex);
+            rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
+
+            // compare string value passed as data in an ERC20 transfer against the tracker value. True if they are the same. False otherwise
+            rule.instructionSet = new uint256[](7);
+            rule.instructionSet[0] = uint256(LogicalOp.PLH); // we place the key at mem[0] (the data of transfer)
+            rule.instructionSet[1] = 0; // placeholder[0]
+            rule.instructionSet[2] = uint256(LogicalOp.PLH); // we get the value of the mapped tracker, and place it in mem[1]
+            rule.instructionSet[3] = 1; // get the key from mem[0]
+            rule.instructionSet[4] = uint256(LogicalOp.EQ); // we compare mem[1] agains mem[0]
+            rule.instructionSet[5] = 1;
+            rule.instructionSet[6] = 0;
+
+            rule.negEffects = new Effect[](1);
+            rule.negEffects[0] = effectId_revert;
+
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        }
+        {
+            uint[][] memory _ruleIds = new uint[][](1);
+            _ruleIds[0] = new uint[](1);
+            _ruleIds[0][0] = ruleId;
+            bytes4[] memory _callingFunctions = new bytes4[](1);
+            _callingFunctions[0] = bytes4(keccak256(bytes(callingFunction)));
+            uint[] memory _callingFunctionIds = new uint[](1);
+            _callingFunctionIds[0] = 1;
+            RulesEnginePolicyFacet(address(red)).updatePolicy(
+                policyId,
+                _callingFunctions,
+                _callingFunctionIds,
+                _ruleIds,
+                PolicyType.CLOSED_POLICY,
+                policyName,
+                policyDescription
+            );
+        }
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+        vm.stopPrank();
+
+        // positive case: we check that the tracker value for addy1 is val1 (it should)
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0xbabe), 1000, abi.encode(val1)); // 1000 is a random value completely irrelevant for the test
+        vm.startPrank(userContractAddress);
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+
+        // negative case: we check that the tracker value for addy2 is val1 (it shouldn't. We expect a revert in this case)
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0xbabe), 1000, abi.encode(val1)); // 1000 is a random value completely irrelevant for the test
+        vm.startPrank(userContractAddress);
+        vm.expectRevert(abi.encodePacked(revert_text));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+    }
+
     function testRulesEngine_Unit_StaticArrayTracker_LargeArray() public ifDeploymentTestsEnabled endWithStopPrank {
         // create a blank policy
         uint256 policyId = _createBlankPolicy();
