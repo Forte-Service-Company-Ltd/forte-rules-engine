@@ -559,8 +559,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         return (retVals, placeHolders);
     }
 
-    event Log(string, bytes);
-    event Log(string, uint);
     /**
      * @dev Internal function to decode the arguments and do the comparisons.
      * @param _prog An array of uint256 representing the program to be executed.
@@ -594,16 +592,12 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 } else {
                     pli = _prog[idx + 1];
                     value = _arguments[pli];
-                    emit Log("pli", pli);
-                    emit Log("value", value);
                     typ = _placeHolders[pli].pType;
                     idx += 2;
                 }
                 if (typ == ParamTypes.UINT || typ == ParamTypes.ADDR || typ == ParamTypes.BOOL) {
-                    emit Log("value type", uint(typ));
                     v = abi.decode(value, (uint256));
                 } else if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {
-                    emit Log("reference type", uint(typ));
                     // Convert string to uint256 for direct comparison using == and != operations
                     (bool isTrackerValue, , ) = _extractFlags(_placeHolders[pli]);
                     // PLHM can be assumed to always be a tracker value as it is only used in mapped trackers
@@ -614,7 +608,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                         v = uint256(keccak256(value));
                     }
                 } else if (typ == ParamTypes.STATIC_TYPE_ARRAY || typ == ParamTypes.DYNAMIC_TYPE_ARRAY) {
-                    emit Log("array type", uint(typ));
                     // length of array for direct comparison using == and != operations
                     v = abi.decode(value, (uint256));
                 }
@@ -702,10 +695,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             } else {
                 revert(INVALID_INSTRUCTION);
             }
-            emit Log("opi", opi);
             mem[opi] = v;
             opi += 1;
-            emit Log("v", v);
         }
         return ProcessorLib._uintToBool(mem[opi - 1]);
     }
