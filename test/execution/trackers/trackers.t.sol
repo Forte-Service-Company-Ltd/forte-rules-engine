@@ -764,11 +764,14 @@ abstract contract trackers is RulesEngineCommon {
         uint256 ruleId;
         {
             rule.placeHolders = new Placeholder[](2);
+            // we add a fake placeholder to test that its type doesn't affect the outcome
+            // rule.placeHolders[0].pType = ParamTypes.ADDR;
+            // rule.placeHolders[0].typeSpecificIndex = 0; // _to_ address
             // placeholder zero is the address of the receipient
             rule.placeHolders[0].pType = ParamTypes.ADDR;
             rule.placeHolders[0].typeSpecificIndex = 0; // _to_ address
             // placeholder 1 is the mapped tracker value of the _to_ address
-            rule.placeHolders[1].pType = ParamTypes.UINT;
+            rule.placeHolders[1].pType = ParamTypes.STR;
             rule.placeHolders[1].typeSpecificIndex = uint128(trackerIndex);
             rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
 

@@ -559,6 +559,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         return (retVals, placeHolders);
     }
 
+    event Log(string, uint);
+    event Log(string, bytes);
+
     /**
      * @dev Internal function to decode the arguments and do the comparisons.
      * @param _prog An array of uint256 representing the program to be executed.
@@ -581,20 +584,21 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             LogicalOp op = LogicalOp(_prog[idx]);
 
             if (op == LogicalOp.PLH || op == LogicalOp.PLHM) {
-                // Placeholder format is: get the index of the argument in the array. For example, PLH 0 is the first argument in the arguments array and its type and value                
-                uint256 pli;
+                // Placeholder format is: get the index of the argument in the array. For example, PLH 0 is the first argument in the arguments array and its type and value
+                uint256 pli = _prog[idx + 1];
                 bytes memory value;
                 ParamTypes typ;
                 if (op == LogicalOp.PLHM) {
                     uint key = mem[_prog[idx + 2]];
-                    (value, typ) = _getMappedTrackerValue(_policyId, _prog[idx + 1], key);
+                    (value, typ) = _getMappedTrackerValue(_policyId, pli, key);
                     idx += 3;
                 } else {
-                    pli = _prog[idx + 1];
+                    // pli = _prog[idx + 1];
                     value = _arguments[pli];
                     typ = _placeHolders[pli].pType;
                     idx += 2;
                 }
+                emit Log("value", value);
                 if (typ == ParamTypes.UINT || typ == ParamTypes.ADDR || typ == ParamTypes.BOOL) {
                     v = abi.decode(value, (uint256));
                 } else if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {
@@ -695,6 +699,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             } else {
                 revert(INVALID_INSTRUCTION);
             }
+            emit Log("opi", opi);
+            emit Log("v", v);
             mem[opi] = v;
             opi += 1;
         }
@@ -953,7 +959,13 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _effects An array of effects to be applied as part of the rule execution.
      * @param _callingFunctionArgs Encoded calldata containing arguments for the calling function.
      */
-    function _doEffects(Rule storage _rule, uint256 _policyId, Effect[] memory _effects, bytes calldata _callingFunctionArgs, PlaceholderType _kind) internal {
+    function _doEffects(
+        Rule storage _rule,
+        uint256 _policyId,
+        Effect[] memory _effects,
+        bytes calldata _callingFunctionArgs,
+        PlaceholderType _kind
+    ) internal {
         // Load the Effect data from storage
         // Data validation will always ensure _effects.length will be less than MAX_LOOP
         for (uint256 i = 0; i < _effects.length; i++) {
@@ -1004,9 +1016,20 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _message Event Message String
      * @param _callingFunctionArgs calling function arguments
      */
-    function _fireDynamicEvent(Rule storage _rule, uint256 _policyId, bytes32 _message, bytes calldata _callingFunctionArgs, PlaceholderType _kind) internal {
+    function _fireDynamicEvent(
+        Rule storage _rule,
+        uint256 _policyId,
+        bytes32 _message,
+        bytes calldata _callingFunctionArgs,
+        PlaceholderType _kind
+    ) internal {
         // Build the effect arguments struct for event parameters:
-        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, _kind);
+        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(
+            _rule,
+            _policyId,
+            _callingFunctionArgs,
+            _kind
+        );
         // Data validation will always ensure effectArguments.length will be less than MAX_LOOP
         for (uint256 i = 0; i < effectArguments.length; i++) {
             // loop through parameter types and set eventParam
@@ -1069,7 +1092,12 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256[] memory _instructionSet,
         PlaceholderType _kind
     ) internal {
-        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, _kind);
+        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(
+            _rule,
+            _policyId,
+            _callingFunctionArgs,
+            _kind
+        );
         if (_instructionSet.length > 1) {
             _run(_instructionSet, placeholders, _policyId, effectArguments);
         }
