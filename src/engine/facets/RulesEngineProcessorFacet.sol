@@ -193,7 +193,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             }
             (mappedTrackerValue, valueType) = _getMappedTrackerValue(policyId, trackerIndex, mappedTrackerKey);
         } else {
-            if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {
+            if (mappedTrackerKeyEI.eType != EncodedIndexType.TRACKER && (typ == ParamTypes.STR || typ == ParamTypes.BYTES)) {
                 mappedTrackerKey = uint256(keccak256(retVals[mappedTrackerKeyEI.index]));
             } else {
                 mappedTrackerKey = uint256(bytes32(retVals[mappedTrackerKeyEI.index]));
@@ -616,7 +616,12 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 uint256 pli = _prog[idx + 2];
                 tt == TrackerTypes.MEMORY
                     ? _updateTrackerValue(_policyId, _prog[idx + 1], mem[pli])
-                    : _updateTrackerValue(_policyId, _prog[idx + 1], _arguments[pli], _placeHolders[pli].flags != FacetUtils.FLAG_TRACKER_VALUE);
+                    : _updateTrackerValue(
+                        _policyId,
+                        _prog[idx + 1],
+                        _arguments[pli],
+                        _placeHolders[pli].flags != FacetUtils.FLAG_TRACKER_VALUE
+                    );
                 idx += 4;
             } else if (op == LogicalOp.TRUM) {
                 // update the tracker value
@@ -725,7 +730,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             trk.trackerValue = abi.encode(keccak256(_trackerValue));
         } else {
             trk.trackerValue = _trackerValue;
-        }   
+        }
     }
 
     /**

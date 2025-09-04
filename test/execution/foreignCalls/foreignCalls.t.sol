@@ -223,7 +223,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         }
     }
 
-    function testRulesEngine_Unit_ForeignCall_MappedTrackerAsParam_MultipleMappedTrackerKeys_Positive()
+    function testRulesEngine_Unit_ForeignCall_MappedTrackerAsParam_MultipleMappedTrackerKeys_EncodedValueType_Positive()
         public
         ifDeploymentTestsEnabled
         endWithStopPrank
@@ -406,6 +406,203 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
 
             assertEq(PermissionedForeignCallTestContract(pfcContractAddress).getDecodedIntOne(), 1000000000);
             assertEq(PermissionedForeignCallTestContract(pfcContractAddress).getDecodedIntTwo(), 33);
+            assertEq(PermissionedForeignCallTestContract(pfcContractAddress).getDecodedStrOne(), str);
+            assertEq(PermissionedForeignCallTestContract(pfcContractAddress).getDecodedStrTwo(), str2);
+            assertEq(PermissionedForeignCallTestContract(pfcContractAddress).getDecodedAddr(), to);
+        }
+    }
+
+    function testRulesEngine_Unit_ForeignCall_MappedTrackerAsParam_MultipleMappedTrackerKeys_TrackerType_Positive()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+        resetsGlobalVariables
+    {
+        uint256 policyId;
+        uint256 ruleId;
+        uint256 callingFunctionId;
+
+        {
+            vm.startPrank(policyAdmin);
+
+            policyId = _createBlankPolicy();
+
+            ParamTypes[] memory fcArgs = new ParamTypes[](5);
+            fcArgs[0] = ParamTypes.UINT;
+            fcArgs[1] = ParamTypes.STR;
+            fcArgs[2] = ParamTypes.UINT;
+            fcArgs[3] = ParamTypes.STR;
+            fcArgs[4] = ParamTypes.ADDR;
+
+            uint256 foreignCallId;
+            {
+                ForeignCall memory fc;
+                fc.encodedIndices = new ForeignCallEncodedIndex[](5);
+                fc.encodedIndices[0].index = 1;
+                fc.encodedIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
+                fc.encodedIndices[1].index = 2;
+                fc.encodedIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
+                fc.encodedIndices[2].index = 2;
+                fc.encodedIndices[2].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
+                fc.encodedIndices[3].index = 3;
+                fc.encodedIndices[3].eType = EncodedIndexType.ENCODED_VALUES;
+                fc.encodedIndices[4].index = 1;
+                fc.encodedIndices[4].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
+                fc.mappedTrackerKeyIndices = new ForeignCallEncodedIndex[](3);
+                fc.mappedTrackerKeyIndices[0].index = 1;
+                fc.mappedTrackerKeyIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+                fc.mappedTrackerKeyIndices[1].index = 2; // Use placeholder index 2 (tracker3) value as key
+                fc.mappedTrackerKeyIndices[1].eType = EncodedIndexType.TRACKER;
+                fc.mappedTrackerKeyIndices[2].index = 4;
+                fc.mappedTrackerKeyIndices[2].eType = EncodedIndexType.ENCODED_VALUES;
+                fc.foreignCallAddress = address(pfcContractAddress);
+                fc.signature = bytes4(keccak256(bytes("testSig(uint256,string,uint256,string,address)")));
+                fc.returnType = ParamTypes.UINT;
+                fc.parameterTypes = fcArgs;
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "testSig(uint256,string,uint256,string,address)"
+                );
+            }
+
+            {
+                // Same tracker setup as original, but tracker2 now uses BYTES keys instead of ADDR
+                Trackers memory tracker1;
+                tracker1.pType = ParamTypes.UINT;
+                tracker1.trackerKeyType = ParamTypes.UINT;
+                tracker1.mapped = true;
+
+                bytes[] memory tracker1Keys = new bytes[](2);
+                tracker1Keys[0] = abi.encode(11);
+                tracker1Keys[1] = abi.encode(22);
+
+                bytes[] memory tracker1Values = new bytes[](2);
+                tracker1Values[0] = abi.encode(1000000000);
+                tracker1Values[1] = abi.encode(0x1234567);
+
+                Trackers memory tracker2;
+                tracker2.pType = ParamTypes.UINT;
+                tracker2.trackerKeyType = ParamTypes.BYTES;
+                tracker2.mapped = true;
+
+                bytes[] memory tracker2Keys = new bytes[](2);
+                tracker2Keys[0] = abi.encode(bytes("TEST")); // BYTES key
+                tracker2Keys[1] = abi.encode(bytes("TEST1234")); // BYTES key that matches tracker3
+
+                bytes[] memory tracker2Values = new bytes[](2);
+                tracker2Values[0] = abi.encode(22);
+                tracker2Values[1] = abi.encode(33); // This should be retrieved when using tracker3 as key
+
+                RulesEngineComponentFacet(address(red)).createMappedTracker(
+                    policyId,
+                    tracker1,
+                    "tracker1",
+                    tracker1Keys,
+                    tracker1Values,
+                    TrackerArrayTypes.VOID
+                );
+                RulesEngineComponentFacet(address(red)).createMappedTracker(
+                    policyId,
+                    tracker2,
+                    "tracker2",
+                    tracker2Keys,
+                    tracker2Values,
+                    TrackerArrayTypes.VOID
+                );
+
+                // Add tracker3 with BYTES value that will be used as key for tracker2 lookup
+                // The key is that tracker3 contains the BYTES data "TEST1234" which should match tracker2's key
+                Trackers memory tracker3;
+                tracker3.pType = ParamTypes.BYTES;
+                tracker3.trackerValue = abi.encode(bytes("TEST1234")); // Store the actual BYTES data, not the hash
+                RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker3, "tracker3", TrackerArrayTypes.VOID);
+            }
+
+            Rule memory rule;
+            rule.instructionSet = new uint256[](7);
+            rule.instructionSet[0] = uint(LogicalOp.PLH);
+            rule.instructionSet[1] = 3; // Use foreign call placeholder (index 3)
+            rule.instructionSet[2] = uint(LogicalOp.NUM);
+            rule.instructionSet[3] = 0;
+            rule.instructionSet[4] = uint(LogicalOp.EQ);
+            rule.instructionSet[5] = 0;
+            rule.instructionSet[6] = 1;
+
+            rule.placeHolders = new Placeholder[](4);
+            rule.placeHolders[0].flags = uint8(FLAG_TRACKER_VALUE);
+            rule.placeHolders[0].typeSpecificIndex = uint128(1);
+            rule.placeHolders[1].flags = uint8(FLAG_TRACKER_VALUE);
+            rule.placeHolders[1].typeSpecificIndex = uint128(2);
+            rule.placeHolders[2].flags = uint8(FLAG_TRACKER_VALUE);
+            rule.placeHolders[2].typeSpecificIndex = uint128(3);
+            rule.placeHolders[3].flags = uint8(FLAG_FOREIGN_CALL);
+            rule.placeHolders[3].typeSpecificIndex = uint128(foreignCallId);
+
+            rule.negEffects = new Effect[](1);
+            rule.negEffects[0] = effectId_revert;
+            rule.posEffects = new Effect[](1);
+            rule.posEffects[0] = effectId_event;
+
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
+
+            {
+                bytes4 transferSelector = ExampleUserContract.transferSigTest.selector;
+                ParamTypes[] memory pTypes = new ParamTypes[](5);
+                pTypes[0] = ParamTypes.ADDR;
+                pTypes[1] = ParamTypes.UINT;
+                pTypes[2] = ParamTypes.STR;
+                pTypes[3] = ParamTypes.STR;
+                pTypes[4] = ParamTypes.UINT;
+                callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                    policyId,
+                    transferSelector,
+                    pTypes,
+                    "transferSigTest(address,uint256,string,string)",
+                    ""
+                );
+
+                bytes4[] memory selectors = new bytes4[](1);
+                selectors[0] = transferSelector;
+                uint256[] memory functionIds = new uint256[](1);
+                functionIds[0] = callingFunctionId;
+                uint256[][] memory ruleIdsArr = new uint256[][](1);
+                ruleIdsArr[0] = new uint256[](1);
+                ruleIdsArr[0][0] = ruleId;
+
+                RulesEnginePolicyFacet(address(red)).updatePolicy(
+                    policyId,
+                    selectors,
+                    functionIds,
+                    ruleIdsArr,
+                    PolicyType.CLOSED_POLICY,
+                    policyName,
+                    policyDescription
+                );
+            }
+
+            {
+                uint256[] memory policyIds = new uint256[](1);
+                policyIds[0] = policyId;
+                vm.stopPrank();
+                vm.startPrank(callingContractAdmin);
+                RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+                vm.stopPrank();
+            }
+        }
+
+        {
+            vm.startPrank(userContractAddress);
+            address to = address(0x1234567);
+            uint256 value = 11;
+            string memory str = "TESTER";
+            string memory str2 = "TESTER2";
+            bytes memory transferCalldata = abi.encodeWithSelector(ExampleUserContract.transferSigTest.selector, to, value, str, str2, 22);
+
+            RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
+
+            assertEq(PermissionedForeignCallTestContract(pfcContractAddress).getDecodedIntOne(), 1000000000);
+            assertEq(PermissionedForeignCallTestContract(pfcContractAddress).getDecodedIntTwo(), 33); // Should now find the correct key
             assertEq(PermissionedForeignCallTestContract(pfcContractAddress).getDecodedStrOne(), str);
             assertEq(PermissionedForeignCallTestContract(pfcContractAddress).getDecodedStrTwo(), str2);
             assertEq(PermissionedForeignCallTestContract(pfcContractAddress).getDecodedAddr(), to);
@@ -1215,9 +1412,13 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyIds[0], 1, abi.encode(address(0x7654321)));
         assertEq(
             value,
-            abi.encode(keccak256(abi.encode(
-                "This is a string to test that the value string is above a bytes32 and does not get sliced weirdly. If you are seeing this we win!"
-            )))
+            abi.encode(
+                keccak256(
+                    abi.encode(
+                        "This is a string to test that the value string is above a bytes32 and does not get sliced weirdly. If you are seeing this we win!"
+                    )
+                )
+            )
         );
 
         // vm.expectRevert();
