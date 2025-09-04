@@ -48,7 +48,119 @@ abstract contract components is RulesEngineCommon {
         );
     }
 
-    function testRulesEngine_Unit_createCallingFunction_AlredyExists() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_CallingFunctionsArrayConsistency() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256 policyId = _createBlankPolicy();
+        // we add the first calling function
+        bytes4 callingFunctionId = _addCallingFunctionToPolicy(policyId);
+        CallingFunctionStorageSet[] memory allCallingFunctions = RulesEngineComponentFacet(address(red)).getAllCallingFunctions(policyId);
+        assertEq(bytes32(allCallingFunctions[0].signature), bytes32(callingFunctionId));
+        assertEq(uint(allCallingFunctions[0].parameterTypes[0]), uint(ParamTypes.ADDR));
+        assertEq(uint(allCallingFunctions[0].parameterTypes[1]), uint(ParamTypes.UINT));
+        // we add the second calling function
+        vm.startPrank(policyAdmin);
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.STR;
+        bytes4 callingFunctionId2 = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            bytes4(bytes4(keccak256(bytes(callingFunction2)))),
+            pTypes,
+            callingFunction,
+            ""
+        );
+        // Save the Policy
+        callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
+        uint256[][] memory blankRuleIds = new uint256[][](0);
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            callingFunctions,
+            blankRuleIds,
+            PolicyType.CLOSED_POLICY,
+            policyName,
+            policyDescription
+        );
+        allCallingFunctions = RulesEngineComponentFacet(address(red)).getAllCallingFunctions(policyId);
+        assertEq(bytes32(allCallingFunctions[0].signature), bytes32(callingFunctionId));
+        assertEq(uint(allCallingFunctions[0].parameterTypes[0]), uint(ParamTypes.ADDR));
+        assertEq(uint(allCallingFunctions[0].parameterTypes[1]), uint(ParamTypes.UINT));
+        assertEq(bytes32(allCallingFunctions[1].signature), bytes32(callingFunctionId2));
+        assertEq(uint(allCallingFunctions[1].parameterTypes[0]), uint(ParamTypes.ADDR));
+        assertEq(uint(allCallingFunctions[1].parameterTypes[1]), uint(ParamTypes.STR));
+
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        bytes4 callingFunctionId3 = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            bytes4(bytes4(keccak256(bytes(callingFunction3)))),
+            pTypes,
+            callingFunction,
+            ""
+        );
+        // Save the Policy
+        callingFunctions.push(bytes4(keccak256(bytes(callingFunction3))));
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            callingFunctions,
+            blankRuleIds,
+            PolicyType.CLOSED_POLICY,
+            policyName,
+            policyDescription
+        );
+        allCallingFunctions = RulesEngineComponentFacet(address(red)).getAllCallingFunctions(policyId);
+        assertEq(bytes32(allCallingFunctions[0].signature), bytes32(callingFunctionId));
+        assertEq(uint(allCallingFunctions[0].parameterTypes[0]), uint(ParamTypes.ADDR));
+        assertEq(uint(allCallingFunctions[0].parameterTypes[1]), uint(ParamTypes.UINT));
+        assertEq(bytes32(allCallingFunctions[1].signature), bytes32(callingFunctionId2));
+        assertEq(uint(allCallingFunctions[1].parameterTypes[0]), uint(ParamTypes.ADDR));
+        assertEq(uint(allCallingFunctions[1].parameterTypes[1]), uint(ParamTypes.STR));
+        assertEq(bytes32(allCallingFunctions[2].signature), bytes32(callingFunctionId3));
+        assertEq(uint(allCallingFunctions[2].parameterTypes[0]), uint(ParamTypes.ADDR));
+        assertEq(uint(allCallingFunctions[2].parameterTypes[1]), uint(ParamTypes.UINT));
+
+        bytes4[] memory newSelectors = new bytes4[](2);
+        newSelectors[0] = callingFunctionId3;
+        newSelectors[1] = callingFunctionId;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            newSelectors,
+            blankRuleIds,
+            PolicyType.CLOSED_POLICY,
+            policyName,
+            policyDescription
+        );
+        allCallingFunctions = RulesEngineComponentFacet(address(red)).getAllCallingFunctions(policyId);
+        assertEq(newSelectors.length, allCallingFunctions.length);
+        assertEq(bytes32(allCallingFunctions[0].signature), bytes32(callingFunctionId3));
+        assertEq(uint(allCallingFunctions[0].parameterTypes[0]), uint(ParamTypes.ADDR));
+        assertEq(uint(allCallingFunctions[0].parameterTypes[1]), uint(ParamTypes.UINT));
+        assertEq(bytes32(allCallingFunctions[1].signature), bytes32(callingFunctionId));
+        assertEq(uint(allCallingFunctions[1].parameterTypes[0]), uint(ParamTypes.ADDR));
+        assertEq(uint(allCallingFunctions[1].parameterTypes[1]), uint(ParamTypes.UINT));
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            callingFunctions,
+            blankRuleIds,
+            PolicyType.CLOSED_POLICY,
+            policyName,
+            policyDescription
+        );
+        allCallingFunctions = RulesEngineComponentFacet(address(red)).getAllCallingFunctions(policyId);
+        assertEq(callingFunctions.length, allCallingFunctions.length);
+        RulesEngineComponentFacet(address(red)).deleteCallingFunction(policyId, callingFunctionId);
+        allCallingFunctions = RulesEngineComponentFacet(address(red)).getAllCallingFunctions(policyId);
+        assertEq(callingFunctions.length - 1, allCallingFunctions.length);
+        // the order of the calling functions is rearranged when deleting one of them
+        assertEq(bytes32(allCallingFunctions[0].signature), bytes32(callingFunctionId3));
+        assertEq(uint(allCallingFunctions[0].parameterTypes[0]), uint(ParamTypes.ADDR));
+        assertEq(uint(allCallingFunctions[0].parameterTypes[1]), uint(ParamTypes.UINT));
+        assertEq(bytes32(allCallingFunctions[1].signature), bytes32(callingFunctionId2));
+        assertEq(uint(allCallingFunctions[1].parameterTypes[0]), uint(ParamTypes.ADDR));
+        assertEq(uint(allCallingFunctions[1].parameterTypes[1]), uint(ParamTypes.STR));
+    }
+
+    function testRulesEngine_Unit_updateCallingFunction_DoesNotExist() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4 callingFunctionId = _addCallingFunctionToPolicy(policyId);
         assertEq(callingFunctionId, bytes4(keccak256(bytes(callingFunction))));
@@ -143,7 +255,7 @@ abstract contract components is RulesEngineCommon {
         RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction))), pTypes2);
     }
 
-    function testRulesEngine_Unit_updateCallingFunction_Negative_NewCallingFunctionNotSame()
+    function testRulesEngine_Unit_updateCallingFunction_Negative_CallingFunctionDoesNotExist()
         public
         ifDeploymentTestsEnabled
         endWithStopPrank

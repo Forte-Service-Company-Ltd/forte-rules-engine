@@ -538,7 +538,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         uint256 functionIdCount = sigs.length;
         CallingFunctionStorageSet[] memory callingFunctionStorageSets = new CallingFunctionStorageSet[](functionIdCount);
         uint256 j = 0;
-        for (uint256 i = 1; i <= functionIdCount; i++) {
+        for (uint256 i = 0; i < functionIdCount; i++) {
             if (data.callingFunctionStorageSets[policyId][sigs[i]].set) {
                 callingFunctionStorageSets[j] = data.callingFunctionStorageSets[policyId][sigs[i]];
                 j++;
@@ -558,6 +558,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         _validateCallingFunctionPType(_pTypes);
         CallingFunctionStruct storage data = lib._getCallingFunctionStorage();
         data.callingFunctionStorageSets[_policyId][_functionSignature].set = true;
+        data.callingFunctionStorageSets[_policyId][_functionSignature].signature = _functionSignature;
         data.callingFunctionStorageSets[_policyId][_functionSignature].parameterTypes = _pTypes;
     }
 

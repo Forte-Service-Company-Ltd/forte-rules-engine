@@ -295,6 +295,7 @@ struct CallingFunctionStruct {
  */
 struct CallingFunctionStorageSet {
     bool set;
+    bytes4 signature;
     ParamTypes[] parameterTypes;
 }
 
