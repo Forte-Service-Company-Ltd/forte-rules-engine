@@ -24,4 +24,4 @@ jobs:
         id: build-and-test
         uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/actions/onchain-build-and-test@INF-263-Onchain-Build-and-Test
         with:
-          alchemy_key: ${{ secrets.ALCHEMY_KEY }}
+          alchemy_eth_api: ${{ secrets.ALCHEMY_KEY }}
