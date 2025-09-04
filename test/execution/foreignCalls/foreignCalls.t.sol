@@ -926,7 +926,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
 
         // Negative path - hit MAX_LOOP require statement
         // TODO this requires new MAX_LOOP = 5000 so this doesn't run out of gas.
-        // for (uint i; i < 9_999; i++) RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+        // for (uint i; i < 9_997; i++) RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
         // vm.expectRevert("Max foreign calls reached");
         // RulesEngineForeignCallFacet(address(red)).updateForeignCall(
         //     policyId,
