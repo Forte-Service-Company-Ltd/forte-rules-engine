@@ -229,8 +229,8 @@ struct ForeignCall {
     ForeignCallEncodedIndex[] encodedIndices;
     // Tracks the index of the arguments that are mapped to a tracker
     ForeignCallEncodedIndex[] mappedTrackerKeyIndices;
-    // Index of the Calling Function this foreign call is tied to
-    uint256 callingFunctionIndex;
+    // Selector of the Calling Function this foreign call is tied to
+    bytes4 callingFunctionSelector;
 }
 
 /**
