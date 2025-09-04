@@ -578,6 +578,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         if (keccak256(bytes(_callingFunctionName)) == EMPTY_STRING_HASH) revert(NAME_REQ);
         CallingFunctionMetadataStruct storage metaData = lib._getCallingFunctioneMetadataStorage();
         metaData.callingFunctionMetadata[_policyId][_functionSignature].callingFunction = _callingFunctionName;
+        metaData.callingFunctionMetadata[_policyId][_functionSignature].signature = _functionSignature;
         metaData.callingFunctionMetadata[_policyId][_functionSignature].encodedValues = _encodedValues;
     }
 
