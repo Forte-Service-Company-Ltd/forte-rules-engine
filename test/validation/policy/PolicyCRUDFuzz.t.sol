@@ -155,7 +155,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
             for (uint i; i < selectorAmount; i++) selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
         uint256[][] memory _ruleIds = new uint256[][](0);
-        // TODO make this test better by fuzzing some more vars
         vm.expectRevert("Invalid Signature");
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -436,9 +435,3 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         facet.checkDuplicatesUint256(sigs);
     }
 }
-// NOTE for my self
-
-// 3. Add test for CALLING_FUNCTION_ALREADY_EXISTS (done)
-// 4. add test for foreign call already exists (Gordon)
-// 5. add test for foreign call not set (Gordon)
-// 9. Do all the TODOs in the tests.
