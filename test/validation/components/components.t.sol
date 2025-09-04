@@ -234,7 +234,7 @@ abstract contract components is RulesEngineCommon {
         endWithStopPrank
     {
         uint256 policyId = _createBlankPolicy();
-        bytes4 callingFunctionId = _addCallingFunctionToPolicy(policyId);
+        _addCallingFunctionToPolicy(policyId);
         ParamTypes[] memory pTypes2 = new ParamTypes[](1);
         pTypes2[0] = ParamTypes.ADDR;
         vm.expectRevert("New parameter types must be of greater or equal length to the original");
@@ -478,7 +478,6 @@ abstract contract components is RulesEngineCommon {
     function testRulesEngine_Unit_deleteCallingFunctionMultiple_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory _callingFunctions;
-        uint256[] memory _callingFunctionIds;
         uint256[][] memory _ruleIds;
         // This test does not utilize helper _addCallingFunctionToPolicy(policyId) because it needs to individually set the function callingFunctions for deletion
         ParamTypes[] memory pTypes = new ParamTypes[](2);
@@ -500,15 +499,9 @@ abstract contract components is RulesEngineCommon {
             ""
         );
         assertEq(callingFunctionId2, bytes4(keccak256(bytes(callingFunction2))));
-        CallingFunctionStorageSet memory matchingCallingFunction = RulesEngineComponentFacet(address(red)).getCallingFunction(
-            policyId,
-            callingFunctionId
-        );
+        RulesEngineComponentFacet(address(red)).getCallingFunction(policyId, callingFunctionId);
 
-        CallingFunctionStorageSet memory matchingCallingFunction2 = RulesEngineComponentFacet(address(red)).getCallingFunction(
-            policyId,
-            callingFunctionId2
-        );
+        RulesEngineComponentFacet(address(red)).getCallingFunction(policyId, callingFunctionId2);
 
         _callingFunctions = new bytes4[](2);
         _callingFunctions[0] = bytes4(keccak256(bytes(callingFunction)));
@@ -535,10 +528,7 @@ abstract contract components is RulesEngineCommon {
         CallingFunctionStorageSet memory cf = RulesEngineComponentFacet(address(red)).getCallingFunction(policyId, callingFunctionId);
         assertEq(cf.set, false);
 
-        CallingFunctionStorageSet memory matchingCallingFunction3 = RulesEngineComponentFacet(address(red)).getCallingFunction(
-            policyId,
-            callingFunctionId2
-        );
+        RulesEngineComponentFacet(address(red)).getCallingFunction(policyId, callingFunctionId2);
 
         //check that policy callingFunctions array is resized to 1
         (_callingFunctions, _ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
@@ -587,10 +577,7 @@ abstract contract components is RulesEngineCommon {
         pTypes[1] = ParamTypes.UINT;
         _addCallingFunctionToPolicy(policyId);
         assertEq(callingFunctionId, bytes4(keccak256(bytes(callingFunction))));
-        CallingFunctionStorageSet memory matchingCallingFunction = RulesEngineComponentFacet(address(red)).getCallingFunction(
-            policyId,
-            callingFunctionId
-        );
+        RulesEngineComponentFacet(address(red)).getCallingFunction(policyId, callingFunctionId);
 
         RulesEnginePolicyFacet(address(red)).cementPolicy(policyId);
         vm.expectRevert("Not allowed for cemented policy");
@@ -614,7 +601,6 @@ abstract contract components is RulesEngineCommon {
     function testRulesEngine_Unit_CreateForeignCall_Negative_CementedPolicy() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -634,7 +620,6 @@ abstract contract components is RulesEngineCommon {
     function testRulesEngine_Unit_CreateForeignCall_Negative_Non_PolicyAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -1354,7 +1339,7 @@ abstract contract components is RulesEngineCommon {
         tracker.trackerValue = abi.encode(emptyArray);
         tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
         vm.expectRevert("Invalid type");
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
     }
 
     // Mapped Tracker array value types
@@ -1543,7 +1528,7 @@ abstract contract components is RulesEngineCommon {
         tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
         tracker.trackerValue = abi.encode(trackerValues);
         vm.expectRevert("Invalid type");
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+        RulesEngineComponentFacet(address(red)).createMappedTracker(
             policyID,
             tracker,
             trackerName,

@@ -581,7 +581,7 @@ abstract contract policiesExecution is RulesEngineCommon {
         transferPTypes[0] = ParamTypes.ADDR;
         transferPTypes[1] = ParamTypes.UINT;
 
-        bytes4 transferFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256(bytes("transfer(address,uint256)"))),
             transferPTypes,
@@ -594,7 +594,7 @@ abstract contract policiesExecution is RulesEngineCommon {
         transferFromPTypes[1] = ParamTypes.ADDR;
         transferFromPTypes[2] = ParamTypes.UINT;
 
-        bytes4 transferFromFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))),
             transferFromPTypes,

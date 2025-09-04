@@ -9,7 +9,7 @@ import {FacetUtils} from "src/engine/facets/FacetUtils.sol";
  * from the FacetUtils. Since the function is not meant to be used directly, some example functions were created.
  */
 contract TestFacetUtils is FacetUtils {
-    function checkDuplicatesBytes4(bytes4[] calldata sigs) public {
+    function checkDuplicatesBytes4(bytes4[] calldata sigs) public pure {
         uint start;
         assembly {
             start := sigs.offset
@@ -17,7 +17,7 @@ contract TestFacetUtils is FacetUtils {
         if (_isThereDuplicatesInCalldataValueTypeArray(sigs.length, start)) revert(DUPLICATES_NOT_ALLOWED);
     }
 
-    function checkDuplicatesBytes32(bytes32[] calldata hashes) public {
+    function checkDuplicatesBytes32(bytes32[] calldata hashes) public pure {
         uint start;
         assembly {
             start := hashes.offset
@@ -25,7 +25,7 @@ contract TestFacetUtils is FacetUtils {
         if (_isThereDuplicatesInCalldataValueTypeArray(hashes.length, start)) revert(DUPLICATES_NOT_ALLOWED);
     }
 
-    function checkDuplicatesUint256(uint256[] calldata ids) public {
+    function checkDuplicatesUint256(uint256[] calldata ids) public pure {
         uint start;
         assembly {
             start := ids.offset
@@ -91,7 +91,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         vm.startPrank(user1);
         uint policyId = _createBlankPolicy();
         bytes4[] memory selectors = new bytes4[](0);
-        uint256[] memory functionIds = new uint256[](0);
         uint256[][] memory _ruleIds = new uint256[][](0);
         if (_policyType > policyTypes) vm.expectRevert("PolicyType is invalid");
         // a low-level call is necessary for the test not to fail on a policyType negative-path test-building phase
@@ -145,7 +144,6 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         uint policyId = _createBlankPolicy();
         bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
         // we skip the creation of the function to provoke the error
-        uint functionId = 1;
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;

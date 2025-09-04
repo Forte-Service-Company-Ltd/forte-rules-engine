@@ -453,7 +453,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         }
     }
 
-    function _validateNoIdenticalFunctionSigs(bytes4[] calldata sigs) internal {
+    function _validateNoIdenticalFunctionSigs(bytes4[] calldata sigs) internal pure {
         uint start;
         assembly {
             start := sigs.offset

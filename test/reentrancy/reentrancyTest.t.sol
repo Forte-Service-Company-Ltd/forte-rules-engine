@@ -167,7 +167,7 @@ contract ReentrancyTest is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        bytes4 callingFunctionId1 = _addCallingFunctionToPolicy(policyIds[0]);
+        _addCallingFunctionToPolicy(policyIds[0]);
         _addCallingFunctionToPolicy(policyIds[1]);
         // Rule: amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule;

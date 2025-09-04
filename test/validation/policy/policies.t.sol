@@ -18,7 +18,7 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_UpdatePolicy_InvalidRule() public ifDeploymentTestsEnabled endWithStopPrank {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
-        (uint256 policyId, uint256 ruleId) = setUpRuleSimple();
+        (uint256 policyId, ) = setUpRuleSimple();
         // the following calling function doesn't exist in the policy yet, but the test won't reach this selector, so we skip the unnecessary setup.
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction3))));
         ruleIds.push(new uint256[](1));
@@ -40,7 +40,7 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_UpdatePolicy_NoCallingFunctions() public ifDeploymentTestsEnabled endWithStopPrank {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
-        (uint256 policyId, uint256 ruleId) = setUpRuleSimple();
+        (uint256 policyId, ) = setUpRuleSimple();
         // the following calling function doesn't exist in the policy yet, but the test won't reach this selector, so we skip the unnecessary setup.
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction3))));
         ruleIds.push(new uint256[](1));
@@ -239,7 +239,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_ApplyPolicy_ClosedPolicy_NotSubscriber() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -263,7 +262,6 @@ abstract contract policies is RulesEngineCommon {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = policyId;
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -365,7 +363,6 @@ abstract contract policies is RulesEngineCommon {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = policyId;
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -415,7 +412,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_ApplyPolicy_OpenPolicy_NotSubscriber() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -437,7 +433,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_ApplyPolicy_ClosedPolicy_Subscriber() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -458,7 +453,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_UpdatePolicy_Negative_CementedPolicy() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).cementPolicy(policyId);
         vm.expectRevert("Not allowed for cemented policy");
@@ -475,7 +469,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_UpdatePolicy_Negative_Non_PolicyAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
 
         // Prank a random, non-policy admin address
@@ -510,7 +503,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_ApplyPolicy_Negative_CementedPolicy() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -533,7 +525,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_ApplyPolicy_Negative_Non_CallingContractAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -557,7 +548,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_UnapplyPolicy_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankSignatures = new bytes4[](0);
-        uint256[] memory blankFunctionSignatureIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -580,7 +570,6 @@ abstract contract policies is RulesEngineCommon {
 
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankSignatures = new bytes4[](0);
-        uint256[] memory blankFunctionSignatureIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -593,7 +582,6 @@ abstract contract policies is RulesEngineCommon {
 
         uint256 policyId2 = _createBlankPolicy();
         bytes4[] memory blankSignatures2 = new bytes4[](0);
-        uint256[] memory blankFunctionSignatureIds2 = new uint256[](0);
         uint256[][] memory blankRuleIds2 = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId2,
@@ -625,7 +613,6 @@ abstract contract policies is RulesEngineCommon {
 
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankSignatures = new bytes4[](0);
-        uint256[] memory blankFunctionSignatureIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -638,7 +625,6 @@ abstract contract policies is RulesEngineCommon {
 
         uint256 policyId2 = _createBlankPolicy();
         bytes4[] memory blankSignatures2 = new bytes4[](0);
-        uint256[] memory blankFunctionSignatureIds2 = new uint256[](0);
         uint256[][] memory blankRuleIds2 = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId2,
@@ -674,7 +660,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_UnapplyPolicy_Multiple_OnlyRemoveOne_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankSignatures = new bytes4[](0);
-        uint256[] memory blankFunctionSignatureIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -687,7 +672,6 @@ abstract contract policies is RulesEngineCommon {
         uint256[] memory policyIds = new uint256[](2);
         uint256 policyId2 = _createBlankPolicy();
         bytes4[] memory blankSignatures2 = new bytes4[](0);
-        uint256[] memory blankFunctionSignatureIds2 = new uint256[](0);
         uint256[][] memory blankRuleIds2 = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId2,
@@ -712,7 +696,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_UnapplyPolicy_Negative_NotCallingContractAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankSignatures = new bytes4[](0);
-        uint256[] memory blankFunctionSignatureIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -782,7 +765,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_AppliedPolicy_Event() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
@@ -858,7 +840,6 @@ abstract contract policies is RulesEngineCommon {
     function testRulesEngine_Unit_ClosedPolicySubscriber_AddRemove_Events() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
