@@ -164,14 +164,13 @@ abstract contract trackers is RulesEngineCommon {
 
         retVal = userContract.transfer(address(0x7654321), 9);
         assertTrue(retVal);
-        // TODO this runs out of gas. We should change MAX_LOOP to 5000
-        // for (uint i; i < 9_998; i++) {
-        //     console2.log("i", i);
-        //     RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "name", TrackerArrayTypes.VOID);
-        // }
-        // // Expect to revert when _trackerIndex >= MAX_LOOP
-        // vm.expectRevert("Max trackers reached");
-        // RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "name", TrackerArrayTypes.VOID);
+        for (uint i; i < 9_998; i++) {
+            vm.pauseGasMetering();
+            RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "name", TrackerArrayTypes.VOID);
+        }
+        // Expect to revert when _trackerIndex >= MAX_LOOP
+        vm.expectRevert("Max trackers reached");
+        RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "name", TrackerArrayTypes.VOID);
     }
 
     function testRuleEngine_Unit_createTrackerInvalidMappedFlag() public {

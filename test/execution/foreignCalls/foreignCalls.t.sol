@@ -925,14 +925,13 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         vm.startPrank(policyAdmin);
 
         // Negative path - hit MAX_LOOP require statement
-        // TODO this requires new MAX_LOOP = 5000 so this doesn't run out of gas.
-        // for (uint i; i < 9_997; i++) RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
-        // vm.expectRevert("Max foreign calls reached");
-        // RulesEngineForeignCallFacet(address(red)).updateForeignCall(
-        //     policyId,
-        //     10_000, // foreign call index - MAX_LOOP is 10,000
-        //     fc3
-        // );
+
+        for (uint i; i < 9_997; i++) {
+            vm.pauseGasMetering();
+            RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+        }
+        vm.expectRevert("Max foreign calls reached");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
     }
 
     function testRulesEngine_Unit_PermissionedForeignCall_UpdatePermissionedFC_NewPolicyAdmin_Negative()
