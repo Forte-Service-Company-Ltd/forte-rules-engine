@@ -1120,26 +1120,41 @@ abstract contract policies is RulesEngineCommon {
         tracker5.set = true;
         tracker5.trackerValue = abi.encode(0x0033);
 
-        rule.effectPlaceHolders = new Placeholder[](5);
-        rule.effectPlaceHolders[0].pType = ParamTypes.ADDR;
-        rule.effectPlaceHolders[0].typeSpecificIndex = 1;
-        rule.effectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders = new Placeholder[](5);
+        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.positiveEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
 
-        rule.effectPlaceHolders[1].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[1].typeSpecificIndex = 2;
-        rule.effectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 2;
+        rule.positiveEffectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
 
-        rule.effectPlaceHolders[2].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[2].typeSpecificIndex = 3;
-        rule.effectPlaceHolders[2].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[2].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[2].typeSpecificIndex = 3;
+        rule.positiveEffectPlaceHolders[2].flags = FLAG_TRACKER_VALUE;
 
-        rule.effectPlaceHolders[3].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[3].typeSpecificIndex = 4;
-        rule.effectPlaceHolders[3].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[3].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[3].typeSpecificIndex = 4;
+        rule.positiveEffectPlaceHolders[3].flags = FLAG_TRACKER_VALUE;
 
-        rule.effectPlaceHolders[4].pType = ParamTypes.ADDR;
-        rule.effectPlaceHolders[4].typeSpecificIndex = 5;
-        rule.effectPlaceHolders[4].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[4].pType = ParamTypes.ADDR;
+        rule.positiveEffectPlaceHolders[4].typeSpecificIndex = 5;
+        rule.positiveEffectPlaceHolders[4].flags = FLAG_TRACKER_VALUE;
+
+        rule.negativeEffectPlaceHolders = new Placeholder[](5);
+        rule.negativeEffectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule.negativeEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.negativeEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+
+        rule.negativeEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[1].typeSpecificIndex = 2;
+        rule.negativeEffectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.negativeEffectPlaceHolders[2].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[2].typeSpecificIndex = 3;
+        rule.negativeEffectPlaceHolders[2].flags = FLAG_TRACKER_VALUE;
+        rule.negativeEffectPlaceHolders[3].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[3].typeSpecificIndex = 4;
+        rule.negativeEffectPlaceHolders[3].flags = FLAG_TRACKER_VALUE;
 
         rule.negEffects = new Effect[](1);
         rule.posEffects = new Effect[](1);
@@ -1282,10 +1297,15 @@ abstract contract policies is RulesEngineCommon {
         assertEq(trackerToRuleIdList1.length, 5);
 
         // update to the rule to now include a tracker and ensure it updates the list
-        rule6.effectPlaceHolders = new Placeholder[](1);
-        rule6.effectPlaceHolders[0].pType = ParamTypes.ADDR;
-        rule6.effectPlaceHolders[0].typeSpecificIndex = 1;
-        rule6.effectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+        rule6.positiveEffectPlaceHolders = new Placeholder[](1);
+        rule6.positiveEffectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule6.positiveEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule6.positiveEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+
+        rule6.negativeEffectPlaceHolders = new Placeholder[](1);
+        rule6.negativeEffectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule6.negativeEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule6.negativeEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
 
         rule6.negEffects = new Effect[](1);
         rule6.posEffects = new Effect[](1);
@@ -1350,26 +1370,45 @@ abstract contract policies is RulesEngineCommon {
         tracker5.set = true;
         tracker5.trackerValue = abi.encode(0x0033);
 
-        rule.effectPlaceHolders = new Placeholder[](5);
-        rule.effectPlaceHolders[0].pType = ParamTypes.ADDR;
-        rule.effectPlaceHolders[0].typeSpecificIndex = 1;
-        rule.effectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders = new Placeholder[](5);
+        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.positiveEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
 
-        rule.effectPlaceHolders[1].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[1].typeSpecificIndex = 2;
-        rule.effectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 2;
+        rule.positiveEffectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
 
-        rule.effectPlaceHolders[2].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[2].typeSpecificIndex = 3;
-        rule.effectPlaceHolders[2].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[2].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[2].typeSpecificIndex = 3;
+        rule.positiveEffectPlaceHolders[2].flags = FLAG_TRACKER_VALUE;
 
-        rule.effectPlaceHolders[3].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[3].typeSpecificIndex = 4;
-        rule.effectPlaceHolders[3].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[3].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[3].typeSpecificIndex = 4;
+        rule.positiveEffectPlaceHolders[3].flags = FLAG_TRACKER_VALUE;
 
-        rule.effectPlaceHolders[4].pType = ParamTypes.ADDR;
-        rule.effectPlaceHolders[4].typeSpecificIndex = 5;
-        rule.effectPlaceHolders[4].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[4].pType = ParamTypes.ADDR;
+        rule.positiveEffectPlaceHolders[4].typeSpecificIndex = 5;
+        rule.positiveEffectPlaceHolders[4].flags = FLAG_TRACKER_VALUE;
+
+        rule.negativeEffectPlaceHolders = new Placeholder[](5);
+        rule.negativeEffectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule.negativeEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.negativeEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+
+        rule.negativeEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[1].typeSpecificIndex = 2;
+        rule.negativeEffectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
+
+        rule.negativeEffectPlaceHolders[2].pType = ParamTypes.UINT;
+
+        rule.negativeEffectPlaceHolders[3].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[3].typeSpecificIndex = 4;
+        rule.negativeEffectPlaceHolders[3].flags = FLAG_TRACKER_VALUE;
+
+        rule.negativeEffectPlaceHolders[4].pType = ParamTypes.ADDR;
+        rule.negativeEffectPlaceHolders[4].typeSpecificIndex = 5;
+        rule.negativeEffectPlaceHolders[4].flags = FLAG_TRACKER_VALUE;
 
         rule.negEffects = new Effect[](1);
         rule.posEffects = new Effect[](1);
@@ -1429,10 +1468,15 @@ abstract contract policies is RulesEngineCommon {
         tracker1.set = true;
         tracker1.trackerValue = abi.encode(0xD00D);
 
-        rule.effectPlaceHolders = new Placeholder[](1);
-        rule.effectPlaceHolders[0].pType = ParamTypes.ADDR;
-        rule.effectPlaceHolders[0].typeSpecificIndex = 1;
-        rule.effectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders = new Placeholder[](1);
+        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.positiveEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+
+        rule.negativeEffectPlaceHolders = new Placeholder[](1);
+        rule.negativeEffectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule.negativeEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.negativeEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
 
         rule.negEffects = new Effect[](1);
         rule.posEffects = new Effect[](1);

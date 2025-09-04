@@ -119,12 +119,19 @@ contract ReentrancyTest is RulesEngineCommon {
         rule.placeHolders[2].flags = FLAG_TRACKER_VALUE;
         rule.placeHolders[2].typeSpecificIndex = 1;
 
-        rule.effectPlaceHolders = new Placeholder[](3);
-        rule.effectPlaceHolders[0].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[0].typeSpecificIndex = 1;
-        rule.effectPlaceHolders[1].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
-        rule.effectPlaceHolders[1].typeSpecificIndex = 1;
+        rule.positiveEffectPlaceHolders = new Placeholder[](3);
+        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.positiveEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 1;
+
+        rule.negativeEffectPlaceHolders = new Placeholder[](3);
+        rule.negativeEffectPlaceHolders[0].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.negativeEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.negativeEffectPlaceHolders[1].typeSpecificIndex = 1;
 
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
@@ -200,12 +207,19 @@ contract ReentrancyTest is RulesEngineCommon {
         rule.placeHolders[2].flags = FLAG_TRACKER_VALUE;
         rule.placeHolders[2].typeSpecificIndex = 1;
 
-        rule.effectPlaceHolders = new Placeholder[](3);
-        rule.effectPlaceHolders[0].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[0].typeSpecificIndex = 1;
-        rule.effectPlaceHolders[1].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
-        rule.effectPlaceHolders[1].typeSpecificIndex = 1;
+        rule.positiveEffectPlaceHolders = new Placeholder[](3);
+        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.positiveEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 1;
+
+        rule.negativeEffectPlaceHolders = new Placeholder[](3);
+        rule.negativeEffectPlaceHolders[0].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.negativeEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.negativeEffectPlaceHolders[1].typeSpecificIndex = 1;
 
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);

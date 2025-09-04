@@ -242,12 +242,13 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             }
         }
 
+        uint256 trackerId;
         // repeat for effectPlaceHolders
         for (uint256 k = 0; k < positiveEffectPlaceHolders.length; k++) {
             // check for tracker flag on placeholder
             if (FacetUtils._isTrackerValue(positiveEffectPlaceHolders[k])) {
                 // retrieve the tracker ID from the placeholder
-                uint256 trackerId = positiveEffectPlaceHolders[k].typeSpecificIndex;
+                trackerId = positiveEffectPlaceHolders[k].typeSpecificIndex;
                 // check if the rule ID is already in the array
                 bool exists = false;
                 for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][trackerId].length; l++) {
@@ -262,23 +263,24 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                 }
             }
         }
+        
         for (uint256 k = 0; k < negativeEffectPlaceHolders.length; k++) {
             // check for tracker flag on placeholder
             if (FacetUtils._isTrackerValue(negativeEffectPlaceHolders[k])) {
                 // retrieve the tracker ID from the placeholder
-                uint256 trackerId = negativeEffectPlaceHolders[k].typeSpecificIndex;
-            }
-            // check if the rule ID is already in the array
-            bool exists = false;
-            for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][trackerId].length; l++) {
+                trackerId = negativeEffectPlaceHolders[k].typeSpecificIndex;
                 // check if the rule ID is already in the array
-                if (trackerData.trackerIdToRuleIds[_policyId][trackerId][l] == _ruleId) {
-                    exists = true;
-                    break;
+                bool exists = false;
+                for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][trackerId].length; l++) {
+                    // check if the rule ID is already in the array
+                    if (trackerData.trackerIdToRuleIds[_policyId][trackerId][l] == _ruleId) {
+                        exists = true;
+                        break;
+                    }
+                    if (!exists) {
+                        trackerData.trackerIdToRuleIds[_policyId][trackerId].push(_ruleId);
+                    }
                 }
-            }
-            if (!exists) {
-                trackerData.trackerIdToRuleIds[_policyId][trackerId].push(_ruleId);
             }
         }
     }
@@ -293,7 +295,8 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         TrackerStorage storage trackerData = lib._getTrackerStorage();
 
         Placeholder[] memory placeHolders = lib._getRuleStorage().ruleStorageSets[_policyId][_ruleId].rule.placeHolders;
-        Placeholder[] memory effectPlaceHolders = lib._getRuleStorage().ruleStorageSets[_policyId][_ruleId].rule.effectPlaceHolders;
+        Placeholder[] memory positiveEffectPlaceHolders = lib._getRuleStorage().ruleStorageSets[_policyId][_ruleId].rule.positiveEffectPlaceHolders;
+        Placeholder[] memory negativeEffectPlaceHolders = lib._getRuleStorage().ruleStorageSets[_policyId][_ruleId].rule.negativeEffectPlaceHolders;
         // check if a tracker is used in the instruction set of the rule
         // if so, we update the mapping to remove rule ID
         for (uint256 i = 0; i < placeHolders.length; i++) {
@@ -317,18 +320,39 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             }
         }
         // repeat for effectPlaceHolders
-        for (uint256 k = 0; k < effectPlaceHolders.length; k++) {
+        for (uint256 k = 0; k < positiveEffectPlaceHolders.length; k++) {
             // check for tracker flag on effect placeholder
-            if (FacetUtils._isTrackerValue(effectPlaceHolders[k])) {
+            if (FacetUtils._isTrackerValue(positiveEffectPlaceHolders[k])) {
                 // if the placeholder flag is a tracker, retrieve the tracker ID and remove the rule ID from the mapping
-                for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex].length; ) {
+                for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][positiveEffectPlaceHolders[k].typeSpecificIndex].length; ) {
                     // check if the rule ID is already in the array
-                    if (trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex][l] == _ruleId) {
-                        trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex][l] = trackerData
-                            .trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex][
-                                trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex].length - 1
+                    if (trackerData.trackerIdToRuleIds[_policyId][positiveEffectPlaceHolders[k].typeSpecificIndex][l] == _ruleId) {
+                        trackerData.trackerIdToRuleIds[_policyId][positiveEffectPlaceHolders[k].typeSpecificIndex][l] = trackerData
+                            .trackerIdToRuleIds[_policyId][positiveEffectPlaceHolders[k].typeSpecificIndex][
+                                trackerData.trackerIdToRuleIds[_policyId][positiveEffectPlaceHolders[k].typeSpecificIndex].length - 1
                             ];
-                        trackerData.trackerIdToRuleIds[_policyId][effectPlaceHolders[k].typeSpecificIndex].pop();
+                        trackerData.trackerIdToRuleIds[_policyId][positiveEffectPlaceHolders[k].typeSpecificIndex].pop();
+                        break; // Exit the loop after removal
+                    } else {
+                        l++; // Only increment if no removal occurred
+                    }
+                }
+            }
+        }
+
+                // repeat for effectPlaceHolders
+        for (uint256 k = 0; k < negativeEffectPlaceHolders.length; k++) {
+            // check for tracker flag on effect placeholder
+            if (FacetUtils._isTrackerValue(negativeEffectPlaceHolders[k])) {
+                // if the placeholder flag is a tracker, retrieve the tracker ID and remove the rule ID from the mapping
+                for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][negativeEffectPlaceHolders[k].typeSpecificIndex].length; ) {
+                    // check if the rule ID is already in the array
+                    if (trackerData.trackerIdToRuleIds[_policyId][negativeEffectPlaceHolders[k].typeSpecificIndex][l] == _ruleId) {
+                        trackerData.trackerIdToRuleIds[_policyId][negativeEffectPlaceHolders[k].typeSpecificIndex][l] = trackerData
+                            .trackerIdToRuleIds[_policyId][negativeEffectPlaceHolders[k].typeSpecificIndex][
+                                trackerData.trackerIdToRuleIds[_policyId][negativeEffectPlaceHolders[k].typeSpecificIndex].length - 1
+                            ];
+                        trackerData.trackerIdToRuleIds[_policyId][negativeEffectPlaceHolders[k].typeSpecificIndex].pop();
                         break; // Exit the loop after removal
                     } else {
                         l++; // Only increment if no removal occurred
@@ -372,7 +396,8 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         }
         // placeholders
         _validatePlaceholders(rule.placeHolders);
-        _validatePlaceholders(rule.effectPlaceHolders);
+        _validatePlaceholders(rule.positiveEffectPlaceHolders);
+        _validatePlaceholders(rule.negativeEffectPlaceHolders);
         // effects
         require(rule.posEffects.length > 0 || rule.negEffects.length > 0, EFFECT_REQ);
         _validateEffects(rule.posEffects, policyId);

@@ -962,7 +962,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 if (effect.effectType == EffectTypes.REVERT) {
                     _doRevert(effect.errorMessage);
                 } else if (effect.effectType == EffectTypes.EVENT) {
-                    _buildEvent(_rule, _effects[i].dynamicParam, _policyId, _effects[i].text, _effects[i], _callingFunctionArgs);
+                    _buildEvent(_rule, _effects[i].dynamicParam, _policyId, _effects[i].text, _effects[i], _callingFunctionArgs, _kind);
                 } else {
                     _evaluateExpression(_rule, _policyId, _callingFunctionArgs, effect.instructionSet, _kind);
                 }
@@ -985,12 +985,13 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 _policyId,
         bytes32 _message,
         Effect memory _effectStruct,
-        bytes calldata _callingFunctionArgs
+        bytes calldata _callingFunctionArgs,
+        BuildArgumentsPlaceholders _kind
     ) internal {
         // determine if we need to dynamically build event key
         if (_isDynamicParam) {
             // fire event by param type based on return value
-            _fireDynamicEvent(_rule, _policyId, _message, _callingFunctionArgs);
+            _fireDynamicEvent(_rule, _policyId, _message, _callingFunctionArgs, _kind);
         } else {
             _fireEvent(_policyId, _message, _effectStruct);
         }
@@ -1003,9 +1004,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _message Event Message String
      * @param _callingFunctionArgs calling function arguments
      */
-    function _fireDynamicEvent(Rule storage _rule, uint256 _policyId, bytes32 _message, bytes calldata _callingFunctionArgs) internal {
+    function _fireDynamicEvent(Rule storage _rule, uint256 _policyId, bytes32 _message, bytes calldata _callingFunctionArgs, BuildArgumentsPlaceholders _kind) internal {
         // Build the effect arguments struct for event parameters:
-        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, true);
+        (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, _kind);
         // Data validation will always ensure effectArguments.length will be less than MAX_LOOP
         for (uint256 i = 0; i < effectArguments.length; i++) {
             // loop through parameter types and set eventParam
@@ -1059,12 +1060,14 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _policyId the policy id
      * @param _callingFunctionArgs arguments of the calling function
      * @param _instructionSet instruction set
+     * @param _kind the type of placeholders to build
      */
     function _evaluateExpression(
         Rule storage _rule,
         uint256 _policyId,
         bytes calldata _callingFunctionArgs,
-        uint256[] memory _instructionSet
+        uint256[] memory _instructionSet,
+        BuildArgumentsPlaceholders _kind
     ) internal {
         (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, BuildArgumentsPlaceholders.POSITIVE_EFFECT);
         if (_instructionSet.length > 1) {

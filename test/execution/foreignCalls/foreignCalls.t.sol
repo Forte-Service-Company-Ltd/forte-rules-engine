@@ -147,10 +147,15 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
             rule.placeHolders[1].typeSpecificIndex = uint128(foreignCallId);
             rule.placeHolders[1].flags = uint8(FLAG_FOREIGN_CALL);
 
-            rule.effectPlaceHolders = new Placeholder[](1);
-            rule.effectPlaceHolders[0].pType = ParamTypes.BYTES;
-            rule.effectPlaceHolders[0].typeSpecificIndex = 0;
-            rule.effectPlaceHolders[0].flags = 0;
+            rule.positiveEffectPlaceHolders = new Placeholder[](1);
+            rule.positiveEffectPlaceHolders[0].pType = ParamTypes.BYTES;
+            rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 0;
+            rule.positiveEffectPlaceHolders[0].flags = 0;
+
+            rule.negativeEffectPlaceHolders = new Placeholder[](1);
+            rule.negativeEffectPlaceHolders[0].pType = ParamTypes.BYTES;
+            rule.negativeEffectPlaceHolders[0].typeSpecificIndex = 0;
+            rule.negativeEffectPlaceHolders[0].flags = 0;
 
             rule.negEffects = new Effect[](1);
             rule.negEffects[0] = effectId_revert;

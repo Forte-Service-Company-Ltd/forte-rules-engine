@@ -2404,19 +2404,33 @@ abstract contract trackers is RulesEngineCommon {
         rule.placeHolders[3].typeSpecificIndex = 2;
         rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
 
-        rule.effectPlaceHolders = new Placeholder[](4);
-        rule.effectPlaceHolders[0].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[0].typeSpecificIndex = 1;
-        rule.effectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
-        rule.effectPlaceHolders[1].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[1].typeSpecificIndex = 2;
-        rule.effectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
-        rule.effectPlaceHolders[2].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[2].typeSpecificIndex = 1;
-        rule.effectPlaceHolders[2].flags = FLAG_FOREIGN_CALL;
-        rule.effectPlaceHolders[3].pType = ParamTypes.UINT;
-        rule.effectPlaceHolders[3].typeSpecificIndex = 2;
-        rule.effectPlaceHolders[3].flags = FLAG_FOREIGN_CALL;
+        rule.positiveEffectPlaceHolders = new Placeholder[](4);
+        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.positiveEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 2;
+        rule.positiveEffectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.positiveEffectPlaceHolders[2].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[2].typeSpecificIndex = 1;
+        rule.positiveEffectPlaceHolders[2].flags = FLAG_FOREIGN_CALL;
+        rule.positiveEffectPlaceHolders[3].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[3].typeSpecificIndex = 2;
+        rule.positiveEffectPlaceHolders[3].flags = FLAG_FOREIGN_CALL;
+
+        rule.negativeEffectPlaceHolders = new Placeholder[](4);
+        rule.negativeEffectPlaceHolders[0].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.negativeEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
+        rule.negativeEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[1].typeSpecificIndex = 2;
+        rule.negativeEffectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.negativeEffectPlaceHolders[2].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[2].typeSpecificIndex = 1;
+        rule.negativeEffectPlaceHolders[2].flags = FLAG_FOREIGN_CALL;
+        rule.negativeEffectPlaceHolders[3].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[3].typeSpecificIndex = 2;
+        rule.negativeEffectPlaceHolders[3].flags = FLAG_FOREIGN_CALL;
 
         uint256[] memory negInstructionSet = new uint256[](14);
         negInstructionSet[0] = uint256(LogicalOp.NUM);
