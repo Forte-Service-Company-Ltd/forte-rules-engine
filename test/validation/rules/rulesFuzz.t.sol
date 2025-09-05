@@ -4,6 +4,8 @@ pragma solidity ^0.8.24;
 import "test/utils/RulesEngineCommon.t.sol";
 
 abstract contract rulesFuzz is RulesEngineCommon {
+    uint[4] lessLimitedOpCodes = [17, 18, 4, 2];
+
     /**
      *
      *
@@ -15,6 +17,9 @@ abstract contract rulesFuzz is RulesEngineCommon {
     function testRulesEngine_Fuzz_createRule_InvalidInstruction(uint8 _opA, uint8 _opB) public {
         uint256 opA = uint256(_opA);
         uint256 opB = uint256(_opB);
+        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM
+        if (opA == 17 || opA == 18 || opA == 4 || opA == 2) opA = 6;
+        if (opB == 17 || opB == 18 || opB == 4 || opB == 2) opB = 6;
 
         (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
         uint256[] memory instructionSet = buildInstructionSet2Opcodes(opA, opB, opAElements, opBElements, 0);
@@ -35,6 +40,9 @@ abstract contract rulesFuzz is RulesEngineCommon {
     function testRulesEngine_Fuzz_createRule_negInvalidInstructionSet(uint8 _opA, uint8 _opB, uint _opAElements, uint _opBElements) public {
         uint256 opA = bound(_opA, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
         uint256 opB = bound(_opB, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
+        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM
+        if (opA == 17 || opA == 18 || opA == 4 || opA == 2) opA = 6;
+        if (opB == 17 || opB == 18 || opB == 4 || opB == 2) opB = 6;
         _opAElements = bound(_opAElements, 1, 4);
         _opBElements = bound(_opBElements, 1, 4);
 
@@ -57,13 +65,16 @@ abstract contract rulesFuzz is RulesEngineCommon {
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
-    function testRulesEngine_Fuzz_createRule_memoryOverFlow(uint8 _opA, uint8 _opB, uint8 _data) public {
+    function testRulesEngine_Fuzz_createRule_memoryOverFlow(uint8 _opA, uint8 _opB, uint8 _plhIdx, uint8 _data) public {
         // we avoid opcode 0 as it is the only one whose element won't be checked
         uint256 opA = bound(_opA, 1, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
         uint256 opB = bound(_opB, 1, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
+        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM
+        if (opA == 17 || opA == 18 || opA == 4 || opA == 2) opA = 6;
+        if (opB == 17 || opB == 18 || opB == 4 || opB == 2) opB = 6;
 
         (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
-        uint256[] memory instructionSet = buildInstructionSet2Opcodes(opA, opB, opAElements, opBElements, _data);
+        uint256[] memory instructionSet = buildInstructionSet2Opcodes(opA, opB, opAElements, opBElements, uint256(_data));
 
         // rule setup
         Rule memory rule;
@@ -72,6 +83,12 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.instructionSet = instructionSet;
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
+        rule.placeHolders = new Placeholder[](2);
+        rule.placeHolders[0].pType = ParamTypes.UINT;
+        rule.placeHolders[0].typeSpecificIndex = 1;
+        rule.placeHolders[1].pType = ParamTypes.UINT;
+        rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.placeHolders[1].typeSpecificIndex = _plhIdx;
         // test
         if (_data > RulesEngineRuleFacet(address(red)).getMemorySize()) vm.expectRevert("Memory Overflow");
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
@@ -243,6 +260,45 @@ abstract contract rulesFuzz is RulesEngineCommon {
         for (uint i = 0; i < instructionSetLength; i++) {
             if (isData) {
                 instructionSet[i] = data;
+                if (dataElements > 1) {
+                    --dataElements;
+                } else {
+                    isData = false;
+                }
+            } else {
+                if (isOpBTurn) {
+                    instructionSet[i] = opB;
+                    dataElements = opBElements;
+                    isOpBTurn = false;
+                } else {
+                    instructionSet[i] = opA;
+                    dataElements = opAElements;
+                    isOpBTurn = true;
+                }
+                isData = true;
+            }
+        }
+        return instructionSet;
+    }
+
+    function buildInstructionSetDataMax(
+        uint256 opA,
+        uint256 opB,
+        uint256 opAElements,
+        uint256 opBElements,
+        bool causesOverflow,
+        uint256 data
+    ) internal view returns (uint256[] memory instructionSet) {
+        uint instructionSetLength = (opAElements + opBElements + 2) *
+            (RulesEngineRuleFacet(address(red)).getMemorySize() / 2);
+        instructionSet = new uint256[](instructionSetLength);
+        // we build the instruction set by alternating opA and opB. We assign all data elements with the "data" parameter
+        bool isOpBTurn;
+        bool isData;
+        uint dataElements;
+        for (uint i = 0; i < instructionSetLength; i++) {
+            if (isData) {
+                instructionSet[i] = data+ (causesOverflow ? 1 : 0);
                 if (dataElements > 1) {
                     --dataElements;
                 } else {

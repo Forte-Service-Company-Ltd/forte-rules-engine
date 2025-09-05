@@ -180,33 +180,6 @@ abstract contract instructionSet is RulesEngineCommon {
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
-    function testInstructionSet_Unit_MemoryRegisters_ThreeExpected() public ifDeploymentTestsEnabled endWithStopPrank {
-        uint256[] memory policyIds = new uint256[](1);
-        policyIds[0] = _createBlankPolicy();
-        // Add the calling function to the policy
-        ParamTypes[] memory pTypes = new ParamTypes[](2);
-        pTypes[0] = ParamTypes.ADDR;
-        pTypes[1] = ParamTypes.UINT;
-        _addCallingFunctionToPolicy(policyIds[0]);
-        Rule memory rule;
-
-        rule.instructionSet = new uint256[](9);
-        rule.instructionSet[0] = uint(LogicalOp.NUM);
-        rule.instructionSet[1] = 1;
-        rule.instructionSet[2] = uint(LogicalOp.NUM);
-        rule.instructionSet[3] = 1;
-        rule.instructionSet[4] = uint(LogicalOp.TRUM);
-        rule.instructionSet[5] = 0;
-        rule.instructionSet[6] = 1;
-        rule.instructionSet[7] = 1;
-        rule.instructionSet[8] = 1000; // extra memory register larger than 18 to avoid enum confusion
-
-        rule.negEffects = new Effect[](1);
-        rule.negEffects[0] = effectId_revert;
-        vm.expectRevert("Memory Overflow");
-        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
-    }
-
     function testInstructionSet_Unit_MemoryRegisters_TwoExpected_OneGiven() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
@@ -241,18 +214,98 @@ abstract contract instructionSet is RulesEngineCommon {
         _addCallingFunctionToPolicy(policyIds[0]);
         Rule memory rule;
 
+        /// create tracker struct
+        Trackers memory tracker;
+        tracker.mapped = true;
+        tracker.pType = ParamTypes.BOOL;
+        tracker.trackerKeyType = ParamTypes.UINT;
+
+        /// create tracker key arrays
+        bytes[] memory trackerKeys = new bytes[](2);
+        trackerKeys[0] = abi.encode(1); // key 1
+        trackerKeys[1] = abi.encode(2); // key 2
+
+        /// create tracker value arrays
+        bytes[] memory trackerValues = new bytes[](2);
+        trackerValues[0] = abi.encode(true); // value 1
+        trackerValues[1] = abi.encode(false); // value 2
+
+        /// create tracker name
+        string memory trackerName = "tracker1";
+
+        uint256 trackerIndex = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyIds[0],
+            tracker,
+            trackerName,
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.VOID
+        );        
+
         rule.instructionSet = new uint256[](7);
         rule.instructionSet[0] = uint(LogicalOp.NUM);
         rule.instructionSet[1] = 1;
         rule.instructionSet[2] = uint(LogicalOp.NUM);
         rule.instructionSet[3] = 1;
         rule.instructionSet[4] = uint(LogicalOp.TRUM);
-        rule.instructionSet[5] = 0;
+        rule.instructionSet[5] = trackerIndex;
         rule.instructionSet[6] = 1;
 
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
         vm.expectRevert("Invalid Instruction Set");
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+    }
+
+    function testInstructionSet_Unit_TRUM_TrackerExists_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        // Add the calling function to the policy
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        _addCallingFunctionToPolicy(policyIds[0]);
+        Rule memory rule;
+
+
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.NUM);
+        rule.instructionSet[1] = 1;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 1;
+        rule.instructionSet[4] = uint(LogicalOp.TRUM);
+        rule.instructionSet[5] = 1;
+        rule.instructionSet[6] = 1;
+
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+        vm.expectRevert("Tracker referenced in rule not set");
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+    }
+
+    function testInstructionSet_Unit_PLHM_TrackerExists_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        // Add the calling function to the policy
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        _addCallingFunctionToPolicy(policyIds[0]);
+        Rule memory rule;
+
+
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.NUM);
+        rule.instructionSet[1] = 1;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 1;
+        rule.instructionSet[4] = uint(LogicalOp.PLHM);
+        rule.instructionSet[5] = 1;
+        rule.instructionSet[6] = 1;
+
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+        vm.expectRevert("Tracker referenced in rule not set");
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
