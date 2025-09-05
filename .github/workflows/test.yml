@@ -13,52 +13,15 @@ env:
 
 jobs:
   check:
-    strategy:
-      fail-fast: true
-
     name: Build and Test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+      - name: Build and Test
+        id: build-and-test
+        uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/actions/onchain-build-and-test@INF-263-Onchain-Build-and-Test
         with:
-          version: v1.2.1
-      - name: Install python dependencies for tests
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip
-          pip3 install -r requirements.txt
-          forge soldeer install
-      - name: Go setup
-        uses: actions/setup-go@v4
-        with:
-            go-version: "^1.18.1"
-
-      - name: Install medusa
-        run: |
-            git clone https://github.com/crytic/medusa.git
-            cd medusa
-            go build -o medusa -v .
-            go install -v .
-            sudo cp medusa /usr/bin
-            pip install crytic-compile
-      - name: Display Foundry version
-        run: forge --version
-      - name: Build the repository
-        run: |
-          forge build
-        id: build
-      - name: Run Foundry tests
-        env:
-          ETHEREUM_RPC_KEY: ${{ secrets.ALCHEMY_KEY }}
-        run: |
-          forge test --ffi -vvv 
-        id: forge-test
-      - name: Run Medusa tests
-        run: |
-          medusa fuzz --config medusa.json
-        id: medusa-test
+          alchemy_eth_api: ${{ secrets.ALCHEMY_KEY }}
