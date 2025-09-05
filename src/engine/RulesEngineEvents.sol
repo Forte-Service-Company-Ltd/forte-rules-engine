@@ -12,8 +12,6 @@ event RulesEngineEvent(uint256 indexed _eventKey, bytes32 _eventString, bool ind
 event ForeignCallCreated(uint256 indexed policyId, uint256 indexed foreignCallId);
 event ForeignCallUpdated(uint256 indexed policyId, uint256 indexed foreignCallId);
 event ForeignCallDeleted(uint256 indexed policyId, uint256 indexed foreignCallId);
-/// When a Foriegn Call is deleted we delete all Rules associated
-event AssociatedRuleDeleted(uint256 indexed policyId, bytes4 indexed callingFunctionSelector);
 
 /// Tracker Events
 event TrackerCreated(uint256 indexed policyId, uint256 indexed trackerId);
@@ -43,6 +41,8 @@ event PolicyDisabled(uint256 indexed policyId);
 event CallingFunctionCreated(uint256 indexed policyId, bytes4 indexed callingFunctionSelector);
 event CallingFunctionUpdated(uint256 indexed policyId, bytes4 indexed callingFunctionSelector);
 event CallingFunctionDeleted(uint256 indexed policyId, bytes4 indexed callingFunctionSelector);
+/// When a Calling Function is deleted we delete all Rules associated
+event AssociatedRuleDeleted(uint256 indexed policyId, bytes4 indexed callingFunctionSelector);
 
 /// Admin Events
 event PolicyAdminRoleGranted(address indexed adminAddress, uint256 indexed policyId);
