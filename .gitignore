@@ -18,7 +18,6 @@ bin/
 include/
 lib/python*
 pyvenv.cfg
-
 # Soldeer
 /dependencies
 
