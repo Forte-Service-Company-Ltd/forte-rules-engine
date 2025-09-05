@@ -148,10 +148,7 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         bytes4[] memory selectors = new bytes4[](selectorAmount);
-        if (selectorAmount > 0)
-            // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
-            // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
-            for (uint i; i < selectorAmount; i++) selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
+        if (selectorAmount > 0) for (uint i; i < selectorAmount; i++) selectors[i] = _modifySelectorWithIterator(sigCallingFunction, i);
         uint256[][] memory _ruleIds = new uint256[][](0);
         vm.expectRevert("Invalid Signature");
         RulesEnginePolicyFacet(address(red)).updatePolicy(
@@ -179,8 +176,7 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
         RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
         bytes4[] memory selectors = new bytes4[](functionAmount);
-        if (functionAmount > 0)
-            for (uint i; i < functionAmount; i++) selectors[i] = bytes4(sigCallingFunction ^ (bytes32(i) << (256 - 8 * 4)));
+        if (functionAmount > 0) for (uint i; i < functionAmount; i++) selectors[i] = _modifySelectorWithIterator(sigCallingFunction, i);
         uint256[][] memory _ruleIds = new uint256[][](functionAmount);
         uint256[] memory _ids = new uint256[](functionAmount);
         _ids[0] = ruleId;
@@ -247,10 +243,8 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             pTypes[1] = ParamTypes.UINT;
             bytes4[] memory selectors = new bytes4[](functionAmount);
             if (functionAmount > 0)
-                // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
-                // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
                 for (uint i; i < functionAmount; i++) {
-                    selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
+                    selectors[i] = _modifySelectorWithIterator(sigCallingFunction, i);
                     RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, selectors[i], pTypes, callingFunction, "");
                 }
             uint256[][] memory _ruleIds = new uint256[][](ruleAmounts);
@@ -342,10 +336,8 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             pTypes[1] = ParamTypes.UINT;
             bytes4[] memory selectors = new bytes4[](functionAmount);
             if (functionAmount > 0)
-                // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
-                // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
                 for (uint i; i < functionAmount; i++) {
-                    selectors[i] = bytes4(sigCallingFunction ^ ((bytes32(i) << (256 - 4 * 8)))); // sigCallingFunction XOR i
+                    selectors[i] = _modifySelectorWithIterator(sigCallingFunction, i);
                     RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, selectors[i], pTypes, callingFunction, "");
                 }
             if (shouldRevert) selectors[identicalElementIndex] = selectors[copiedElementIndex]; // we duplicate a random element in a random position

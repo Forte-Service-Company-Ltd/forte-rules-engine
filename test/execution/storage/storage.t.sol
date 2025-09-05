@@ -87,14 +87,14 @@ abstract contract storageTest is RulesEngineCommon {
     function testCallingFunctionAssociationStorage(uint16 total) public {
         uint256 index = bound(uint256(total), 0, 300);
         uint256[] memory policyIds = new uint256[](1);
-
+        bytes4 cf2Selector = bytes4(keccak256(bytes(callingFunction2)));
         policyIds[0] = _createBlankPolicy();
 
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         for (uint256 i = 0; i < index; i++) {
-            bytes4 selector = bytes4(bytes4(keccak256(bytes(callingFunction2))) ^ (bytes32(i) << (256 - 4 * 8)));
+            bytes4 selector = _modifySelectorWithIterator(cf2Selector, i);
             RulesEngineComponentFacet(address(red)).createCallingFunction(policyIds[0], selector, pTypes, callingFunction, "");
             callingFunctions.push(selector);
             uint256[][] memory blankRuleIds = new uint256[][](0);
@@ -113,7 +113,7 @@ abstract contract storageTest is RulesEngineCommon {
     function testCallingFunctionStorage(uint16 total) public {
         uint256 index = bound(uint256(total), 0, 1000);
         uint256[] memory policyIds = new uint256[](1);
-
+        bytes4 cfSelector = bytes4(keccak256(bytes(callingFunction)));
         policyIds[0] = _createBlankPolicy();
 
         ParamTypes[] memory pTypes = new ParamTypes[](2);
@@ -123,15 +123,13 @@ abstract contract storageTest is RulesEngineCommon {
             // Save the calling function
             RulesEngineComponentFacet(address(red)).createCallingFunction(
                 policyIds[0],
-                bytes4(bytes4(keccak256(bytes(callingFunction))) ^ (bytes32(i) << (256 - 8 * 4))),
+                _modifySelectorWithIterator(cfSelector, i),
                 pTypes,
                 callingFunction,
                 ""
             );
             assertTrue(
-                RulesEngineComponentFacet(address(red))
-                    .getCallingFunction(policyIds[0], bytes4(bytes4(keccak256(bytes(callingFunction))) ^ (bytes32(i) << (256 - 8 * 4))))
-                    .set
+                RulesEngineComponentFacet(address(red)).getCallingFunction(policyIds[0], _modifySelectorWithIterator(cfSelector, i)).set
             );
         }
     }

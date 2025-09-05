@@ -3221,6 +3221,6 @@ contract RulesEngineCommon is DiamondMine, Test {
     function _modifySelectorWithIterator(bytes4 _selector, uint i) internal pure returns (bytes4 selector) {
         // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
         // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
-        selector = bytes4(bytes4(keccak256(bytes(_selector))) ^ (bytes32(i) << (256 - 4 * 8)));
+        selector = bytes4(_selector ^ (bytes32(i) << (256 - 4 * 8)));
     }
 }
