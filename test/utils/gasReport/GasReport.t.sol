@@ -44,7 +44,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
     function setUp() public {
         vm.startPrank(policyAdmin);
         red = createRulesEngineDiamond(address(0xB0b));
-
         //R2V2 Setup
         //-------------------------------------------------------------------------------------
         // No Policy
@@ -52,14 +51,12 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         userContractNoPolicy.mint(USER_ADDRESS, 1_000_000 * ATTO);
         userContractNoPolicy.setRulesEngineAddress(address(red));
         userContractNoPolicy.setCallingContractAdmin(callingContractAdmin);
-
         // Min Transfer
         userContractMinTransfer = new ExampleERC20("Token Name", "SYMB");
         userContractMinTransfer.mint(USER_ADDRESS, 1_000_000 * ATTO);
         userContractMinTransfer.setRulesEngineAddress(address(red));
         userContractMinTransfer.setCallingContractAdmin(callingContractAdmin);
         _setupRuleWithRevert(address(userContractMinTransfer));
-
         // OFAC
         userContractFC = new ExampleERC20("Token Name", "SYMB");
         userContractFC.mint(USER_ADDRESS, 1_000_000 * ATTO);
@@ -70,7 +67,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         vm.startPrank(policyAdmin);
         setupRuleWithOFACForeignCall(address(testContract2), EffectTypes.REVERT, true);
         testContract2.addToNaughtyList(address(0x7654321));
-
         // OFAC Plus Min Transfer
         userContractFCPlusMin = new ExampleERC20("Token Name", "SYMB");
         userContractFCPlusMin.mint(USER_ADDRESS, 1_000_000 * ATTO);
@@ -79,7 +75,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         setupRulesWithForeignCallAndMinTransfer(address(testContract2), EffectTypes.REVERT, true);
-
         // OFAC Plus Min In One Rule
         userContractFCPlusMinPlusMaxOneRule = new ExampleERC20("Token Name", "SYMB");
         userContractFCPlusMinPlusMaxOneRule.mint(USER_ADDRESS, 1_000_000 * ATTO);
@@ -88,7 +83,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         setupRulesWithForeignCallPlusMinTransferAndMaxTransferInOneRule(address(testContract2), EffectTypes.REVERT, true);
-
         // OFAC Plus Min In Separate Policies
         userContractFCPlusMinSeparatePolicy = new ExampleERC20("Token Name", "SYMB");
         userContractFCPlusMinSeparatePolicy.mint(USER_ADDRESS, 1_000_000 * ATTO);
@@ -97,7 +91,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         setupRulesWithForeignCallAndMinTransferSeparatePolicies(address(testContract2), EffectTypes.REVERT, true);
-
         // Min Transfer 20 iterations
         userContractManyChecksMin = new ExampleERC20("Token Name", "SYMB");
         userContractManyChecksMin.mint(USER_ADDRESS, 1_000_000 * ATTO);
@@ -106,7 +99,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         _setupRuleWithRevertManyCondition();
-
         // OFAC Plus Min Plus Max Transfer
         userContractFCPlusMinPlusMax = new ExampleERC20("Token Name", "SYMB");
         userContractFCPlusMinPlusMax.mint(USER_ADDRESS, 1_000_000 * ATTO);
@@ -115,7 +107,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         setupRulesWithForeignCallPlusMinTransferAndMaxTransfer(address(testContract2), EffectTypes.REVERT, true);
-
         // Pause Rule
         userContractPause = new ExampleERC20("Token Name", "SYMB");
         userContractPause.mint(USER_ADDRESS, 1_000_000 * ATTO);
@@ -124,7 +115,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         setUpRuleWithPauseTrackers();
-
         // Oracle Flex
         userContractOracleFlex = new ExampleERC20("Token Name", "SYMB");
         userContractOracleFlex.mint(USER_ADDRESS, 1_000_000 * ATTO);
@@ -134,7 +124,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         setupRuleWithOracleFlexForeignCall(address(testContract2), EffectTypes.REVERT, true);
-
         // Min Max Balance
         userContractMinMaxBalance = new ExampleERC20("Token Name", "SYMB");
         userContractMinMaxBalance.mint(USER_ADDRESS, 1_000_000 * ATTO);
@@ -143,7 +132,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         setUpRuleWithMinMaxBalanceLimits();
-
         //-------------------------------------------------------------------------------------
 
         testContract = new ForeignCallTestContract();
@@ -430,11 +418,8 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-
         _addCallingFunctionToPolicy(policyIds[0]);
-
         _addCallingFunctionToPolicy(policyIds[1]);
-
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
         fcArgs[0] = ParamTypes.ADDR;
         ForeignCall memory fc;
@@ -482,19 +467,15 @@ contract GasReports is GasHelpers, RulesEngineCommon {
 
         bytes4[] memory callingFunctionsNew = new bytes4[](1);
         callingFunctionsNew[0] = bytes4(keccak256(bytes(callingFunction)));
-        uint256[] memory callingFunctionIdsNew = new uint256[](1);
-        callingFunctionIdsNew[0] = 1;
         // ruleIds[0][1] = ruleId2;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctionsNew,
-            callingFunctionIdsNew,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
             policyDescription
         );
-
         // Add rules for the second policy
         ruleId1 = RulesEngineRuleFacet(address(red)).createRule(policyIds[1], rule1, ruleName, ruleDescription);
         ruleId2 = RulesEngineRuleFacet(address(red)).createRule(policyIds[1], rule2, ruleName, ruleDescription);
@@ -503,7 +484,6 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[1],
             callingFunctionsNew,
-            callingFunctionIdsNew,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -1006,21 +986,19 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         pTypes[4] = ParamTypes.UINT;
         pTypes[5] = ParamTypes.UINT;
 
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
-            bytes4(bytes4(keccak256(bytes("transfer(address,uint256)")))),
+            bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)")))),
             pTypes,
-            "transfer(address,uint256)",
-            "address,uint256"
+            "transferFrom(address,address,uint256)",
+            "address,address,uint256"
         );
         // Save the Policy
-        callingFunctions.push(bytes4(keccak256(bytes("transfer(address,uint256)"))));
-        callingFunctionIds.push(callingFunctionId);
+        callingFunctions.push(bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))));
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -1078,21 +1056,19 @@ contract GasReports is GasHelpers, RulesEngineCommon {
         pTypes[4] = ParamTypes.UINT;
         pTypes[5] = ParamTypes.UINT;
 
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
-            bytes4(bytes4(keccak256(bytes("transfer(address,uint256)")))),
+            bytes4(bytes4(keccak256(bytes("func(address,uint256)")))),
             pTypes,
-            "transfer(address,uint256)",
+            "func(address,uint256)",
             "address,uint256"
         );
         // Save the Policy
-        callingFunctions.push(bytes4(keccak256(bytes("transfer(address,uint256)"))));
-        callingFunctionIds.push(callingFunctionId);
+        callingFunctions.push(bytes4(keccak256(bytes("func(address,uint256)"))));
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,

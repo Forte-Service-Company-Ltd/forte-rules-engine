@@ -76,11 +76,11 @@ abstract contract policiesExecution is RulesEngineCommon {
 
         _addCallingFunctionToPolicy(policyIds[0]);
 
-        uint256 callingFunctionId1 = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
-            bytes4(bytes4(keccak256(bytes("transfer(address,uint256)")))),
+            bytes4(bytes4(keccak256(bytes("transfer2(address,uint256)")))),
             pTypes,
-            "transfer(address,uint256)",
+            "transfer2(address,uint256)",
             ""
         );
 
@@ -89,7 +89,7 @@ abstract contract policiesExecution is RulesEngineCommon {
         pTypes[1] = ParamTypes.ADDR;
         pTypes[2] = ParamTypes.UINT;
 
-        uint256 callingFunctionId2 = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)")))),
             pTypes,
@@ -98,11 +98,8 @@ abstract contract policiesExecution is RulesEngineCommon {
         );
 
         bytes4[] memory callingFunctions = new bytes4[](2);
-        callingFunctions[0] = bytes4(bytes4(keccak256(bytes("transfer(address,uint256)"))));
+        callingFunctions[0] = bytes4(bytes4(keccak256(bytes("transfer2(address,uint256)"))));
         callingFunctions[1] = bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))));
-        uint256[] memory callingFunctionIds = new uint256[](2);
-        callingFunctionIds[0] = callingFunctionId1;
-        callingFunctionIds[1] = callingFunctionId2;
         uint256[][] memory ruleIds = new uint256[][](2);
         ruleIds[0] = new uint256[](3);
         ruleIds[0][0] = 1;
@@ -115,7 +112,6 @@ abstract contract policiesExecution is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             "policyName",
@@ -132,7 +128,10 @@ abstract contract policiesExecution is RulesEngineCommon {
         assertEq(keccak256(abi.encodePacked(rules[1][0].instructionSet)), keccak256(abi.encodePacked(initialRules[0].instructionSet)));
         assertEq(keccak256(abi.encodePacked(rules[1][1].instructionSet)), keccak256(abi.encodePacked(initialRules[1].instructionSet)));
 
-        RulesEngineComponentFacet(address(red)).deleteCallingFunction(policy1, callingFunctionId2);
+        RulesEngineComponentFacet(address(red)).deleteCallingFunction(
+            policy1,
+            bytes4(keccak256(bytes("transferFrom(address,address,uint256)")))
+        );
         rules = RulesEngineRuleFacet(address(red)).getAllRules(policy1);
         assertEq(rules.length, 1);
         assertEq(rules[0].length, 3);
@@ -159,11 +158,11 @@ abstract contract policiesExecution is RulesEngineCommon {
 
         _addCallingFunctionToPolicy(policyIds[0]);
 
-        uint256 callingFunctionId1 = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
-            bytes4(bytes4(keccak256(bytes("transfer(address,uint256)")))),
+            bytes4(bytes4(keccak256(bytes("transfer2(address,uint256)")))),
             pTypes,
-            "transfer(address,uint256)",
+            "transfer2(address,uint256)",
             ""
         );
 
@@ -172,7 +171,7 @@ abstract contract policiesExecution is RulesEngineCommon {
         pTypes[1] = ParamTypes.ADDR;
         pTypes[2] = ParamTypes.UINT;
 
-        uint256 callingFunctionId2 = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)")))),
             pTypes,
@@ -181,11 +180,8 @@ abstract contract policiesExecution is RulesEngineCommon {
         );
 
         bytes4[] memory callingFunctions = new bytes4[](2);
-        callingFunctions[0] = bytes4(bytes4(keccak256(bytes("transfer(address,uint256)"))));
+        callingFunctions[0] = bytes4(bytes4(keccak256(bytes("transfer2(address,uint256)"))));
         callingFunctions[1] = bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))));
-        uint256[] memory callingFunctionIds = new uint256[](2);
-        callingFunctionIds[0] = callingFunctionId1;
-        callingFunctionIds[1] = callingFunctionId2;
         uint256[][] memory ruleIds = new uint256[][](2);
         ruleIds[0] = new uint256[](3);
         ruleIds[0][0] = 1;
@@ -198,7 +194,6 @@ abstract contract policiesExecution is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             "policyName",
@@ -340,10 +335,10 @@ abstract contract policiesExecution is RulesEngineCommon {
             rule.negEffects = new Effect[](1);
             rule.negEffects[0] = effectId_revert;
             // Save the rule
-            ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, "My rule", "My way or the highway");
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "My rule", "My way or the highway");
         }
 
-        uint functionId;
+        bytes4 functionId;
         bytes4 sigCallingFunction;
         {
             ParamTypes[] memory pTypes = new ParamTypes[](2);
@@ -360,8 +355,6 @@ abstract contract policiesExecution is RulesEngineCommon {
         }
         bytes4[] memory selectors = new bytes4[](1);
         selectors[0] = sigCallingFunction;
-        uint256[] memory functionIds = new uint256[](1);
-        functionIds[0] = functionId;
         uint256[][] memory _ruleIds = new uint256[][](1);
         uint256[] memory _ids = new uint256[](1);
         _ids[0] = ruleId;
@@ -369,7 +362,6 @@ abstract contract policiesExecution is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             selectors,
-            functionIds,
             _ruleIds,
             PolicyType.OPEN_POLICY,
             "Test Policy",
@@ -407,8 +399,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             rule.negEffects = new Effect[](1);
             rule.negEffects[0] = effectId_revert;
 
-            vm.expectRevert("Policy does not exist");
-            RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, "Test rule", "Test description");
+            vm.expectRevert("Rule not set");
+            RulesEngineRuleFacet(address(red)).updateRule(policyId, ruleId, rule, "Test rule", "Test description");
         }
 
         // attempting to create a calling function for the deleted policy should revert
@@ -429,13 +421,9 @@ abstract contract policiesExecution is RulesEngineCommon {
         // verify that getPolicy shows cleared mappings for the deleted policy
         // Note: The calling functions array may still exist, but the mappings should be cleared
         {
-            (bytes4[] memory callingFunctions, uint256[] memory callingFunctionIds, uint256[][] memory ruleIds) = RulesEnginePolicyFacet(
-                address(red)
-            ).getPolicy(policyId);
+            (bytes4[] memory callingFunctions, uint256[][] memory ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
             // The calling functions array may still contain the function signature
             if (callingFunctions.length > 0) {
-                // But the function IDs should be cleared (set to 0)
-                assertEq(callingFunctionIds[0], 0, "Deleted policy should have cleared calling function IDs");
                 // And rule associations should be empty
                 assertEq(ruleIds[0].length, 0, "Deleted policy should have no rule associations");
             }
@@ -593,7 +581,7 @@ abstract contract policiesExecution is RulesEngineCommon {
         transferPTypes[0] = ParamTypes.ADDR;
         transferPTypes[1] = ParamTypes.UINT;
 
-        uint256 transferFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256(bytes("transfer(address,uint256)"))),
             transferPTypes,
@@ -606,7 +594,7 @@ abstract contract policiesExecution is RulesEngineCommon {
         transferFromPTypes[1] = ParamTypes.ADDR;
         transferFromPTypes[2] = ParamTypes.UINT;
 
-        uint256 transferFromFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))),
             transferFromPTypes,
@@ -619,10 +607,6 @@ abstract contract policiesExecution is RulesEngineCommon {
         callingFunctions[0] = bytes4(keccak256(bytes("transfer(address,uint256)")));
         callingFunctions[1] = bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
 
-        uint256[] memory callingFunctionIds = new uint256[](2);
-        callingFunctionIds[0] = transferFunctionId;
-        callingFunctionIds[1] = transferFromFunctionId;
-
         uint256[][] memory ruleIds = new uint256[][](2);
         ruleIds[0] = new uint256[](1);
         ruleIds[0][0] = transferRuleId;
@@ -632,7 +616,6 @@ abstract contract policiesExecution is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.OPEN_POLICY,
             "OFAC Deny List Policy [Sepolia]",

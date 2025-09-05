@@ -20,7 +20,7 @@ abstract contract ERC20UnitTestsCommon is RulesEngineCommon {
         rule.negEffects[0] = effectId_revert;
         rule.posEffects[0] = effectId_event;
         // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyIds[0], 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
@@ -46,7 +46,7 @@ abstract contract ERC20UnitTestsCommon is RulesEngineCommon {
         rule.negEffects[0] = effectId_revert;
         rule.posEffects[0] = effectId_event;
         // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyIds[0], 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
@@ -73,7 +73,7 @@ abstract contract ERC20UnitTestsCommon is RulesEngineCommon {
         rule.posEffects[0] = effectId_event; // TRUE condition (balance >= 100) → allow with event
         rule.negEffects[0] = effectId_revert; // FALSE condition (balance < 100) → revert
         // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyIds[0], 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;

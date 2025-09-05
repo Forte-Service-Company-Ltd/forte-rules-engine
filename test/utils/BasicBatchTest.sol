@@ -14,7 +14,6 @@ contract BasicBatchTest is RulesEngineCommon {
         bytes[] memory calls = new bytes[](3);
 
         bytes4[] memory blankCallingFunctions = new bytes4[](0);
-        uint256[] memory blankCallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         calls[0] = abi.encodeWithSelector(
             RulesEnginePolicyFacet.createPolicy.selector,
@@ -39,7 +38,6 @@ contract BasicBatchTest is RulesEngineCommon {
             RulesEnginePolicyFacet.updatePolicy.selector,
             1,
             blankCallingFunctions,
-            blankCallingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY
         );

@@ -16,16 +16,22 @@ enum TestType {
 }
 
 contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
-
     function setUp() public {
         red = createRulesEngineDiamondWithTestProcessorFacet(address(this));
         userContractAddress = address(new ExampleUserContract());
         ExampleUserContract(userContractAddress).setRulesEngineAddress(address(red));
         ExampleUserContract(userContractAddress).setCallingContractAdmin(callingContractAdmin);
-        
     }
 
-    function SetupPlaceholdersAndRule(bytes memory _input, TestType _testType) internal ifDeploymentTestsEnabled endWithStopPrank returns (uint256[] memory, Placeholder[] memory, uint256) {
+    function SetupPlaceholdersAndRule(
+        bytes memory _input,
+        TestType _testType
+    )
+        internal
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+        returns (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId)
+    {
         uint256[] memory policyIds = new uint256[](1);
         // blank slate policy
         vm.startPrank(callingContractAdmin);
@@ -48,7 +54,6 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             rule.instructionSet[7] = uint(LogicalOp.EQ);
             rule.instructionSet[8] = 1;
             rule.instructionSet[9] = 2;
-
         } else {
             rule.instructionSet = new uint256[](7);
             rule.instructionSet[0] = uint(LogicalOp.PLH);
@@ -83,7 +88,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
                 set: false,
                 trackerIndex: 0
             });
-            
+
             rule.placeHolders = new Placeholder[](2);
             rule.placeHolders[0].pType = ParamTypes.UINT;
             rule.placeHolders[0].typeSpecificIndex = 0;
@@ -91,14 +96,16 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             rule.placeHolders[1].pType = ParamTypes.STR;
             rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
             vm.startPrank(callingContractAdmin);
-            rule.placeHolders[1].typeSpecificIndex = uint128(RulesEngineComponentFacet(address(red)).createMappedTracker(
-                policyIds[0], 
-                tracker, 
-                "test", 
-                trackerKeys, 
-                trackerValues, 
-                TrackerArrayTypes.VOID
-            ));
+            rule.placeHolders[1].typeSpecificIndex = uint128(
+                RulesEngineComponentFacet(address(red)).createMappedTracker(
+                    policyIds[0],
+                    tracker,
+                    "test",
+                    trackerKeys,
+                    trackerValues,
+                    TrackerArrayTypes.VOID
+                )
+            );
             vm.stopPrank();
         } else if (_testType == TestType.BYTES_FROM_MAPPED_TRACKER) {
             bytes[] memory trackerKeys = new bytes[](1);
@@ -113,7 +120,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
                 set: false,
                 trackerIndex: 0
             });
-            
+
             rule.placeHolders = new Placeholder[](2);
             rule.placeHolders[0].pType = ParamTypes.UINT;
             rule.placeHolders[0].typeSpecificIndex = 0;
@@ -121,14 +128,16 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             rule.placeHolders[1].pType = ParamTypes.BYTES;
             rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
             vm.startPrank(callingContractAdmin);
-            rule.placeHolders[1].typeSpecificIndex = uint128(RulesEngineComponentFacet(address(red)).createMappedTracker(
-                policyIds[0], 
-                tracker, 
-                "test", 
-                trackerKeys, 
-                trackerValues, 
-                TrackerArrayTypes.VOID
-            ));
+            rule.placeHolders[1].typeSpecificIndex = uint128(
+                RulesEngineComponentFacet(address(red)).createMappedTracker(
+                    policyIds[0],
+                    tracker,
+                    "test",
+                    trackerKeys,
+                    trackerValues,
+                    TrackerArrayTypes.VOID
+                )
+            );
             vm.stopPrank();
         } else if (_testType == TestType.STRING_FROM_TRACKER) {
             Trackers memory tracker = Trackers({
@@ -139,16 +148,13 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
                 pType: ParamTypes.STR,
                 trackerValue: abi.encode(_input)
             });
-            
+
             rule.placeHolders = new Placeholder[](1);
             rule.placeHolders[0].pType = ParamTypes.STR;
             vm.startPrank(callingContractAdmin);
-            rule.placeHolders[0].typeSpecificIndex = uint128(RulesEngineComponentFacet(address(red)).createTracker(
-                policyIds[0], 
-                tracker, 
-                "test", 
-                TrackerArrayTypes.VOID
-            ));
+            rule.placeHolders[0].typeSpecificIndex = uint128(
+                RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "test", TrackerArrayTypes.VOID)
+            );
             vm.stopPrank();
             rule.placeHolders[0].flags = FLAG_TRACKER_VALUE;
         } else if (_testType == TestType.BYTES_FROM_TRACKER) {
@@ -160,16 +166,13 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
                 pType: ParamTypes.BYTES,
                 trackerValue: abi.encode(_input)
             });
-            
+
             rule.placeHolders = new Placeholder[](1);
             rule.placeHolders[0].pType = ParamTypes.BYTES;
             vm.startPrank(callingContractAdmin);
-            rule.placeHolders[0].typeSpecificIndex = uint128(RulesEngineComponentFacet(address(red)).createTracker(
-                policyIds[0], 
-                tracker, 
-                "test", 
-                TrackerArrayTypes.VOID
-            ));
+            rule.placeHolders[0].typeSpecificIndex = uint128(
+                RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "test", TrackerArrayTypes.VOID)
+            );
             vm.stopPrank();
             rule.placeHolders[0].flags = FLAG_TRACKER_VALUE;
         }
@@ -184,7 +187,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.STR;
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
@@ -193,14 +196,12 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
 
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -209,11 +210,16 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
 
         RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContractAddress), policyIds);
 
-        return (rule.instructionSet, rule.placeHolders, policyIds[0]);
+        instructionSet = rule.instructionSet;
+        placeHolders = rule.placeHolders;
+        policyId = policyIds[0];
     }
 
     function test_stringFromTracker(string memory _input) public {
-        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(bytes(_input), TestType.STRING_FROM_TRACKER);
+        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(
+            bytes(_input),
+            TestType.STRING_FROM_TRACKER
+        );
         bytes[] memory arguments = new bytes[](1);
         arguments[0] = bytes(abi.encode(keccak256(abi.encode(_input))));
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
@@ -222,7 +228,10 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
 
     /// forge-config: default.fuzz.runs = 20
     function test_bytesFromTracker(bytes memory _input) public {
-        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(_input, TestType.BYTES_FROM_TRACKER);
+        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(
+            _input,
+            TestType.BYTES_FROM_TRACKER
+        );
         bytes[] memory arguments = new bytes[](1);
         arguments[0] = bytes(abi.encode(keccak256(abi.encode(_input))));
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
@@ -231,7 +240,10 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
 
     /// forge-config: default.fuzz.runs = 20
     function test_stringFromPlaceholder(string memory _input) public {
-        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(bytes(_input), TestType.STRING_FROM_PLACEHOLDER);
+        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(
+            bytes(_input),
+            TestType.STRING_FROM_PLACEHOLDER
+        );
         bytes[] memory arguments = new bytes[](1);
         arguments[0] = abi.encode(_input);
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
@@ -240,7 +252,10 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
 
     /// forge-config: default.fuzz.runs = 20
     function test_bytesFromPlaceholder(bytes memory _input) public {
-        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(_input, TestType.BYTES_FROM_PLACEHOLDER);
+        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(
+            _input,
+            TestType.BYTES_FROM_PLACEHOLDER
+        );
         bytes[] memory arguments = new bytes[](1);
         arguments[0] = abi.encode(_input);
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
@@ -249,8 +264,11 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
 
     /// forge-config: default.fuzz.runs = 20
     function test_stringFromMappedTracker(string memory _input) public {
-        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(abi.encode(_input), TestType.STRING_FROM_MAPPED_TRACKER);
-        bytes memory trackerValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, placeHolders[1].typeSpecificIndex, abi.encode(1));
+        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(
+            abi.encode(_input),
+            TestType.STRING_FROM_MAPPED_TRACKER
+        );
+        RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, placeHolders[1].typeSpecificIndex, abi.encode(1));
         bytes[] memory arguments = new bytes[](2);
         arguments[0] = abi.encode(1);
         arguments[1] = abi.encode(0);
@@ -260,8 +278,11 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
 
     /// forge-config: default.fuzz.runs = 20
     function test_bytesFromMappedTracker(bytes memory _input) public {
-        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(_input, TestType.BYTES_FROM_MAPPED_TRACKER);
-        bytes memory trackerValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, placeHolders[1].typeSpecificIndex, abi.encode(1));
+        (uint256[] memory instructionSet, Placeholder[] memory placeHolders, uint256 policyId) = SetupPlaceholdersAndRule(
+            _input,
+            TestType.BYTES_FROM_MAPPED_TRACKER
+        );
+        RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, placeHolders[1].typeSpecificIndex, abi.encode(1));
         bytes[] memory arguments = new bytes[](2);
         arguments[0] = abi.encode(1);
         arguments[1] = abi.encode(0);

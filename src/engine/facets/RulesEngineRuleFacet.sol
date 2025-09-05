@@ -62,6 +62,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         if (policyId == 0) revert(POLICY_ID_0);
         _policyAdminOnly(policyId, msg.sender);
         _validateRule(rule);
+        if (!StorageLib._isRuleSet(policyId, ruleId)) revert(RULE_NOT_SET);
         StorageLib._notCemented(policyId);
         // Load the rule data from storage
         RuleStorage storage data = lib._getRuleStorage();
@@ -87,7 +88,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             rules[i] = new Rule[](ruleIds.length);
             // Data validation will always ensure ruleIds.length will be less than MAX_LOOP
             for (uint256 j = 0; j < ruleIds.length; j++) {
-                if (lib._getRuleStorage().ruleStorageSets[policyId][ruleIds[j]].set) {
+                if (StorageLib._isRuleSet(policyId, ruleIds[j])) {
                     rules[i][j] = lib._getRuleStorage().ruleStorageSets[policyId][ruleIds[j]].rule;
                 }
             }

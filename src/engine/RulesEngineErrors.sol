@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 // Rules Engine Error Constants
-string constant SIGNATURES_INCONSISTENT = "Signatures and signature id's are inconsistent";
 string constant POLICY_ID_0 = "Policy ID cannot be 0. Create policy before updating";
 string constant POLICY_DOES_NOT_EXIST = "Policy does not exist";
 string constant POLICY_CEMENTED = "Not allowed for cemented policy";
@@ -22,13 +21,15 @@ string constant ZERO_ADDRESS_NOT_ALLOWED = "Zero Address Is Not Allowed";
 string constant INVALID_TYPE = "Invalid type";
 string constant INVALID_TRACKER_KEY_TYPE = "Invalid tracker key type";
 string constant KEY_AND_VALUE_SAME = "Tracker keys and values must have the same length";
-string constant CALLING_FUNCTION_EXISTS = "Delete calling function before updating to a new one";
+string constant CALLING_FUNCTION_NOT_SET = "Calling function not set";
+string constant CALLING_FUNCTION_ALREADY_EXISTS = "calling function already exists";
 string constant PARM_GT_EQ = "New parameter types must be of greater or equal length to the original";
 string constant PARM_NOT_SAME_TYPE = "New parameter types must be of the same type as the original";
 string constant NOT_ALLOWED_CEMENTED_POLICY = "Not allowed for cemented policy";
 string constant SIG_REQ = "Function signature is required";
 string constant NAME_REQ = "Name is required";
 string constant INVALID_RULE_LENGTH = "Invalid rule array length";
+string constant RULE_NOT_SET = "Rule not set";
 string constant ADDRESS_NOT_ALLOWED = "Address not allowed to be a foreign call";
 
 string constant MAX_FC = "Max foreign calls reached";
@@ -55,6 +56,7 @@ string constant ENC_STRING_INV = "Invalid encoded string";
 string constant EFFECT_REQ = "Must have at least one effect";
 string constant MAPPED_TRACKER_KEY_INDICES_LENGTH_MISMATCH = "Mapped tracker key indices length mismatch.";
 string constant MAPPED_TRACKER_KEY_CANNOT_BE_DOUBLE_NESTED = "Mapped tracker key cannot be double nested";
+string constant DUPLICATES_NOT_ALLOWED = "Duplicates not allowed";
 
 // Admin Error Constants
 string constant RULES_ENGINE_ONLY = "OnlyRulesEngineCanCreateAdminRoles";

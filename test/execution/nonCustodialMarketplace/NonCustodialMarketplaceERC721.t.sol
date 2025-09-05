@@ -114,13 +114,12 @@ contract NonCustodialMarketplaceTestERC721 is RulesEngineCommon {
 
         // we define the calling function that the policy will be attached to
         vm.startPrank(policyAdmin);
-        uint256 callingFunctionId;
         {
             ParamTypes[] memory callingFunctionTypes = new ParamTypes[](3);
             callingFunctionTypes[0] = ParamTypes.ADDR; // from
             callingFunctionTypes[1] = ParamTypes.ADDR; // to
             callingFunctionTypes[2] = ParamTypes.UINT; // tokenId
-            callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
                 policyIds[0],
                 bytes4(keccak256("transferFrom(address,address,uint256)")),
                 callingFunctionTypes,
@@ -158,16 +157,14 @@ contract NonCustodialMarketplaceTestERC721 is RulesEngineCommon {
 
         bytes4[] memory functions = new bytes4[](1);
         functions[0] = bytes4(keccak256("transferFrom(address,address,uint256)"));
-        uint256[] memory functionIds = new uint256[](1);
-        functionIds[0] = callingFunctionId;
-        ruleIds.push(new uint256[](1));
-        ruleIds[0][0] = ruleId;
-        _addRuleIdsToPolicy(policyIds[0], ruleIds);
+        uint[][] memory _ruleIds = new uint[][](1);
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = ruleId;
+        _ruleIds[0] = ids;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             functions,
-            functionIds,
-            ruleIds,
+            _ruleIds,
             PolicyType.CLOSED_POLICY,
             "policyName",
             "policyDescription"

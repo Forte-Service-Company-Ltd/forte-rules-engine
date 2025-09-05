@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "src/engine/facets/FacetCommonImports.sol";
+import {RulesEngineStorageLib as StorageLib} from "src/engine/facets/RulesEngineStorageLib.sol";
 
 /**
  * @title Rules Engine Component Facet
@@ -335,6 +336,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
     function updateTracker(uint256 policyId, uint256 trackerIndex, Trackers calldata tracker) external {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
+        if (!StorageLib._isTrackerSet(policyId, trackerIndex)) revert(TRACKER_NOT_SET);
         // Load the Tracker data from storage
         TrackerStorage storage data = lib._getTrackerStorage();
         _storeTracker(data, policyId, trackerIndex, tracker);
@@ -361,6 +363,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         _notCemented(_policyId);
         // Load the Tracker data from storage
         TrackerStorage storage data = lib._getTrackerStorage();
+        if (!StorageLib._isTrackerSet(_policyId, _trackerIndex)) revert(TRACKER_NOT_SET);
         _storeTrackerMapping(data, _policyId, _trackerIndex, _tracker, _trackerKey, _trackerValue);
         emit TrackerUpdated(_policyId, _trackerIndex);
     }
@@ -398,47 +401,40 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         ParamTypes[] memory pTypes,
         string memory callingFunctionName,
         string memory encodedValues
-    ) external returns (uint256) {
+    ) external returns (bytes4) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
         if (!lib._getPolicyStorage().policyStorageSets[policyId].set) revert(POLICY_DOES_NOT_EXIST);
-        // Step 1: Increment function ID
-        uint256 functionId = _incrementFunctionId(policyId);
+        if (StorageLib._isCallingFunctionSet(policyId, functionSignature)) revert(CALLING_FUNCTION_ALREADY_EXISTS);
 
         // Step 2: Store calling function data
-        _storeCallingFunctionData(policyId, functionId, functionSignature, pTypes);
+        _storeCallingFunctionData(policyId, functionSignature, pTypes);
 
         // Step 3: Store calling function metadata
-        _storeCallingFunctionMetadata(policyId, functionId, functionSignature, callingFunctionName, encodedValues);
+        _storeCallingFunctionMetadata(policyId, functionSignature, callingFunctionName, encodedValues);
 
         // Emit event
-        emit CallingFunctionCreated(policyId, functionId);
+        emit CallingFunctionCreated(policyId, functionSignature);
 
-        return functionId;
+        return functionSignature;
     }
 
     /**
      * @notice Updates an existing calling function by appending new parameter types.
      * @dev Ensures that the new parameter types are compatible with the existing ones.
      * @param policyId The policy ID the calling function is associated with.
-     * @param callingFunctionID The ID of the calling function to update.
      * @param functionSignature The function signature of the calling function.
      * @param pTypes The new parameter types to append.
      * @return functionId The updated calling function ID.
      */
-    function updateCallingFunction(
-        uint256 policyId,
-        uint256 callingFunctionID,
-        bytes4 functionSignature,
-        ParamTypes[] memory pTypes
-    ) external returns (uint256) {
+    function updateCallingFunction(uint256 policyId, bytes4 functionSignature, ParamTypes[] memory pTypes) external returns (bytes4) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
         // Load the calling function data from storage
         CallingFunctionStruct storage data = lib._getCallingFunctionStorage();
         // increment the callingFunctionId if necessary
-        CallingFunctionStorageSet storage callingFunction = data.callingFunctionStorageSets[policyId][callingFunctionID];
-        require(callingFunction.signature == functionSignature, CALLING_FUNCTION_EXISTS);
+        CallingFunctionStorageSet storage callingFunction = data.callingFunctionStorageSets[policyId][functionSignature];
+        require(callingFunction.set, CALLING_FUNCTION_NOT_SET);
         require(callingFunction.parameterTypes.length <= pTypes.length, PARM_GT_EQ);
         for (uint256 i = 0; i < callingFunction.parameterTypes.length; i++) {
             require(pTypes[i] == callingFunction.parameterTypes[i], PARM_NOT_SAME_TYPE);
@@ -448,29 +444,25 @@ contract RulesEngineComponentFacet is FacetCommonImports {
                 callingFunction.parameterTypes.push(pTypes[i]);
             }
         }
-        emit CallingFunctionUpdated(policyId, callingFunctionID);
-        return callingFunctionID;
+        emit CallingFunctionUpdated(policyId, functionSignature);
+        return functionSignature;
     }
 
     /**
      * @notice Deletes a calling function from storage.
      * @dev Removes the calling function and its associated rules and mappings.
      * @param policyId The policy ID the calling function is associated with.
-     * @param callingFunctionId The ID of the calling function to delete.
+     * @param sig The selector of the calling function to delete.
      */
-    function deleteCallingFunction(uint256 policyId, uint256 callingFunctionId) external {
+    function deleteCallingFunction(uint256 policyId, bytes4 sig) external {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
         // retrieve policy from storage
         PolicyStorageSet storage data = lib._getPolicyStorage().policyStorageSets[policyId];
-        // retrieve calling function to delete
-        bytes4 signature = lib._getCallingFunctionStorage().callingFunctionStorageSets[policyId][callingFunctionId].signature;
         // delete the calling function storage set struct
-        delete lib._getCallingFunctionStorage().callingFunctionStorageSets[policyId][callingFunctionId];
-        // delete calling function to id map
-        delete data.policy.callingFunctionIdMap[signature];
+        delete lib._getCallingFunctionStorage().callingFunctionStorageSets[policyId][sig];
         // Capture the rules tied to the function being deleted
-        uint256[] memory toCheckRuleIds = data.policy.callingFunctionsToRuleIds[signature];
+        uint256[] memory toCheckRuleIds = data.policy.callingFunctionsToRuleIds[sig];
 
         // For each rule, see if it appears under any other calling function
         for (uint256 i = 0; i < toCheckRuleIds.length; i++) {
@@ -481,7 +473,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
             bytes4[] memory allSigs = data.policy.callingFunctions;
             for (uint256 s = 0; s < allSigs.length && !presentElsewhere; s++) {
                 bytes4 otherSig = allSigs[s];
-                if (otherSig == signature) continue;
+                if (otherSig == sig) continue;
 
                 uint256[] storage otherRuleIds = data.policy.callingFunctionsToRuleIds[otherSig];
                 for (uint256 k = 0; k < otherRuleIds.length; k++) {
@@ -495,46 +487,43 @@ contract RulesEngineComponentFacet is FacetCommonImports {
             // Only delete the rule if it isn't used by any other calling function
             if (!presentElsewhere) {
                 delete lib._getRuleStorage().ruleStorageSets[policyId][rid];
-                emit AssociatedRuleDeleted(policyId, callingFunctionId);
+                emit AssociatedRuleDeleted(policyId, sig);
             }
         }
 
         // After this, you can clear the mapping for this function's ruleIds
-        delete data.policy.callingFunctionsToRuleIds[signature];
+        delete data.policy.callingFunctionsToRuleIds[sig];
 
         for (uint256 i = 0; i < data.policy.callingFunctions.length; i++) {
-            if (data.policy.callingFunctions[i] == signature) {
+            if (data.policy.callingFunctions[i] == sig) {
                 data.policy.callingFunctions[i] = data.policy.callingFunctions[data.policy.callingFunctions.length - 1];
                 data.policy.callingFunctions.pop();
                 break;
             }
         }
 
-        emit CallingFunctionDeleted(policyId, callingFunctionId);
+        emit CallingFunctionDeleted(policyId, sig);
     }
 
     /**
      * @notice Retrieves a calling function from storage.
      * @param policyId The policy ID the calling function is associated with.
-     * @param callingFunctionId The ID of the calling function to retrieve.
+     * @param sig The selector of the calling function to retrieve.
      * @return CallngFunctionStorageSet The calling function data.
      */
-    function getCallingFunction(uint256 policyId, uint256 callingFunctionId) public view returns (CallingFunctionStorageSet memory) {
+    function getCallingFunction(uint256 policyId, bytes4 sig) public view returns (CallingFunctionStorageSet memory) {
         // Load the calling function data from storage
-        return lib._getCallingFunctionStorage().callingFunctionStorageSets[policyId][callingFunctionId];
+        return lib._getCallingFunctionStorage().callingFunctionStorageSets[policyId][sig];
     }
 
     /**
      * @notice retrieves the calling function metadata
      * @param policyId The policy ID the calling function is associated with.
-     * @param callingFunctionId The identifier for the calling function
+     * @param sig The selector for the calling function
      * @return the metadata for the calling function
      */
-    function getCallingFunctionMetadata(
-        uint256 policyId,
-        uint256 callingFunctionId
-    ) public view returns (CallingFunctionHashMapping memory) {
-        return lib._getCallingFunctioneMetadataStorage().callingFunctionMetadata[policyId][callingFunctionId];
+    function getCallingFunctionMetadata(uint256 policyId, bytes4 sig) public view returns (CallingFunctionHashMapping memory) {
+        return lib._getCallingFunctioneMetadataStorage().callingFunctionMetadata[policyId][sig];
     }
 
     /**
@@ -545,12 +534,13 @@ contract RulesEngineComponentFacet is FacetCommonImports {
     function getAllCallingFunctions(uint256 policyId) public view returns (CallingFunctionStorageSet[] memory) {
         // Load the calling function data from storage
         CallingFunctionStruct storage data = lib._getCallingFunctionStorage();
-        uint256 functionIdCount = data.functionIdCounter[policyId];
+        bytes4[] memory sigs = lib._getPolicyStorage().policyStorageSets[policyId].policy.callingFunctions;
+        uint256 functionIdCount = sigs.length;
         CallingFunctionStorageSet[] memory callingFunctionStorageSets = new CallingFunctionStorageSet[](functionIdCount);
         uint256 j = 0;
-        for (uint256 i = 1; i <= functionIdCount; i++) {
-            if (data.callingFunctionStorageSets[policyId][i].set) {
-                callingFunctionStorageSets[j] = data.callingFunctionStorageSets[policyId][i];
+        for (uint256 i = 0; i < functionIdCount; i++) {
+            if (data.callingFunctionStorageSets[policyId][sigs[i]].set) {
+                callingFunctionStorageSets[j] = data.callingFunctionStorageSets[policyId][sigs[i]];
                 j++;
             }
         }
@@ -558,55 +548,38 @@ contract RulesEngineComponentFacet is FacetCommonImports {
     }
 
     /**
-     * @dev Helper function to increment function ID
-     * @param _policyId The policy ID the calling function is associated with.
-     */
-    function _incrementFunctionId(uint256 _policyId) private returns (uint256) {
-        CallingFunctionStruct storage data = lib._getCallingFunctionStorage();
-        return ++data.functionIdCounter[_policyId];
-    }
-
-    /**
      * @dev Helper function to store calling function data
      * @param _policyId The policy ID the calling function is associated with.
-     * @param _functionId The ID of the function
      * @param _functionSignature The function signature of the calling function
      * @param _pTypes The parameter types for the calling function.
      */
-    function _storeCallingFunctionData(
-        uint256 _policyId,
-        uint256 _functionId,
-        bytes4 _functionSignature,
-        ParamTypes[] memory _pTypes
-    ) private {
+    function _storeCallingFunctionData(uint256 _policyId, bytes4 _functionSignature, ParamTypes[] memory _pTypes) private {
         if (EMPTY_SIG == _functionSignature) revert(SIG_REQ);
         _validateCallingFunctionPType(_pTypes);
         CallingFunctionStruct storage data = lib._getCallingFunctionStorage();
-        data.callingFunctionStorageSets[_policyId][_functionId].set = true;
-        data.callingFunctionStorageSets[_policyId][_functionId].signature = _functionSignature;
-        data.callingFunctionStorageSets[_policyId][_functionId].parameterTypes = _pTypes;
+        data.callingFunctionStorageSets[_policyId][_functionSignature].set = true;
+        data.callingFunctionStorageSets[_policyId][_functionSignature].signature = _functionSignature;
+        data.callingFunctionStorageSets[_policyId][_functionSignature].parameterTypes = _pTypes;
     }
 
     /**
      * @dev Helper function to store calling function metadata
      * @param _policyId The policy ID the calling function is associated with.
-     * @param _functionId The ID of the function
      * @param _functionSignature The function signature of the calling function
      * @param _callingFunctionName Name of the calling function
      * @param _encodedValues Arguments to be encoded
      */
     function _storeCallingFunctionMetadata(
         uint256 _policyId,
-        uint256 _functionId,
         bytes4 _functionSignature,
         string memory _callingFunctionName,
         string memory _encodedValues
     ) private {
         if (keccak256(bytes(_callingFunctionName)) == EMPTY_STRING_HASH) revert(NAME_REQ);
         CallingFunctionMetadataStruct storage metaData = lib._getCallingFunctioneMetadataStorage();
-        metaData.callingFunctionMetadata[_policyId][_functionId].callingFunction = _callingFunctionName;
-        metaData.callingFunctionMetadata[_policyId][_functionId].signature = _functionSignature;
-        metaData.callingFunctionMetadata[_policyId][_functionId].encodedValues = _encodedValues;
+        metaData.callingFunctionMetadata[_policyId][_functionSignature].callingFunction = _callingFunctionName;
+        metaData.callingFunctionMetadata[_policyId][_functionSignature].signature = _functionSignature;
+        metaData.callingFunctionMetadata[_policyId][_functionSignature].encodedValues = _encodedValues;
     }
 
     //-------------------------------------------------------------------------------------------------------------------------------------------------------

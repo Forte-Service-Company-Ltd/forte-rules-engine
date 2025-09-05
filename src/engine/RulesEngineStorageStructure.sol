@@ -185,7 +185,7 @@ struct CallingFunctionHashMapping {
  * Mapping for the metadata for calling functions
  */
 struct CallingFunctionMetadataStruct {
-    mapping(uint256 policyId => mapping(uint256 functionId => CallingFunctionHashMapping)) callingFunctionMetadata;
+    mapping(uint256 policyId => mapping(bytes4 selector => CallingFunctionHashMapping)) callingFunctionMetadata;
 }
 
 /**
@@ -229,8 +229,8 @@ struct ForeignCall {
     ForeignCallEncodedIndex[] encodedIndices;
     // Tracks the index of the arguments that are mapped to a tracker
     ForeignCallEncodedIndex[] mappedTrackerKeyIndices;
-    // Index of the Calling Function this foreign call is tied to
-    uint256 callingFunctionIndex;
+    // Selector of the Calling Function this foreign call is tied to
+    bytes4 callingFunctionSelector;
 }
 
 /**
@@ -286,8 +286,7 @@ struct Trackers {
  * Structure used to hold the calling function Ids and their associated metadata
  */
 struct CallingFunctionStruct {
-    mapping(uint256 policyId => uint256 functionId) functionIdCounter;
-    mapping(uint256 policyId => mapping(uint256 functionId => CallingFunctionStorageSet)) callingFunctionStorageSets;
+    mapping(uint256 policyId => mapping(bytes4 sig => CallingFunctionStorageSet)) callingFunctionStorageSets;
 }
 
 /**
@@ -431,8 +430,6 @@ struct PolicyStorageSet {
  * Policy Storage Structure
  */
 struct Policy {
-    // calling functions to calling function Id
-    mapping(bytes4 => uint256) callingFunctionIdMap;
     // calling function signature to ruleIds
     mapping(bytes4 => uint256[]) callingFunctionsToRuleIds;
     // Array to hold the calling functions signatures for iterating

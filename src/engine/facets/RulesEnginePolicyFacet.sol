@@ -23,7 +23,6 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
      * @dev Updates the policy type, calling functions, and associated rules.
      * @param policyId The ID of the policy to update.
      * @param callingFunctions The function signatures of the calling functions in the policy.
-     * @param callingFunctionIds The IDs of the calling functions.
      * @param ruleIds A two-dimensional array of rule IDs associated with the policy.
      * @param policyType The type of the policy (CLOSED_POLICY or OPEN_POLICY).
      * @return policyId The updated policy ID.
@@ -31,7 +30,6 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
     function updatePolicy(
         uint256 policyId,
         bytes4[] calldata callingFunctions,
-        uint256[] calldata callingFunctionIds,
         uint256[][] calldata ruleIds,
         PolicyType policyType,
         string calldata policyName,
@@ -40,10 +38,9 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         // only the admin of the policy can update. This covers policyId == 0 case.
         _policyAdminOnly(policyId, msg.sender);
         StorageLib._notCemented(policyId);
-        // calling functions length must match the calling function ids length
-        if (callingFunctions.length != callingFunctionIds.length) revert(SIGNATURES_INCONSISTENT);
+        if (!lib._getPolicyStorage().policyStorageSets[policyId].set) revert(POLICY_DOES_NOT_EXIST);
         // Update the policy type
-        return _storePolicyData(policyId, callingFunctions, callingFunctionIds, ruleIds, policyType, policyName, policyDescription);
+        return _storePolicyData(policyId, callingFunctions, ruleIds, policyType, policyName, policyDescription);
     }
 
     /**
@@ -123,10 +120,13 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
             }
         }
 
-        for (uint256 i = 0; i < data.policy.callingFunctions.length; i++) {
-            delete data.policy.callingFunctionIdMap[data.policy.callingFunctions[i]];
-            delete data.policy.callingFunctionsToRuleIds[data.policy.callingFunctions[i]];
+        bytes4[] memory oldCallingFunctions = data.policy.callingFunctions;
+        for (uint256 i = 0; i < oldCallingFunctions.length; i++) {
+            delete data.policy.callingFunctionsToRuleIds[oldCallingFunctions[i]];
+            // Clear the iterator array
+            data.policy.callingFunctions.pop();
         }
+
         emit PolicyDeleted(policyId);
     }
 
@@ -292,18 +292,14 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
      * @dev Since `Policy` contains nested mappings, the data is broken into arrays for external return.
      * @param policyId The ID of the policy.
      * @return callingFunctions The calling functions within the policy.
-     * @return callingFunctionIds The calling function IDs corresponding to each calling function.
      * @return ruleIds The rule IDs corresponding to each calling function.
      */
-    function getPolicy(
-        uint256 policyId
-    ) external view returns (bytes4[] memory callingFunctions, uint256[] memory callingFunctionIds, uint256[][] memory ruleIds) {
+    function getPolicy(uint256 policyId) external view returns (bytes4[] memory callingFunctions, uint256[][] memory ruleIds) {
         // Load the policy data from storage
         Policy storage policy = lib._getPolicyStorage().policyStorageSets[policyId].policy;
         // Initialize the return arrays if necessary
         if (policy.callingFunctions.length > 0) {
             callingFunctions = new bytes4[](policy.callingFunctions.length);
-            callingFunctionIds = new uint256[](policy.callingFunctions.length);
             ruleIds = new uint256[][](policy.callingFunctions.length);
         }
         ruleIds = new uint256[][](policy.callingFunctions.length);
@@ -311,7 +307,6 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         // Data validation will alway ensure policy.signatures.length will be less than MAX_LOOP
         for (uint256 i = 0; i < policy.callingFunctions.length; i++) {
             callingFunctions[i] = policy.callingFunctions[i];
-            callingFunctionIds[i] = policy.callingFunctionIdMap[policy.callingFunctions[i]];
             // Initialize the ruleId return array if necessary
             // Data validation will alway ensure policy.signatureToRuleIds[policy.callingFunctions[i]].length will be less than MAX_LOOP
             for (uint256 ruleIndex = 0; ruleIndex < policy.callingFunctionsToRuleIds[policy.callingFunctions[i]].length; ruleIndex++) {
@@ -327,7 +322,6 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
      * @dev This function processes and stores policy data, including calling functions, rules, and policy type.
      * @param _policyId The ID of the policy.
      * @param _callingFunctions All callingFunctions in the policy.
-     * @param _callingFunctionIds Corresponding Calling Function IDs in the policy. Each element matches one-to-one with the elements in `_callingFunctions`.
      * @param _ruleIds A two-dimensional array of rule IDs. The first level represents calling functions, and the second level contains rule IDs for each calling function.
      * @param _policyType The type of the policy (OPEN or CLOSED).
      * @return policyId The updated policy ID.
@@ -336,7 +330,6 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
     function _storePolicyData(
         uint256 _policyId,
         bytes4[] calldata _callingFunctions,
-        uint256[] calldata _callingFunctionIds,
         uint256[][] calldata _ruleIds,
         PolicyType _policyType,
         string calldata _policyName,
@@ -344,6 +337,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
     ) internal returns (uint256) {
         require(uint8(_policyType) < 3, POLICY_TYPE_INV);
         require(_policyId > 0, POLICY_ID_INV);
+        _validateNoIdenticalFunctionSigs(_callingFunctions);
         // Load the policy data from storage
         Policy storage data = lib._getPolicyStorage().policyStorageSets[_policyId].policy;
 
@@ -355,19 +349,18 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         bytes4[] memory oldCallingFunctions = data.callingFunctions;
         for (uint256 i = 0; i < oldCallingFunctions.length; i++) {
             delete data.callingFunctionsToRuleIds[oldCallingFunctions[i]];
+            // Clear the iterator array
+            data.callingFunctions.pop();
         }
-
-        // Clear the iterator array
-        delete data.callingFunctions;
 
         // Validate input lengths
         require(_ruleIds.length < MAX_LOOP, MAX_RULES);
         require(_callingFunctions.length < MAX_LOOP, MAX_CF);
 
         if (_ruleIds.length > 0) {
-            _processCallingFunctionsWithRules(_policyId, _callingFunctions, _callingFunctionIds, _ruleIds, data);
+            _processCallingFunctionsWithRules(_policyId, _callingFunctions, _ruleIds, data);
         } else {
-            _processCallingFunctionsWithoutRules(_policyId, _callingFunctions, _callingFunctionIds, data);
+            _processCallingFunctionsWithoutRules(_policyId, _callingFunctions, data);
         }
 
         emit PolicyUpdated(_policyId);
@@ -379,24 +372,21 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
      * @dev This function validates calling functions, maps them to their IDs, and processes rules for each calling function.
      * @param _policyId The ID of the policy.
      * @param _callingFunctions The function signatures of the calling functions in the policy.
-     * @param _callingFunctionIds The IDs of the calling functions.
      * @param _ruleIds A two-dimensional array of rule IDs associated with the policy.
      * @param data The policy data storage structure.
      */
     function _processCallingFunctionsWithRules(
         uint256 _policyId,
         bytes4[] calldata _callingFunctions,
-        uint256[] calldata _callingFunctionIds,
         uint256[][] calldata _ruleIds,
         Policy storage data
     ) private {
-        if (_ruleIds.length != _callingFunctions.length && _callingFunctions.length > 0) revert(INVALID_RULE_LENGTH);
+        if (_ruleIds.length != _callingFunctions.length) revert(INVALID_RULE_LENGTH);
         for (uint256 i = 0; i < _callingFunctions.length; i++) {
             // Validate calling function
-            if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctionIds[i], _callingFunctions[i])) revert(INVALID_SIGNATURE);
+            if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctions[i])) revert(INVALID_SIGNATURE);
 
-            // Map calling function to its ID and add to iterator array
-            data.callingFunctionIdMap[_callingFunctions[i]] = _callingFunctionIds[i];
+            // add to iterator array
             data.callingFunctions.push(_callingFunctions[i]);
 
             // Process rules for the calling function
@@ -409,21 +399,14 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
      * @dev This function validates calling functions and maps them to their IDs.
      * @param _policyId The ID of the policy.
      * @param _callingFunctions The function signatures of the calling functions in the policy.
-     * @param _callingFunctionIds The IDs of the calling functions.
      * @param data The policy data storage structure.
      */
-    function _processCallingFunctionsWithoutRules(
-        uint256 _policyId,
-        bytes4[] calldata _callingFunctions,
-        uint256[] calldata _callingFunctionIds,
-        Policy storage data
-    ) private {
+    function _processCallingFunctionsWithoutRules(uint256 _policyId, bytes4[] calldata _callingFunctions, Policy storage data) private {
         for (uint256 i = 0; i < _callingFunctions.length; i++) {
             // Validate calling function
-            if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctionIds[i], _callingFunctions[i])) revert(INVALID_SIGNATURE);
+            if (!StorageLib._isCallingFunctionSet(_policyId, _callingFunctions[i])) revert(INVALID_SIGNATURE);
 
-            // Map calling function to its ID and add to iterator array
-            data.callingFunctionIdMap[_callingFunctions[i]] = _callingFunctionIds[i];
+            // add to iterator array
             data.callingFunctions.push(_callingFunctions[i]);
         }
     }
@@ -469,6 +452,14 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
                 require(StorageLib._isTrackerSet(_policyId, placeholders[k].typeSpecificIndex), TRACKER_NOT_SET);
             }
         }
+    }
+
+    function _validateNoIdenticalFunctionSigs(bytes4[] calldata sigs) internal pure {
+        uint start;
+        assembly {
+            start := sigs.offset
+        }
+        if (_isThereDuplicatesInCalldataValueTypeArray(sigs.length, start)) revert(DUPLICATES_NOT_ALLOWED);
     }
 
     /**

@@ -76,12 +76,10 @@ abstract contract rules is RulesEngineCommon {
     function testRulesEngine_Unit_AddClosedPolicy_Subscriber_Negative_CementedPolicy() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -95,12 +93,10 @@ abstract contract rules is RulesEngineCommon {
     function testRulesEngine_Unit_AddClosedPolicy_Subscriber_Negative_Non_PolicyAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -116,12 +112,10 @@ abstract contract rules is RulesEngineCommon {
     function testRulesEngine_Unit_RemoveClosedPolicy_Subscriber_Negative_CementedPolicy() public ifDeploymentTestsEnabled endWithStopPrank {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -140,12 +134,10 @@ abstract contract rules is RulesEngineCommon {
     {
         uint256 policyId = _createBlankPolicy();
         bytes4[] memory blankcallingFunctions = new bytes4[](0);
-        uint256[] memory blankcallingFunctionIds = new uint256[](0);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             blankcallingFunctions,
-            blankcallingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -236,9 +228,9 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
-        vm.expectEmit(true, false, false, false);
+        vm.expectEmit(true, true, true, true);
         emit RuleUpdated(policyId, ruleId);
-        RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, ruleName, ruleDescription);
+        RulesEngineRuleFacet(address(red)).updateRule(policyId, ruleId, rule, ruleName, ruleDescription);
     }
 
     // Delete
@@ -255,7 +247,7 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
         // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
         RulesEngineRuleFacet(address(red)).deleteRule(policyId, ruleId);
         RuleStorageSet memory sig = RulesEngineRuleFacet(address(red)).getRule(policyId, ruleId);
@@ -275,7 +267,7 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
         // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
         RulesEnginePolicyFacet(address(red)).cementPolicy(policyId);
         vm.expectRevert("Not allowed for cemented policy");
@@ -296,7 +288,7 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects[0] = effectId_event;
 
         // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
         vm.startPrank(newPolicyAdmin);
         vm.expectRevert("Not Authorized To Policy");
@@ -316,7 +308,7 @@ abstract contract rules is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
         // Save the rule
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyId, 0, rule, ruleName, ruleDescription);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
         vm.expectEmit(true, false, false, false);
         emit RuleDeleted(policyId, ruleId);
         RulesEngineRuleFacet(address(red)).deleteRule(policyId, ruleId);
@@ -377,7 +369,7 @@ abstract contract rules is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
@@ -387,13 +379,11 @@ abstract contract rules is RulesEngineCommon {
 
         // Update policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -463,7 +453,7 @@ abstract contract rules is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
@@ -473,13 +463,11 @@ abstract contract rules is RulesEngineCommon {
 
         // Update policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -542,7 +530,7 @@ abstract contract rules is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
@@ -552,13 +540,11 @@ abstract contract rules is RulesEngineCommon {
 
         // Update policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -618,7 +604,7 @@ abstract contract rules is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
@@ -628,13 +614,11 @@ abstract contract rules is RulesEngineCommon {
 
         // Update policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -664,7 +648,6 @@ abstract contract rules is RulesEngineCommon {
     function testRulesEngine_Unit_ForeignCall_Bytes_Param() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId;
         uint256 ruleId;
-        uint256 callingFunctionId;
 
         {
             vm.startPrank(policyAdmin);
@@ -735,7 +718,7 @@ abstract contract rules is RulesEngineCommon {
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
                 pTypes[2] = ParamTypes.BYTES;
-                callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                RulesEngineComponentFacet(address(red)).createCallingFunction(
                     policyId,
                     transferSelector,
                     pTypes,
@@ -745,15 +728,12 @@ abstract contract rules is RulesEngineCommon {
 
                 bytes4[] memory selectors = new bytes4[](1);
                 selectors[0] = transferSelector;
-                uint256[] memory functionIds = new uint256[](1);
-                functionIds[0] = callingFunctionId;
                 uint256[][] memory ruleIdsArr = new uint256[][](1);
                 ruleIdsArr[0] = new uint256[](1);
                 ruleIdsArr[0][0] = ruleId;
                 RulesEnginePolicyFacet(address(red)).updatePolicy(
                     policyId,
                     selectors,
-                    functionIds,
                     ruleIdsArr,
                     PolicyType.CLOSED_POLICY,
                     policyName,
@@ -794,7 +774,6 @@ abstract contract rules is RulesEngineCommon {
     function testRulesEngine_Unit_ForeignCall_Bytes_MsgData() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId;
         uint256 ruleId;
-        uint256 callingFunctionId;
 
         {
             vm.startPrank(policyAdmin);
@@ -864,7 +843,7 @@ abstract contract rules is RulesEngineCommon {
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
                 pTypes[2] = ParamTypes.BYTES;
-                callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                RulesEngineComponentFacet(address(red)).createCallingFunction(
                     policyId,
                     transferSelector,
                     pTypes,
@@ -874,15 +853,12 @@ abstract contract rules is RulesEngineCommon {
 
                 bytes4[] memory selectors = new bytes4[](1);
                 selectors[0] = transferSelector;
-                uint256[] memory functionIds = new uint256[](1);
-                functionIds[0] = callingFunctionId;
                 uint256[][] memory ruleIdsArr = new uint256[][](1);
                 ruleIdsArr[0] = new uint256[](1);
                 ruleIdsArr[0][0] = ruleId;
                 RulesEnginePolicyFacet(address(red)).updatePolicy(
                     policyId,
                     selectors,
-                    functionIds,
                     ruleIdsArr,
                     PolicyType.CLOSED_POLICY,
                     policyName,
@@ -924,7 +900,6 @@ abstract contract rules is RulesEngineCommon {
     function testRulesEngine_Unit_ForeignCall_Address_MsgSender() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId;
         uint256 ruleId;
-        uint256 callingFunctionId;
 
         {
             vm.startPrank(policyAdmin);
@@ -980,7 +955,7 @@ abstract contract rules is RulesEngineCommon {
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
                 pTypes[2] = ParamTypes.BYTES;
-                callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                RulesEngineComponentFacet(address(red)).createCallingFunction(
                     policyId,
                     transferSelector,
                     pTypes,
@@ -990,15 +965,12 @@ abstract contract rules is RulesEngineCommon {
 
                 bytes4[] memory selectors = new bytes4[](1);
                 selectors[0] = transferSelector;
-                uint256[] memory functionIds = new uint256[](1);
-                functionIds[0] = callingFunctionId;
                 uint256[][] memory ruleIdsArr = new uint256[][](1);
                 ruleIdsArr[0] = new uint256[](1);
                 ruleIdsArr[0][0] = ruleId;
                 RulesEnginePolicyFacet(address(red)).updatePolicy(
                     policyId,
                     selectors,
-                    functionIds,
                     ruleIdsArr,
                     PolicyType.CLOSED_POLICY,
                     policyName,
@@ -1038,7 +1010,6 @@ abstract contract rules is RulesEngineCommon {
     function testRulesEngine_Unit_ForeignCall_Uint_BlockTimestamp() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId;
         uint256 ruleId;
-        uint256 callingFunctionId;
 
         {
             vm.startPrank(policyAdmin);
@@ -1094,7 +1065,7 @@ abstract contract rules is RulesEngineCommon {
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
                 pTypes[2] = ParamTypes.BYTES;
-                callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                RulesEngineComponentFacet(address(red)).createCallingFunction(
                     policyId,
                     transferSelector,
                     pTypes,
@@ -1104,15 +1075,12 @@ abstract contract rules is RulesEngineCommon {
 
                 bytes4[] memory selectors = new bytes4[](1);
                 selectors[0] = transferSelector;
-                uint256[] memory functionIds = new uint256[](1);
-                functionIds[0] = callingFunctionId;
                 uint256[][] memory ruleIdsArr = new uint256[][](1);
                 ruleIdsArr[0] = new uint256[](1);
                 ruleIdsArr[0][0] = ruleId;
                 RulesEnginePolicyFacet(address(red)).updatePolicy(
                     policyId,
                     selectors,
-                    functionIds,
                     ruleIdsArr,
                     PolicyType.CLOSED_POLICY,
                     policyName,
@@ -1157,7 +1125,6 @@ abstract contract rules is RulesEngineCommon {
     function testRulesEngine_Unit_ForeignCall_Uint_BlockNumber() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId;
         uint256 ruleId;
-        uint256 callingFunctionId;
 
         {
             vm.startPrank(policyAdmin);
@@ -1213,7 +1180,7 @@ abstract contract rules is RulesEngineCommon {
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
                 pTypes[2] = ParamTypes.BYTES;
-                callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                RulesEngineComponentFacet(address(red)).createCallingFunction(
                     policyId,
                     transferSelector,
                     pTypes,
@@ -1223,15 +1190,12 @@ abstract contract rules is RulesEngineCommon {
 
                 bytes4[] memory selectors = new bytes4[](1);
                 selectors[0] = transferSelector;
-                uint256[] memory functionIds = new uint256[](1);
-                functionIds[0] = callingFunctionId;
                 uint256[][] memory ruleIdsArr = new uint256[][](1);
                 ruleIdsArr[0] = new uint256[](1);
                 ruleIdsArr[0][0] = ruleId;
                 RulesEnginePolicyFacet(address(red)).updatePolicy(
                     policyId,
                     selectors,
-                    functionIds,
                     ruleIdsArr,
                     PolicyType.CLOSED_POLICY,
                     policyName,
@@ -1276,7 +1240,6 @@ abstract contract rules is RulesEngineCommon {
     function testRulesEngine_Unit_ForeignCall_Address_TxOrigin() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId;
         uint256 ruleId;
-        uint256 callingFunctionId;
 
         {
             vm.startPrank(policyAdmin);
@@ -1332,7 +1295,7 @@ abstract contract rules is RulesEngineCommon {
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
                 pTypes[2] = ParamTypes.BYTES;
-                callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                RulesEngineComponentFacet(address(red)).createCallingFunction(
                     policyId,
                     transferSelector,
                     pTypes,
@@ -1342,15 +1305,12 @@ abstract contract rules is RulesEngineCommon {
 
                 bytes4[] memory selectors = new bytes4[](1);
                 selectors[0] = transferSelector;
-                uint256[] memory functionIds = new uint256[](1);
-                functionIds[0] = callingFunctionId;
                 uint256[][] memory ruleIdsArr = new uint256[][](1);
                 ruleIdsArr[0] = new uint256[](1);
                 ruleIdsArr[0][0] = ruleId;
                 RulesEnginePolicyFacet(address(red)).updatePolicy(
                     policyId,
                     selectors,
-                    functionIds,
                     ruleIdsArr,
                     PolicyType.CLOSED_POLICY,
                     policyName,
@@ -1395,7 +1355,6 @@ abstract contract rules is RulesEngineCommon {
         uint256 policyId;
         uint256 trackerId;
         uint256 ruleId;
-        uint256 callingFunctionId;
 
         {
             vm.startPrank(policyAdmin);
@@ -1450,7 +1409,7 @@ abstract contract rules is RulesEngineCommon {
             ParamTypes[] memory pTypes = new ParamTypes[](2);
             pTypes[0] = ParamTypes.ADDR;
             pTypes[1] = ParamTypes.UINT;
-            callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
                 policyId,
                 bytes4(keccak256(bytes(callingFunction))),
                 pTypes,
@@ -1461,15 +1420,12 @@ abstract contract rules is RulesEngineCommon {
             // Link rule to calling function in policy
             bytes4[] memory selectors = new bytes4[](1);
             selectors[0] = bytes4(keccak256(bytes(callingFunction)));
-            uint256[] memory functionIds = new uint256[](1);
-            functionIds[0] = callingFunctionId;
             uint256[][] memory ruleIdsArr = new uint256[][](1);
             ruleIdsArr[0] = new uint256[](1);
             ruleIdsArr[0][0] = ruleId;
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyId,
                 selectors,
-                functionIds,
                 ruleIdsArr,
                 PolicyType.CLOSED_POLICY,
                 policyName,

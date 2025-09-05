@@ -320,13 +320,13 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
         // Save the rule
-        ruleId = RulesEngineRuleFacet(address(red)).updateRule(policyIds[0], 0, rule, ruleName, ruleDescription);
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.STR;
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
@@ -335,14 +335,13 @@ contract RulesEngineCommon is DiamondMine, Test {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
-        callingFunctionIds.push(callingFunctionId);
+
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
 
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -392,7 +391,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.STR;
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
@@ -401,7 +400,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
-        callingFunctionIds.push(callingFunctionId);
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         vm.stopPrank();
@@ -409,7 +407,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -812,7 +809,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         pTypes[0] = _pType;
 
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingSignature)))),
             pTypes,
@@ -821,7 +818,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
-        callingFunctionIds.push(callingFunctionId);
 
         uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, fcSignature);
 
@@ -858,7 +854,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             "policyName",
@@ -884,7 +879,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         pTypes[0] = _pType;
 
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingSignature)))),
             pTypes,
@@ -893,7 +888,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
-        callingFunctionIds.push(callingFunctionId);
 
         uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, fcSignature);
 
@@ -923,7 +917,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             "policyName",
@@ -949,7 +942,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         for (uint array; array < arrayAmount; array++) pTypes[array] = ParamTypes.DYNAMIC_TYPE_ARRAY;
 
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
             bytes4(bytes4(keccak256(bytes(callingSignature)))),
             pTypes,
@@ -958,8 +951,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
-        callingFunctionIds.push(callingFunctionId);
-
         uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, fcSignature);
 
         Rule memory rule;
@@ -996,7 +987,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             "policyName",
@@ -1106,13 +1096,12 @@ contract RulesEngineCommon is DiamondMine, Test {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
 
-        uint256 callingFunctionId;
         {
             ParamTypes[] memory pTypes = new ParamTypes[](2);
             pTypes[0] = ParamTypes.ADDR;
             pTypes[1] = ParamTypes.UINT;
             // Save the calling function
-            callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
                 policyIds[0],
                 bytes4(bytes4(keccak256(bytes(callingFunction)))),
                 pTypes,
@@ -1215,15 +1204,12 @@ contract RulesEngineCommon is DiamondMine, Test {
         bytes4[] memory functions = new bytes4[](1);
         bytes memory _callingFunction = bytes(callingFunction);
         functions[0] = bytes4(keccak256(_callingFunction));
-        uint256[] memory functionIds = new uint256[](1);
-        functionIds[0] = callingFunctionId;
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         // _addRuleIdsToPolicy(policyIds[0], ruleIds);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
             functions,
-            functionIds,
             ruleIds,
             PolicyType.CLOSED_POLICY,
             "policyName",
@@ -2463,14 +2449,14 @@ contract RulesEngineCommon is DiamondMine, Test {
         return rule;
     }
 
-    function _addCallingFunctionToPolicy(uint256 policyId) internal returns (uint256) {
+    function _addCallingFunctionToPolicy(uint256 policyId) internal returns (bytes4) {
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
@@ -2478,22 +2464,20 @@ contract RulesEngineCommon is DiamondMine, Test {
             ""
         );
         // Save the Policy
-        callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        callingFunctionIds.push(callingFunctionId);
+        if (callingFunctions.length == 0) callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
         uint256[][] memory blankRuleIds = new uint256[][](0);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
             policyDescription
         );
-        return callingFunctionId;
+        return bytes4(bytes4(keccak256(bytes(callingFunction))));
     }
 
-    function _addCallingFunctionToPolicyWithString(uint256 policyId) internal returns (uint256) {
+    function _addCallingFunctionToPolicyWithString(uint256 policyId) internal returns (bytes4) {
         ParamTypes[] memory pTypes = new ParamTypes[](5);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
@@ -2501,7 +2485,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         pTypes[3] = ParamTypes.BOOL;
         pTypes[4] = ParamTypes.STR;
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
@@ -2510,14 +2494,12 @@ contract RulesEngineCommon is DiamondMine, Test {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-        callingFunctionIds.push(callingFunctionId);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -2531,9 +2513,9 @@ contract RulesEngineCommon is DiamondMine, Test {
         bytes4 _callingFunction,
         ParamTypes[] memory pTypes,
         string memory functionName
-    ) internal returns (uint256) {
+    ) internal returns (bytes4) {
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(_callingFunction),
             pTypes,
@@ -2542,14 +2524,12 @@ contract RulesEngineCommon is DiamondMine, Test {
         );
         // Save the Policy
         callingFunctions.push(_callingFunction);
-        callingFunctionIds.push(callingFunctionId);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             blankRuleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -2563,9 +2543,9 @@ contract RulesEngineCommon is DiamondMine, Test {
         bytes4 _callingFunction,
         ParamTypes[] memory pTypes,
         string memory functionName
-    ) internal returns (uint256) {
+    ) internal returns (bytes4) {
         // Save the calling function
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(_callingFunction),
             pTypes,
@@ -2574,14 +2554,12 @@ contract RulesEngineCommon is DiamondMine, Test {
         );
         // Save the Policy
         callingFunctions.push(_callingFunction);
-        callingFunctionIds.push(callingFunctionId);
         uint256[][] memory blankRuleIds = new uint256[][](0);
         vm.stopPrank();
         vm.startPrank(policyAdmin);
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             blankRuleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -2596,7 +2574,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             _ruleIds,
             PolicyType.CLOSED_POLICY,
             policyName,
@@ -2610,7 +2587,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             _ruleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -3233,5 +3209,18 @@ contract RulesEngineCommon is DiamondMine, Test {
         vm.stopPrank();
         vm.startPrank(newAdmin);
         RulesEngineAdminRolesFacet(address(red)).confirmNewCallingContractAdmin(_userContract);
+    }
+
+    /**
+     * @dev modifies a selector by changing its least significant bits according to the iterator.
+     * @param _selector to be modified
+     * @param i the iterator to be used to modify the selector
+     * @return selector the modified selector
+     * @notice the returned selector doesn't mean anything, and it is only intended to be used for testing purposes
+     */
+    function _modifySelectorWithIterator(bytes4 _selector, uint i) internal pure returns (bytes4 selector) {
+        // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
+        // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
+        selector = bytes4(_selector ^ (bytes32(i) << (256 - 4 * 8)));
     }
 }

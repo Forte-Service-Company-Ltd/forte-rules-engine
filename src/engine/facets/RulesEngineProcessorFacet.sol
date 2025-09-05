@@ -38,7 +38,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         PolicyAssociationStorage storage data = lib._getPolicyAssociationStorage();
         uint256[] memory policyIds = data.contractPolicyIdMap[msg.sender];
         // loop through all the active policies
-        for (uint256 policyIdx = 0; policyIdx < policyIds.length; policyIdx++) _checkPolicy(policyIds[policyIdx], msg.sender, arguments);
+        for (uint256 policyIdx = 0; policyIdx < policyIds.length; policyIdx++) _checkPolicy(policyIds[policyIdx], arguments);
     }
 
     /**
@@ -430,12 +430,10 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     /**
      * @notice Checks a specific policy for compliance.
      * @param _policyId The ID of the policy to check.
-     * @param _contractAddress The address of the contract being evaluated.
      * @param _arguments Function arguments for the policy evaluation.
      * @return retVal True if the policy passes, false otherwise.
      */
-    function _checkPolicy(uint256 _policyId, address _contractAddress, bytes calldata _arguments) internal returns (bool retVal) {
-        _contractAddress; // added to remove wanring. TODO remove this once msg.sender testing is complete
+    function _checkPolicy(uint256 _policyId, bytes calldata _arguments) internal returns (bool retVal) {
         // Load the policy data from storage
         PolicyStorageSet storage policyStorageSet = lib._getPolicyStorage().policyStorageSets[_policyId];
         mapping(uint256 ruleId => RuleStorageSet) storage ruleData = lib._getRuleStorage().ruleStorageSets[_policyId];

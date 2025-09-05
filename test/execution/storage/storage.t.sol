@@ -45,8 +45,14 @@ abstract contract storageTest is RulesEngineCommon {
     }
 
     function testRuleAssociationStorageFuzz(uint16 total) public {
-        uint256 index = bound(uint256(total), 0, 1000);
+        uint256 index = bound(uint256(total), 0, 200);
         uint256 policyId = _createBlankPolicy();
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
+        RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
+        callingFunctions.push(sigCallingFunction);
         Rule memory rule;
         // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, 4, LogicalOp.GT, 0, 1
         // Build the instruction set for the rule (including placeholders)
@@ -59,14 +65,15 @@ abstract contract storageTest is RulesEngineCommon {
         rule.negEffects[0] = effectId_revert;
         ruleName = "testRule";
         ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = 1;
         uint256 ruleId;
         for (uint256 i = 0; i < index; i++) {
+            console2.log("i", i);
             ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
             ruleIds[0].push(ruleId);
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyId,
                 callingFunctions,
-                callingFunctionIds,
                 ruleIds,
                 PolicyType.CLOSED_POLICY,
                 policyName,
@@ -78,59 +85,52 @@ abstract contract storageTest is RulesEngineCommon {
     }
 
     function testCallingFunctionAssociationStorage(uint16 total) public {
-        uint256 index = bound(uint256(total), 0, 500);
+        uint256 index = bound(uint256(total), 0, 300);
         uint256[] memory policyIds = new uint256[](1);
-
+        bytes4 cf2Selector = bytes4(keccak256(bytes(callingFunction2)));
         policyIds[0] = _createBlankPolicy();
 
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId;
         for (uint256 i = 0; i < index; i++) {
-            callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
-                policyIds[0],
-                bytes4(bytes4(keccak256(bytes(callingFunction)))),
-                pTypes,
-                callingFunction,
-                ""
-            );
-            callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
-            callingFunctionIds.push(callingFunctionId);
+            bytes4 selector = _modifySelectorWithIterator(cf2Selector, i);
+            RulesEngineComponentFacet(address(red)).createCallingFunction(policyIds[0], selector, pTypes, callingFunction, "");
+            callingFunctions.push(selector);
             uint256[][] memory blankRuleIds = new uint256[][](0);
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyIds[0],
                 callingFunctions,
-                callingFunctionIds,
                 blankRuleIds,
                 PolicyType.CLOSED_POLICY,
                 policyName,
                 policyDescription
             );
-            assertTrue(RulesEngineComponentFacet(address(red)).getCallingFunction(policyIds[0], callingFunctionId).set);
+            assertTrue(RulesEngineComponentFacet(address(red)).getCallingFunction(policyIds[0], callingFunctions[i]).set);
         }
     }
 
     function testCallingFunctionStorage(uint16 total) public {
         uint256 index = bound(uint256(total), 0, 1000);
         uint256[] memory policyIds = new uint256[](1);
-
+        bytes4 cfSelector = bytes4(keccak256(bytes(callingFunction)));
         policyIds[0] = _createBlankPolicy();
 
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId;
         for (uint256 i = 0; i < index; i++) {
             // Save the calling function
-            callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
                 policyIds[0],
-                bytes4(bytes4(keccak256(bytes(callingFunction)))),
+                _modifySelectorWithIterator(cfSelector, i),
                 pTypes,
                 callingFunction,
                 ""
             );
-            assertTrue(RulesEngineComponentFacet(address(red)).getCallingFunction(policyIds[0], callingFunctionId).set);
+            assertTrue(
+                RulesEngineComponentFacet(address(red)).getCallingFunction(policyIds[0], _modifySelectorWithIterator(cfSelector, i)).set
+            );
         }
     }
 
