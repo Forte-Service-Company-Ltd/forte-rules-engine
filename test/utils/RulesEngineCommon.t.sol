@@ -3210,4 +3210,17 @@ contract RulesEngineCommon is DiamondMine, Test {
         vm.startPrank(newAdmin);
         RulesEngineAdminRolesFacet(address(red)).confirmNewCallingContractAdmin(_userContract);
     }
+
+    /**
+     * @dev modifies a selector by changing its least significant bits according to the iterator.
+     * @param _selector to be modified
+     * @param i the iterator to be used to modify the selector
+     * @return selector the modified selector
+     * @notice the returned selector doesn't mean anything, and it is only intended to be used for testing purposes
+     */
+    function _modifySelectorWithIterator(bytes4 _selector, uint i) internal pure returns (bytes4 selector) {
+        // bytes4 grabs the 4 most significant bytes of a 32-byte word. We XOR against "i" shifted to the left 28 bytes so it can align with the
+        // selector's bytes4 which allows us to produce a different selector for each iteration after the first one (since i = 0 the first iteration)
+        selector = bytes4(bytes4(keccak256(bytes(_selector))) ^ (bytes32(i) << (256 - 4 * 8)));
+    }
 }
