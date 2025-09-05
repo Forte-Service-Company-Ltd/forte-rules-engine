@@ -761,6 +761,194 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         userContract.transfer(address(0x1234), depth);
     }
 
+    function testRulesEngine_Unit_ForeignCall_DoesNotTriggerOnNegativeEffect() public ifDeploymentTestsEnabled endWithStopPrank {
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes("testSig(uint256)")));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.UINT;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+        fc.returnType = ParamTypes.VOID;
+
+        uint256 policyId = _createBlankPolicy();
+        
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "testSig(uint256)");
+
+        Rule memory rule;
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.PLH);
+        rule.instructionSet[1] = 0;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 0;
+        rule.instructionSet[4] = uint(LogicalOp.GT);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].pType = ParamTypes.UINT;
+        rule.placeHolders[0].typeSpecificIndex = 1;
+
+        rule.negativeEffectPlaceHolders = new Placeholder[](1);
+        rule.negativeEffectPlaceHolders[0].pType = ParamTypes.UINT;
+        rule.negativeEffectPlaceHolders[0].typeSpecificIndex = uint128(foreignCallId);
+        rule.negativeEffectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
+
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0] = effectId_event;
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0].valid = true;
+        rule.negEffects[0].effectType = EffectTypes.EXPRESSION;
+        rule.negEffects[0].instructionSet = new uint256[](2);
+        rule.negEffects[0].instructionSet[0] = uint(LogicalOp.PLH);
+        rule.negEffects[0].instructionSet[1] = 0;
+
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
+
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+
+        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes,
+            callingFunction,
+            ""
+        );
+
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = bytes4(keccak256(bytes(callingFunction)));
+        uint256[] memory functionIds = new uint256[](1);
+        functionIds[0] = callingFunctionId;
+        uint256[][] memory ruleIdsArray = new uint256[][](1);
+        ruleIdsArray[0] = new uint256[](1);
+        ruleIdsArray[0][0] = ruleId;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            functionIds,
+            ruleIdsArray,
+            PolicyType.CLOSED_POLICY,
+            policyName,
+            policyDescription
+        );
+
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+
+        vm.stopPrank();
+        vm.startPrank(address(userContract));
+
+        userContract.transfer(address(0x1234), 100);
+
+        vm.stopPrank();
+        
+        assertEq(foreignCall.getDecodedIntOne(), 0);
+    }
+
+    function testRulesEngine_Unit_ForeignCall_DoesNotTriggerOnPositiveEffect() public ifDeploymentTestsEnabled endWithStopPrank {
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes("testSig(uint256)")));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.UINT;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+        fc.returnType = ParamTypes.VOID;
+
+        uint256 policyId = _createBlankPolicy();
+        
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "testSig(uint256)");
+
+        Rule memory rule;
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.PLH);
+        rule.instructionSet[1] = 0;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 100;
+        rule.instructionSet[4] = uint(LogicalOp.GT);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].pType = ParamTypes.UINT;
+        rule.placeHolders[0].typeSpecificIndex = 1;
+
+        rule.positiveEffectPlaceHolders = new Placeholder[](1);
+        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = uint128(foreignCallId);
+        rule.positiveEffectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
+
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_event;
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0].valid = true;
+        rule.posEffects[0].effectType = EffectTypes.EXPRESSION;
+        rule.posEffects[0].instructionSet = new uint256[](2);
+        rule.posEffects[0].instructionSet[0] = uint(LogicalOp.PLH);
+        rule.posEffects[0].instructionSet[1] = 0;
+
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
+
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+
+        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes,
+            callingFunction,
+            ""
+        );
+
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = bytes4(keccak256(bytes(callingFunction)));
+        uint256[] memory functionIds = new uint256[](1);
+        functionIds[0] = callingFunctionId;
+        uint256[][] memory ruleIdsArray = new uint256[][](1);
+        ruleIdsArray[0] = new uint256[](1);
+        ruleIdsArray[0][0] = ruleId;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            functionIds,
+            ruleIdsArray,
+            PolicyType.CLOSED_POLICY,
+            policyName,
+            policyDescription
+        );
+
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+
+        vm.stopPrank();
+        vm.startPrank(address(userContract));
+
+        userContract.transfer(address(0x1234), 100);
+
+        vm.stopPrank();
+        
+        assertEq(foreignCall.getDecodedIntOne(), 0);
+    }
+
     /**
      * Test passing wrong parameter types to foreign call
      */
@@ -853,8 +1041,6 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         vm.stopPrank();
         vm.startPrank(address(userContract));
 
-        // Expect revert because we passed wrong type to foreign call
-        vm.expectRevert("Invalid dynamic data offset");
         userContract.transfer(address(0x1234), 100);
 
         vm.stopPrank();

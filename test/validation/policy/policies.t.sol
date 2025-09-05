@@ -1302,11 +1302,6 @@ abstract contract policies is RulesEngineCommon {
         rule6.positiveEffectPlaceHolders[0].typeSpecificIndex = 1;
         rule6.positiveEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
 
-        rule6.negativeEffectPlaceHolders = new Placeholder[](1);
-        rule6.negativeEffectPlaceHolders[0].pType = ParamTypes.ADDR;
-        rule6.negativeEffectPlaceHolders[0].typeSpecificIndex = 1;
-        rule6.negativeEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
-
         rule6.negEffects = new Effect[](1);
         rule6.posEffects = new Effect[](1);
         rule6.negEffects[0] = effectId_revert;
@@ -1472,11 +1467,6 @@ abstract contract policies is RulesEngineCommon {
         rule.positiveEffectPlaceHolders[0].pType = ParamTypes.ADDR;
         rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1;
         rule.positiveEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
-
-        rule.negativeEffectPlaceHolders = new Placeholder[](1);
-        rule.negativeEffectPlaceHolders[0].pType = ParamTypes.ADDR;
-        rule.negativeEffectPlaceHolders[0].typeSpecificIndex = 1;
-        rule.negativeEffectPlaceHolders[0].flags = FLAG_TRACKER_VALUE;
 
         rule.negEffects = new Effect[](1);
         rule.posEffects = new Effect[](1);
