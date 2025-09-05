@@ -120,11 +120,12 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
             }
         }
 
-        uint callingFunctionsLength = data.policy.callingFunctions.length;
-        for (uint256 i = 0; i < callingFunctionsLength; i++) {
-            delete data.policy.callingFunctionsToRuleIds[data.policy.callingFunctions[i]];
+        bytes4[] memory oldCallingFunctions = data.policy.callingFunctions;
+        for (uint256 i = 0; i < oldCallingFunctions.length; i++) {
+            delete data.policy.callingFunctionsToRuleIds[oldCallingFunctions[i]];
+            // Clear the iterator array
+            data.policy.callingFunctions.pop();
         }
-        for (uint256 i = 0; i < callingFunctionsLength; i++) data.policy.callingFunctions.pop();
 
         emit PolicyDeleted(policyId);
     }
