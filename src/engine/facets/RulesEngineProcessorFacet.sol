@@ -577,7 +577,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             LogicalOp op = LogicalOp(_prog[idx]);
 
             if (op == LogicalOp.PLH || op == LogicalOp.PLHM) {
-                // Placeholder format is: get the index of the argument in the array. For example, PLH 0 is the first argument in the arguments array and its type and value
+                // Placeholder format is: get the index of the argument in the array. For example, PLH 0 is the first argument in the arguments array and its type and value                
                 uint256 pli;
                 bytes memory value;
                 ParamTypes typ;
