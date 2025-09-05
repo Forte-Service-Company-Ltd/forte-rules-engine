@@ -22,25 +22,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: v1.2.1
-      - name: Install dependencies
-        run: |
-          git config user.email "cloudops@thrackle.io"
-          git config user.name "CloudOps Thrackle"
-          sudo apt-get update
-          sudo apt-get install -y python3-pip
-          pip3 install -r requirements.txt
-          forge soldeer install
-      - name: Run Forge build --sizes
-        run: |
-          forge --version
-          forge build --sizes
-        id: build
-
-      - name: Check Contract Size
-        run: |
-          bash .github/scripts/contract-size.sh
+      - name: Build and Test
+        id: build-and-test
+        uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/actions/contract-size@INF-264-On-Chain-Contract-Size
