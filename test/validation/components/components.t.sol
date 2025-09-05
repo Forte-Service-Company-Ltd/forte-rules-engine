@@ -1224,7 +1224,7 @@ abstract contract components is RulesEngineCommon {
         tracker.trackerValue = abi.encode(emptyArray);
         tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
         vm.expectRevert("Invalid type");
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
     }
 
     // Mapped Tracker array value types
@@ -1413,7 +1413,7 @@ abstract contract components is RulesEngineCommon {
         tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
         tracker.trackerValue = abi.encode(trackerValues);
         vm.expectRevert("Invalid type");
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+        RulesEngineComponentFacet(address(red)).createMappedTracker(
             policyID,
             tracker,
             trackerName,

@@ -14,8 +14,15 @@ docs/
 
 node_modules
 
-
+bin/
+include/
+lib/python*
+pyvenv.cfg
 # Soldeer
 /dependencies
 
 .DS_Store
+
+bin/
+pyvenv.cfg
+lib/python*
