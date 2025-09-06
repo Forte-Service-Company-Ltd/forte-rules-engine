@@ -16,10 +16,16 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout local repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Checkout infrastructure-tooling repository
+        uses: actions/checkout@v4
+        with:
+          repository: Forte-Service-Company-Ltd/infrastructure-tooling
+          ref: staging
+          path: infrastructure-tooling
       - name: Install Foundry
         id: install-foundry
         uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/actions/install-foundry@staging
