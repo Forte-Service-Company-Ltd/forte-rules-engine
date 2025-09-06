@@ -20,8 +20,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Install Foundry
+        id: install-foundry
+        uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/actions/install-foundry@staging
       - name: Build and Test
         id: build-and-test
-        uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/actions/onchain-build-and-test@INF-263-Onchain-Build-and-Test
+        uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/actions/onchain-build-and-test@staging
         with:
           alchemy_eth_api: ${{ secrets.ALCHEMY_KEY }}
+      - name: Contract Size
+        id: contract-size
+        uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/actions/contract-size@staging
