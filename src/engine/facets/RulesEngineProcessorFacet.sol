@@ -3,7 +3,6 @@ pragma solidity ^0.8.24;
 
 import "src/engine/facets/FacetCommonImports.sol";
 import {RulesEngineProcessorLib as ProcessorLib} from "src/engine/facets/RulesEngineProcessorLib.sol";
-import {console2 as console} from "forge-std/src/console2.sol";
 
 /**
  * @title Rules Engine Processor Facet
@@ -135,8 +134,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         // Place the foreign call
         (bool response, bytes memory data) = fc.foreignCallAddress.call(callData);
         // Verify that the foreign call was successful
-        console.log("response", response);
-        console.logBytes(data);
         if (response) {
             // Decode the return value based on the specified return value parameter type in the foreign call structure
             retVal.pType = fc.returnType;
@@ -474,11 +471,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         for (uint256 i = 0; i < ruleCount; i++) {
             Rule storage rule = _ruleData[_applicableRules[i]].rule;
             if (!_evaluateIndividualRule(rule, _policyId, _callingFunctionArgs, PlaceholderType.CONDITIONAL)) {
-                console.log("we're getting to the negative effects");
                 _retVal = false;
                 _doEffects(rule, _policyId, rule.negEffects, _callingFunctionArgs, PlaceholderType.NEGATIVE_EFFECT);
             } else {
-                console.log("we're getting to the positive effects");
                 _doEffects(rule, _policyId, rule.posEffects, _callingFunctionArgs, PlaceholderType.POSITIVE_EFFECT);
             }
         }
@@ -499,7 +494,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         PlaceholderType _kind
     ) internal returns (bool response) {
         (bytes[] memory ruleArgs, Placeholder[] memory placeholders) = _buildArguments(_rule, _policyId, _callingFunctionArgs, _kind);
-        console.log("we're getting to the _run");
         response = _run(_rule.instructionSet, placeholders, _policyId, ruleArgs);
     }
 
@@ -582,7 +576,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256[90] memory mem;
         uint256 idx = 0;
         uint256 opi = 0;
-        console.log("we're getting to the while loop");
         while (idx < _prog.length) {
             uint256 v = 0;
             LogicalOp op = LogicalOp(_prog[idx]);
@@ -705,7 +698,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             mem[opi] = v;
             opi += 1;
         }
-        console.log("completed _run");
         return ProcessorLib._uintToBool(mem[opi - 1]);
     }
 
