@@ -11,4 +11,8 @@ on:
 env:
   FOUNDRY_PROFILE: ci
 
-uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-build-test-report.yaml@staging
+jobs:
+  test:
+    uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-build-test-report.yaml@staging
+    with:
+      alchemy_eth_api: ${{ secrets.ALCHEMY_ETHEREUM_API }}
