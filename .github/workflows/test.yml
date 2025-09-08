@@ -11,29 +11,4 @@ on:
 env:
   FOUNDRY_PROFILE: ci
 
-jobs:
-  check:
-    name: Build and Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout local repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Checkout infrastructure-tooling repository
-        uses: actions/checkout@v4
-        with:
-          repository: Forte-Service-Company-Ltd/infrastructure-tooling
-          ref: staging
-          path: infrastructure-tooling
-      - name: Install Foundry
-        id: install-foundry
-        uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/actions/install-foundry@staging
-      - name: Build and Test
-        id: build-and-test
-        uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/actions/onchain-build-and-test@staging
-        with:
-          alchemy_eth_api: ${{ secrets.ALCHEMY_KEY }}
-      - name: Contract Size
-        id: contract-size
-        uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/actions/contract-size@staging
+uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-build-test-report.yaml@staging
