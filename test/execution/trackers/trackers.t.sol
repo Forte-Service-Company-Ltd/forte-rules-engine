@@ -2681,6 +2681,7 @@ abstract contract trackers is RulesEngineCommon {
     function testRulesEngine_Unit_TrackerAsConditional_String() public ifDeploymentTestsEnabled resetsGlobalVariables {
         /// create tracker value (string value)
         string memory val1 = "trackerValue1";
+        string memory badVal = "trackerValueWrong";
         bytes memory trackerValue = abi.encode(val1); // value for 0x7654321
 
         uint256 policyId = _createBlankPolicy();
@@ -2759,13 +2760,13 @@ abstract contract trackers is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
         vm.stopPrank();
 
-        // positive case: we check that the tracker value for addy1 is val1 (it should)
+        // positive case: we check that the tracker value is val1 (it should)
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0xbabe), 1000, val1); // 1000 is a random value completely irrelevant for the test
         vm.startPrank(userContractAddress);
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
 
-        // negative case: we check that the tracker value for addy2 is val1 (it shouldn't. We expect a revert in this case)
-        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0xbabe), 1000, val1); // 1000 is a random value completely irrelevant for the test
+        // negative case: we check that the tracker value is badVal (it shouldn't. We expect a revert in this case)
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0xbabe), 1000, badVal); // 1000 is a random value completely irrelevant for the test
         vm.startPrank(userContractAddress);
         vm.expectRevert(abi.encodePacked(revert_text));
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
