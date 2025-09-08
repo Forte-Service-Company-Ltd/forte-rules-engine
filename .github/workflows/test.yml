@@ -14,5 +14,4 @@ env:
 jobs:
   test:
     uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-build-test-report.yaml@staging
-    with:
-      alchemy_eth_api: ${{ secrets.ALCHEMY_KEY }}
+    secrets: inherit
