@@ -783,7 +783,7 @@ abstract contract trackers is RulesEngineCommon {
             rule.instructionSet[3] = uint128(trackerIndex);
             rule.instructionSet[4] = 0; // get the key from mem[0]
             rule.instructionSet[5] = uint256(LogicalOp.NUM); // we place the hashed value of what we know is val1 in mem[2]
-            rule.instructionSet[6] = uint256(keccak256(abi.encodePacked(val1)));
+            rule.instructionSet[6] = uint256(keccak256(abi.encode(val1)));
             rule.instructionSet[7] = uint256(LogicalOp.EQ); // we compare mem[1] agains mem[2]
             rule.instructionSet[8] = 1;
             rule.instructionSet[9] = 2;
