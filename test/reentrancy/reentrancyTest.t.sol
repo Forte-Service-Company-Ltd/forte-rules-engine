@@ -91,6 +91,17 @@ contract ReentrancyTest is RulesEngineCommon {
         // Rule: amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule;
 
+        // Create the tracker
+        Trackers memory tracker;
+        tracker.trackerValue = abi.encode(0);
+        tracker.pType = ParamTypes.UINT;
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
+            policyIds[0],
+            tracker,
+            "trName",
+            TrackerArrayTypes.VOID
+        );
+
         rule.posEffects = new Effect[](1);
         rule.posEffects[0].instructionSet = _createTrackerUpdateInstructionSet();
         rule.posEffects[0].effectType = EffectTypes.EXPRESSION;

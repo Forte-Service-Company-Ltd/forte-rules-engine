@@ -519,9 +519,17 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
 
     // CRUD: Rules
     function testRulesEngine_Unit_UpdateRule_NotPolicyAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
-        vm.startPrank(policyAdmin);
-        uint256 policyId = setupEffectWithTrackerUpdateUint();
+        uint256 policyId = _createBlankPolicy();
         Rule memory rule;
+        // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, 4, LogicalOp.GT, 0, 1
+        // Build the instruction set for the rule (including placeholders)
+        rule.instructionSet = _createInstructionSet(4);
+        // Build the calling function argument placeholder
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].pType = ParamTypes.UINT;
+        rule.placeHolders[0].typeSpecificIndex = 1;
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0] = effectId_event;
         // Change to non policy admin user
         vm.startPrank(user1);
         vm.expectRevert("Not Authorized To Policy");

@@ -456,18 +456,19 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.effectPlaceHolders[1].pType = ParamTypes.ADDR;
         rule.effectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
         rule.effectPlaceHolders[1].typeSpecificIndex = 1;
-        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         //build tracker
         Trackers memory tracker;
         /// build the members of the struct:
         tracker.pType = ParamTypes.UINT;
         tracker.trackerValue = abi.encode(2);
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
+        console2.log("*****************trackerId", trackerId);
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
 
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
         fcArgs[0] = ParamTypes.UINT;
         ForeignCall memory fc;

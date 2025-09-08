@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import "src/engine/facets/RulesEngineAdminRolesFacet.sol";
 import "src/engine/facets/RulesEngineComponentFacet.sol";
 import {RulesEngineStorageLib as StorageLib} from "src/engine/facets/RulesEngineStorageLib.sol";
-
+import "forge-std/src/console2.sol";
 /**
  * @title Rules Engine Policy Facet
  * @dev This contract serves as the primary data facet for the Rules Engine rules. It is responsible for creating, updating,
@@ -409,6 +409,9 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                     // Verify that the tracker exists in the policy
                     TrackerStorage storage trackerData = lib._getTrackerStorage();
                     if (dataCounter == 1){
+                        console2.log("instructionHold",instructionHold);
+                        console2.log("instruction",instruction);
+                        console2.log("i",i);
                         if (!trackerData.trackers[policyId][instruction].set) revert(TRACKER_NOT_SET);
                     }
 
@@ -456,7 +459,8 @@ contract RulesEngineRuleFacet is FacetCommonImports {
     function _isLessLimitedOpCode(uint opCode) internal pure returns (bool) {
         if (
             opCode == uint(LogicalOp.PLHM) ||
-            opCode == uint(LogicalOp.TRUM)
+            opCode == uint(LogicalOp.TRUM) ||
+            opCode == uint(LogicalOp.TRU)
         ) return true;
     }
 
