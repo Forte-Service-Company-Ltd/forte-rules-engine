@@ -180,7 +180,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.posEffects[0] = effectId_revert;
         // test
         if (causesTrackerNotSet) vm.expectRevert("Tracker referenced in rule not set");
-        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
     function testRulesEngine_Fuzz_createRule_simple(uint256 _ruleValue, uint256 _transferValue) public {

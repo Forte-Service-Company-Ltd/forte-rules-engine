@@ -59,7 +59,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
     ) external returns (uint256) {
         if (policyId == 0) revert(POLICY_ID_0);
         _policyAdminOnly(policyId, msg.sender);
-        _validateRule(rule);
+        _validateRule(rule, policyId);
         if (!StorageLib._isRuleSet(policyId, ruleId)) revert(RULE_NOT_SET);
         StorageLib._notCemented(policyId);
         // Load the rule data from storage
@@ -405,11 +405,13 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                     if (instruction > memorySize) revert(MEMORY_OVERFLOW);             
                 } else {
                     // Verify that the tracker exists in the policy
-                    TrackerStorage storage trackerData = lib._getTrackerStorage();
                     if (dataCounter == 1){
                         if (instructionHold == uint(LogicalOp.PLH)) {// PLH is only limited by the Max loop size
                             if (instruction > MAX_LOOP) revert(MEMORY_OVERFLOW);
-                        } else if (!trackerData.trackers[policyId][instruction].set) revert(TRACKER_NOT_SET);
+                        } else {
+                            TrackerStorage storage trackerData = lib._getTrackerStorage();
+                            if (!trackerData.trackers[policyId][instruction].set) revert(TRACKER_NOT_SET);
+                        }
                     }
 
                 }
