@@ -151,7 +151,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         bytes memory dynamicData,
         ForeignCallEncodedIndex memory mappedTrackerKeyEI,
         uint256 parameterTypesLength
-    ) internal returns (bytes memory, uint256, bytes memory) {
+    ) internal view returns (bytes memory, uint256, bytes memory) {
         bytes memory mappedTrackerValue;
         ParamTypes typ = lib._getTrackerStorage().trackers[policyId][trackerIndex].trackerKeyType;
 
@@ -182,7 +182,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 trackerIndex,
         ForeignCallEncodedIndex memory mappedTrackerKeyEI,
         ParamTypes typ
-    ) internal returns (bytes memory mappedTrackerValue, ParamTypes valueType) {
+    ) internal view returns (bytes memory mappedTrackerValue, ParamTypes valueType) {
         uint256 mappedTrackerKey;
         if (mappedTrackerKeyEI.eType == EncodedIndexType.ENCODED_VALUES) {
             if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {
@@ -559,9 +559,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         return (retVals, placeHolders);
     }
 
-    event Log(string, uint);
-    event Log(string, bytes);
-
     /**
      * @dev Internal function to decode the arguments and do the comparisons.
      * @param _prog An array of uint256 representing the program to be executed.
@@ -587,7 +584,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 // Placeholder format is: get the index of the argument in the array. For example, PLH 0 is the first argument in the arguments array and its type and value
                 // uint256 pli;
                 uint256 pli = _prog[idx + 1];
-                emit Log("pli", pli);
                 bytes memory value;
                 ParamTypes typ;
                 if (op == LogicalOp.PLHM) {
@@ -600,7 +596,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     typ = _placeHolders[pli].pType;
                     idx += 2;
                 }
-                emit Log("value", value);
                 if (typ == ParamTypes.UINT || typ == ParamTypes.ADDR || typ == ParamTypes.BOOL) {
                     v = abi.decode(value, (uint256));
                 } else if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {
@@ -701,8 +696,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             } else {
                 revert(INVALID_INSTRUCTION);
             }
-            emit Log("opi", opi);
-            emit Log("v", v);
             mem[opi] = v;
             opi += 1;
         }
@@ -936,7 +929,10 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      *                    - typeSpecificIndex: Position in calldata to read from (slot index for value types)
      * @return bytes The extracted parameter value as bytes (must be decoded according to pType)
      */
-    function _handleRegularParameter(bytes calldata _callingFunctionArgs, Placeholder memory placeholder) internal returns (bytes memory) {
+    function _handleRegularParameter(
+        bytes calldata _callingFunctionArgs,
+        Placeholder memory placeholder
+    ) internal pure returns (bytes memory) {
         if (placeholder.pType == ParamTypes.STR || placeholder.pType == ParamTypes.BYTES) {
             return _getDynamicVariableFromCalldata(_callingFunctionArgs, placeholder.typeSpecificIndex);
         } else if (placeholder.pType == ParamTypes.STATIC_TYPE_ARRAY || placeholder.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
@@ -1117,16 +1113,13 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _index The index of the dynamic variable to extract.
      * @return The extracted dynamic variable as a bytes array.
      */
-    function _getDynamicVariableFromCalldata(bytes calldata _data, uint256 _index) internal returns (bytes memory) {
+    function _getDynamicVariableFromCalldata(bytes calldata _data, uint256 _index) internal pure returns (bytes memory) {
         // Get offset from parameter position, using index * 32 to get the correct position in the calldata
         uint256 offset = uint256(bytes32(_data[_index * 32:(_index + 1) * 32]));
-        emit Log("offset", offset);
         // Get length from the offset position, using offset + 32 to get the correct position in the calldata
         uint256 length = uint256(bytes32(_data[offset:offset + 32]));
-        emit Log("length", length);
         // Allocate memory for result: 32 (offset) + 32 (length) + data length
         bytes memory result = new bytes(64 + ((length + 31) / 32) * 32);
-        emit Log("result getting dynamic data", result);
         assembly {
             // Store offset to length (0x20)
             mstore(add(result, 32), 0x20)
