@@ -463,7 +463,6 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.negativeEffectPlaceHolders[1].pType = ParamTypes.ADDR;
         rule.negativeEffectPlaceHolders[1].flags = FLAG_TRACKER_VALUE;
         rule.negativeEffectPlaceHolders[1].typeSpecificIndex = 1;
-        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         //build tracker
         Trackers memory tracker;
         /// build the members of the struct:
