@@ -18,6 +18,4 @@ env:
 jobs:
   test:
     uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-build-test-report.yaml@staging
-    with:
-      markdown-file-path: './README.md, ./CHANGELOG.md, ./CODE_OF_CONDUCT.md, ./CONTRIBUTING.md, ./SECURITY.md'
     secrets: inherit
