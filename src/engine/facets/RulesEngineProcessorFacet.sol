@@ -616,7 +616,12 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 uint256 pli = _prog[idx + 2];
                 tt == TrackerTypes.MEMORY
                     ? _updateTrackerValue(_policyId, _prog[idx + 1], mem[pli])
-                    : _updateTrackerValue(_policyId, _prog[idx + 1], _arguments[pli], _placeHolders[pli].flags != FacetUtils.FLAG_TRACKER_VALUE);
+                    : _updateTrackerValue(
+                        _policyId,
+                        _prog[idx + 1],
+                        _arguments[pli],
+                        _placeHolders[pli].flags != FacetUtils.FLAG_TRACKER_VALUE
+                    );
                 idx += 4;
             } else if (op == LogicalOp.TRUM) {
                 // update the tracker value
@@ -725,7 +730,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             trk.trackerValue = abi.encode(keccak256(_trackerValue));
         } else {
             trk.trackerValue = _trackerValue;
-        }   
+        }
     }
 
     /**
@@ -871,16 +876,17 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             // Important: Return msg.data properly formatted for dynamic bytes parameters
             // We need to create a properly encoded bytes value with length prefix
             bytes memory msgData = msg.data;
-            bytes memory encodedData = new bytes(msg.data.length + 32);
+            bytes memory encodedData = new bytes(msg.data.length + 64);
 
             // Store length in first 32 bytes
             assembly {
-                mstore(add(encodedData, 32), mload(msgData))
+                mstore(add(encodedData, 32), 0x20)
+                mstore(add(encodedData, 64), mload(msgData))
             }
 
             // Copy the actual data
             for (uint256 i = 0; i < msg.data.length; i++) {
-                encodedData[i + 32] = msg.data[i];
+                encodedData[i + 64] = msg.data[i];
             }
 
             return (encodedData, ParamTypes.BYTES);

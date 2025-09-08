@@ -3182,4 +3182,226 @@ abstract contract trackers is RulesEngineCommon {
             assertEq(finalArray[1], 200, "Second tracker value should remain unchanged");
         }
     }
+
+    function testRulesEngine_Unit_MappedTracker_MsgData_Storage() public ifDeploymentTestsEnabled resetsGlobalVariables {
+        uint256 policyId = _createBlankPolicy();
+
+        // Crate and setup mapped tracker for msg.data storage
+        uint256 trackerIndex = _createMsgDataMappedTracker(policyId);
+
+        // Create and setup rule with TRUM opcode
+        uint256 ruleId = _createMsgDataStorageRule(policyId, trackerIndex);
+
+        // Setup policy with calling function and rule
+        _setupPolicyWithMsgDataRule(policyId, ruleId);
+
+        // Execute test and verify results
+        _executeMsgDataTest(policyId, trackerIndex);
+    }
+
+    function _createMsgDataMappedTracker(uint256 policyId) internal returns (uint256) {
+        Trackers memory tracker;
+        tracker.mapped = true;
+        tracker.pType = ParamTypes.BYTES; // Value type: bytes (for msg.data)
+        tracker.trackerKeyType = ParamTypes.ADDR; // Key type: address (for msg.sender)
+
+        bytes[] memory emptyKeys = new bytes[](0);
+        bytes[] memory emptyValues = new bytes[](0);
+
+        return
+            RulesEngineComponentFacet(address(red)).createMappedTracker(
+                policyId,
+                tracker,
+                "msgDataTracker",
+                emptyKeys,
+                emptyValues,
+                TrackerArrayTypes.VOID
+            );
+    }
+
+    function _createMsgDataStorageRule(uint256 policyId, uint256 trackerIndex) internal returns (uint256) {
+        Rule memory rule;
+
+        // Simple condition that always passes (1 == 1)
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.NUM);
+        rule.instructionSet[1] = 1;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 1;
+        rule.instructionSet[4] = uint(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        // Set up effect placeholders for storing data
+        rule.effectPlaceHolders = new Placeholder[](2);
+        rule.effectPlaceHolders[0].pType = ParamTypes.BYTES;
+        rule.effectPlaceHolders[0].typeSpecificIndex = 0;
+        rule.effectPlaceHolders[0].flags = uint8(GLOBAL_MSG_DATA << SHIFT_GLOBAL_VAR);
+        rule.effectPlaceHolders[1].pType = ParamTypes.ADDR;
+        rule.effectPlaceHolders[1].typeSpecificIndex = 0;
+        rule.effectPlaceHolders[1].flags = uint8(GLOBAL_MSG_SENDER << SHIFT_GLOBAL_VAR);
+
+        // Create positive effect: Store msg.data in mapped tracker using TRUM
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0].valid = true;
+        rule.posEffects[0].effectType = EffectTypes.EXPRESSION;
+        rule.posEffects[0].text = "";
+        rule.posEffects[0].errorMessage = "";
+
+        // TRUM instruction to store msg.data with sender key
+        // PLH(value) PLH(key) TRUM trackerIndex valueIndex keyIndex PLACE_HOLDER
+        rule.posEffects[0].instructionSet = new uint256[](9);
+        rule.posEffects[0].instructionSet[0] = uint(LogicalOp.PLH);
+        rule.posEffects[0].instructionSet[1] = 0; // msg.data placeholder index
+        rule.posEffects[0].instructionSet[2] = uint(LogicalOp.PLH);
+        rule.posEffects[0].instructionSet[3] = 1; // msg.sender placeholder index
+        rule.posEffects[0].instructionSet[4] = uint(LogicalOp.TRUM);
+        rule.posEffects[0].instructionSet[5] = trackerIndex;
+        rule.posEffects[0].instructionSet[6] = 0; // value (msg.data) from placeholder 0
+        rule.posEffects[0].instructionSet[7] = 1; // key (msg.sender) from placeholder 1
+        rule.posEffects[0].instructionSet[8] = uint(TrackerTypes.PLACE_HOLDER);
+
+        rule.negEffects = new Effect[](0);
+
+        return RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "msgDataStorageRule", "Stores msg.data in mapped tracker");
+    }
+
+    function _setupPolicyWithMsgDataRule(uint256 policyId, uint256 ruleId) internal {
+        // Set up calling function
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes,
+            callingFunction,
+            ""
+        );
+
+        // Update policy
+        bytes4[] memory callingFunctions = new bytes4[](1);
+        callingFunctions[0] = bytes4(keccak256(bytes(callingFunction)));
+        uint256[] memory callingFunctionIds = new uint256[](1);
+        callingFunctionIds[0] = callingFunctionId;
+        uint256[][] memory ruleIds = new uint256[][](1);
+        ruleIds[0] = new uint256[](1);
+        ruleIds[0][0] = ruleId;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            callingFunctions,
+            callingFunctionIds,
+            ruleIds,
+            PolicyType.OPEN_POLICY,
+            policyName,
+            policyDescription
+        );
+
+        // Apply policy to user contract
+        vm.startPrank(callingContractAdmin);
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract), policyIds);
+        vm.stopPrank();
+    }
+
+    function _executeMsgDataTest(uint256 policyId, uint256 trackerIndex) internal {
+        // Execute the policy with specific calldata to store msg.data
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), uint256(100));
+
+        // Execute policy - this should store msg.data in the mapped tracker
+        vm.prank(address(userContract));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+
+        // Check that data was stored using the correct key format (abi.encoded address)
+        bytes memory keyAsBytes = abi.encode(address(userContract));
+        bytes memory storedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, keyAsBytes);
+
+        // Verify that some data was stored (non-empty)
+        assertTrue(storedValue.length > 0, "No data stored in mapped tracker");
+
+        // Decode the first layer (tracker storage encoding)
+        bytes memory firstDecode = abi.decode(storedValue, (bytes));
+        assertTrue(firstDecode.length > 0, "First decode yielded empty data");
+
+        // Check for function selector (a9059cbb)
+        bool hasSelector = false;
+        bytes4 expectedSelector = bytes4(keccak256(bytes(callingFunction)));
+
+        // The selector a9059cbb should be at some 4-byte aligned position in the data
+        for (uint256 i = 0; i <= firstDecode.length - 4; i += 1) {
+            // Extract 4 bytes starting at position i
+            bytes4 found = bytes4(
+                uint32(
+                    (uint32(uint8(firstDecode[i])) << 24) |
+                        (uint32(uint8(firstDecode[i + 1])) << 16) |
+                        (uint32(uint8(firstDecode[i + 2])) << 8) |
+                        uint32(uint8(firstDecode[i + 3]))
+                )
+            );
+
+            if (found == expectedSelector) {
+                hasSelector = true;
+                break;
+            }
+        }
+        assertTrue(hasSelector, "Should contain function selector"); // Check for our test address (0x7654321)
+        bool hasAddress = false;
+        bytes32 expectedAddr = bytes32(uint256(0x7654321));
+        for (uint256 i = 0; i <= firstDecode.length - 32; i++) {
+            bytes32 found;
+            assembly {
+                found := mload(add(add(firstDecode, 32), i))
+            }
+            if (found == expectedAddr) {
+                hasAddress = true;
+                break;
+            }
+        }
+        assertTrue(hasAddress, "Should contain test address");
+
+        // Check for our test uint (100 = 0x64)
+        bool hasValue = false;
+        bytes32 expectedValue = bytes32(uint256(100));
+        for (uint256 i = 0; i <= firstDecode.length - 32; i++) {
+            bytes32 found;
+            assembly {
+                found := mload(add(add(firstDecode, 32), i))
+            }
+            if (found == expectedValue) {
+                hasValue = true;
+                break;
+            }
+        }
+        assertTrue(hasValue, "Should contain test value (100)");
+
+        // The firstDecode contains the raw _handleGlobalVar format:
+        // [32 bytes: offset] [32 bytes: length] [length bytes: actual msg.data]
+
+        // firstDecode length should be 164 bytes (0xa4)
+        assertEq(firstDecode.length, 164, "Decoded data should be exactly 164 bytes");
+
+        // check that the original msg.data appears in the stored data
+        bytes memory expectedMsgData = abi.encodeWithSelector(expectedSelector, address(0x7654321), uint256(100));
+
+        // search for the exact msg.data sequence within the decoded data
+        bool msgDataFound = false;
+        if (firstDecode.length >= expectedMsgData.length) {
+            for (uint256 i = 0; i <= firstDecode.length - expectedMsgData.length; i++) {
+                bool matches = true;
+                for (uint256 j = 0; j < expectedMsgData.length && matches; j++) {
+                    if (firstDecode[i + j] != expectedMsgData[j]) {
+                        matches = false;
+                    }
+                }
+                if (matches) {
+                    msgDataFound = true;
+                    break;
+                }
+            }
+        }
+
+        assertTrue(msgDataFound, "Original msg.data should be preserved intact within stored tracker data");
+    }
 }

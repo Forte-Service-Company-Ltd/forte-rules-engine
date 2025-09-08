@@ -324,19 +324,6 @@ abstract contract rules is RulesEngineCommon {
 
     bytes internal testArgs;
 
-    /*uint8 constant FLAG_FOREIGN_CALL = 0x01;
-    uint8 constant FLAG_TRACKER_VALUE = 0x02;
-    uint8 constant SHIFT_GLOBAL_VAR = 2;
-    uint8 constant MASK_GLOBAL_VAR = 0x1C;*/
-
-    // Global variable type constants
-    uint8 constant GLOBAL_NONE = 0;
-    uint8 constant GLOBAL_MSG_SENDER = 1;
-    uint8 constant GLOBAL_BLOCK_TIMESTAMP = 2;
-    uint8 constant GLOBAL_MSG_DATA = 3;
-    uint8 constant GLOBAL_BLOCK_NUMBER = 4;
-    uint8 constant GLOBAL_TX_ORIGIN = 5;
-
     function testRulesEngine_Unit_GlobalVariable_BlockTimestamp() public ifDeploymentTestsEnabled resetsGlobalVariables {
         // Create policy
         vm.startPrank(policyAdmin);
