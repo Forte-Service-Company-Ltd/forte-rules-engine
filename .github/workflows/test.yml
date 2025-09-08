@@ -8,6 +8,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, edited, ready_for_review]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 env:
   FOUNDRY_PROFILE: ci
 
