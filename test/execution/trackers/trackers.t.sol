@@ -730,13 +730,13 @@ abstract contract trackers is RulesEngineCommon {
         {
             // Verify mapping: 0x7654321 → "trackerValue1"
             bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, abi.encode(addy1));
-            assertEq(value, abi.encode(val1));
+            assertEq(value, abi.encodePacked(keccak256(abi.encode(val1))), "not val1");
 
             // Verify mapping: 0x1234567 → "trackerValue2"
             value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, abi.encode(addy2));
-            assertEq(value, abi.encode(val2));
+            assertEq(value, abi.encodePacked(keccak256(abi.encode(val2))), "not val2");
 
-            assertEq(trackerIndex, 1);
+            assertEq(trackerIndex, 1, "not trackerIndex");
         }
 
         /// positive path: address 0x7654321 maps to "trackerValue1", condition should pass
@@ -758,8 +758,8 @@ abstract contract trackers is RulesEngineCommon {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = policyId;
 
-        _addCallingFunctionToPolicy(policyIds[0]);
-
+        // _addCallingFunctionToPolicy(policyIds[0]);
+        vm.startPrank(policyAdmin);
         Rule memory rule;
         uint256 ruleId;
         {
@@ -783,7 +783,7 @@ abstract contract trackers is RulesEngineCommon {
             rule.instructionSet[3] = uint128(trackerIndex);
             rule.instructionSet[4] = 0; // get the key from mem[0]
             rule.instructionSet[5] = uint256(LogicalOp.NUM); // we place the hashed value of what we know is val1 in mem[2]
-            rule.instructionSet[6] = uint256(keccak256(abi.encode(val1)));
+            rule.instructionSet[6] = uint256(keccak256(abi.encodePacked(val1)));
             rule.instructionSet[7] = uint256(LogicalOp.EQ); // we compare mem[1] agains mem[2]
             rule.instructionSet[8] = 1;
             rule.instructionSet[9] = 2;
@@ -799,12 +799,9 @@ abstract contract trackers is RulesEngineCommon {
             _ruleIds[0][0] = ruleId;
             bytes4[] memory _callingFunctions = new bytes4[](1);
             _callingFunctions[0] = bytes4(keccak256(bytes(callingFunction)));
-            uint[] memory _callingFunctionIds = new uint[](1);
-            _callingFunctionIds[0] = 1;
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyId,
                 _callingFunctions,
-                _callingFunctionIds,
                 _ruleIds,
                 PolicyType.CLOSED_POLICY,
                 policyName,
@@ -2707,7 +2704,7 @@ abstract contract trackers is RulesEngineCommon {
             // validate tracker
             Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
             assertFalse(returnedTracker.mapped);
-            assertEq(returnedTracker.trackerValue, abi.encode(val1));
+            assertEq(returnedTracker.trackerValue, abi.encodePacked(keccak256(abi.encode(val1))), "not val1");
             assertEq(trackerIndex, 1);
         }
 
@@ -2730,7 +2727,7 @@ abstract contract trackers is RulesEngineCommon {
 
             // compare string value passed as data in an ERC20 transfer against the tracker value. True if they are the same. False otherwise
             rule.instructionSet = new uint256[](7);
-            rule.instructionSet[0] = uint256(LogicalOp.PLH); // we place the key at mem[0] (the data of transfer)
+            rule.instructionSet[0] = uint256(LogicalOp.PLH); // we place the value to check against at mem[0] (the data of transfer)
             rule.instructionSet[1] = 0; // placeholder[0]
             rule.instructionSet[2] = uint256(LogicalOp.PLH); // we get the value of the mapped tracker, and place it in mem[1]
             rule.instructionSet[3] = 1; // get the key from mem[0]
@@ -2749,12 +2746,9 @@ abstract contract trackers is RulesEngineCommon {
             _ruleIds[0][0] = ruleId;
             bytes4[] memory _callingFunctions = new bytes4[](1);
             _callingFunctions[0] = bytes4(keccak256(bytes(callingFunction)));
-            uint[] memory _callingFunctionIds = new uint[](1);
-            _callingFunctionIds[0] = 1;
             RulesEnginePolicyFacet(address(red)).updatePolicy(
                 policyId,
                 _callingFunctions,
-                _callingFunctionIds,
                 _ruleIds,
                 PolicyType.CLOSED_POLICY,
                 policyName,
@@ -2766,12 +2760,12 @@ abstract contract trackers is RulesEngineCommon {
         vm.stopPrank();
 
         // positive case: we check that the tracker value for addy1 is val1 (it should)
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0xbabe), 1000, abi.encode(val1)); // 1000 is a random value completely irrelevant for the test
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0xbabe), 1000, val1); // 1000 is a random value completely irrelevant for the test
         vm.startPrank(userContractAddress);
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
 
         // negative case: we check that the tracker value for addy2 is val1 (it shouldn't. We expect a revert in this case)
-        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0xbabe), 1000, abi.encode(val1)); // 1000 is a random value completely irrelevant for the test
+        arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0xbabe), 1000, val1); // 1000 is a random value completely irrelevant for the test
         vm.startPrank(userContractAddress);
         vm.expectRevert(abi.encodePacked(revert_text));
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
