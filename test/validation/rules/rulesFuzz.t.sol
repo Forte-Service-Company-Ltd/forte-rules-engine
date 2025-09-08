@@ -95,7 +95,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
     }
 
     function testRulesEngine_Fuzz_createRule_WithPLHmemoryOverFlow(uint8 _plhIdx, uint8 _data) public {
-        // we avoid opcode 0 as it is the only one whose element won't be checked
+        // We set both opcodes to PLH
         uint256 opA = 2;
         uint256 opB = 2;
 

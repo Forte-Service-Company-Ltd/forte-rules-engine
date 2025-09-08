@@ -454,12 +454,12 @@ contract RulesEngineRuleFacet is FacetCommonImports {
      * @return bool Returns `true` if the operation code is less limited, otherwise `false`.
      */
     function _isLessLimitedOpCode(uint opCode) internal pure returns (bool) {
-        if (
+        return (
             opCode == uint(LogicalOp.PLHM) ||
             opCode == uint(LogicalOp.PLH) ||
             opCode == uint(LogicalOp.TRUM) ||
             opCode == uint(LogicalOp.TRU)
-        ) return true;
+        ); 
     }
 
     /**
