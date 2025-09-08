@@ -582,16 +582,14 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
 
             if (op == LogicalOp.PLH || op == LogicalOp.PLHM) {
                 // Placeholder format is: get the index of the argument in the array. For example, PLH 0 is the first argument in the arguments array and its type and value
-                // uint256 pli;
                 uint256 pli = _prog[idx + 1];
                 bytes memory value;
                 ParamTypes typ;
                 if (op == LogicalOp.PLHM) {
                     uint key = mem[_prog[idx + 2]];
-                    (value, typ) = _getMappedTrackerValue(_policyId, _prog[idx + 1], key);
+                    (value, typ) = _getMappedTrackerValue(_policyId, pli, key);
                     idx += 3;
                 } else {
-                    // pli = _prog[idx + 1];
                     value = _arguments[pli];
                     typ = _placeHolders[pli].pType;
                     idx += 2;
