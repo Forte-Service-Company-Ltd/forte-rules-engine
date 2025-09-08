@@ -1131,6 +1131,7 @@ contract RulesEngineCommon is DiamondMine, Test {
     function _setupRuleWithMintEffect(uint256 _transferValue, address _userContractAddr) public returns (address nftAddress) {
         // setup
         nftContract = new ExampleERC721("Token Name", "SYMB");
+        nftContract.transferOwnership(address(red));
         testContract2 = new ForeignCallTestContractOFAC();
 
         // policy
@@ -1138,15 +1139,16 @@ contract RulesEngineCommon is DiamondMine, Test {
         policyIds[0] = _createBlankPolicy();
 
         {
-            ParamTypes[] memory pTypes = new ParamTypes[](2);
+            ParamTypes[] memory pTypes = new ParamTypes[](3);
             pTypes[0] = ParamTypes.ADDR;
-            pTypes[1] = ParamTypes.UINT;
+            pTypes[1] = ParamTypes.ADDR;
+            pTypes[2] = ParamTypes.UINT;
             // Save the calling function
             RulesEngineComponentFacet(address(red)).createCallingFunction(
                 policyIds[0],
-                bytes4(bytes4(keccak256(bytes(callingFunction)))),
+                bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))),
                 pTypes,
-                callingFunction,
+                "transferFrom(address,address,uint256)",
                 ""
             );
         }
@@ -1157,14 +1159,14 @@ contract RulesEngineCommon is DiamondMine, Test {
             fcArgs[0] = ParamTypes.ADDR;
             ForeignCall memory fc;
             fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-            fc.encodedIndices[0].index = 2;
+            fc.encodedIndices[0].index = 0;
             fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES; // the from, to, and msg.sender are all part of the regular encoded values (calldata)
             fc.parameterTypes = fcArgs;
             fc.foreignCallAddress = address(nftContract);
             fc.signature = bytes4(keccak256(("safeMint(address)")));
             fc.returnType = ParamTypes.VOID;
-            fc.foreignCallIndex = 1;
-            mintCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "safeMint(address)");
+            fc.foreignCallIndex = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "safeMint(address)");
+            mintCallId = fc.foreignCallIndex;
         }
         uint256 banCallId;
         {
@@ -1172,26 +1174,22 @@ contract RulesEngineCommon is DiamondMine, Test {
             fcArgs[0] = ParamTypes.ADDR;
             ForeignCall memory fc;
             fc.encodedIndices = new ForeignCallEncodedIndex[](1);
-            fc.encodedIndices[0].index = 2;
+            fc.encodedIndices[0].index = 0;
             fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES; // the from, to, and msg.sender are all part of the regular encoded values (calldata)
             fc.parameterTypes = fcArgs;
             fc.foreignCallAddress = address(testContract2);
             fc.signature = bytes4(keccak256(("addToNaughtyList(address)")));
             fc.returnType = ParamTypes.VOID;
-            fc.foreignCallIndex = 2;
-            banCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "addToNaughtyList(address)");
+            fc.foreignCallIndex = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "addToNaughtyList(address)");
+            banCallId = fc.foreignCallIndex;
         }
 
-        // Rule: amount > 1e18 -> mint -> transfer(address _to, uint256 amount) returns (bool)"
+        // Rule: amount > 1e18 -> mint -> transferFrom(address _from, address _to, uint256 amount) returns (bool)"
         Rule memory rule;
         // Build the foreign call placeholder
-        rule.positiveEffectPlaceHolders = new Placeholder[](1);
-        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.UINT;
-        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1; // amount
-
-        rule.negativeEffectPlaceHolders = new Placeholder[](1);
-        rule.negativeEffectPlaceHolders[0].pType = ParamTypes.UINT;
-        rule.negativeEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].pType = ParamTypes.UINT;
+        rule.placeHolders[0].typeSpecificIndex = 2; // amount
 
         // Build the instruction set for the rule (including placeholders)
         rule.instructionSet = new uint256[](7);
@@ -1203,17 +1201,13 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.instructionSet[5] = 0;
         rule.instructionSet[6] = 1;
 
-        rule.positiveEffectPlaceHolders = new Placeholder[](2);
+        rule.positiveEffectPlaceHolders = new Placeholder[](1);
         rule.positiveEffectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
         rule.positiveEffectPlaceHolders[0].typeSpecificIndex = uint128(mintCallId);
-        rule.positiveEffectPlaceHolders[1].flags = FLAG_FOREIGN_CALL;
-        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = uint128(banCallId);
 
-        rule.negativeEffectPlaceHolders = new Placeholder[](2);
+        rule.negativeEffectPlaceHolders = new Placeholder[](1);
         rule.negativeEffectPlaceHolders[0].flags = FLAG_FOREIGN_CALL;
-        rule.negativeEffectPlaceHolders[0].typeSpecificIndex = uint128(mintCallId);
-        rule.negativeEffectPlaceHolders[1].flags = FLAG_FOREIGN_CALL;
-        rule.negativeEffectPlaceHolders[1].typeSpecificIndex = uint128(banCallId);
+        rule.negativeEffectPlaceHolders[0].typeSpecificIndex = uint128(banCallId);
 
         {
             // positive effect
@@ -1227,7 +1221,7 @@ contract RulesEngineCommon is DiamondMine, Test {
                 pType: ParamTypes.ADDR,
                 param: "",
                 text: EVENTTEXT,
-                errorMessage: "mint call failed",
+                errorMessage: "",
                 instructionSet: mintEffectBytecode
             });
             rule.posEffects = new Effect[](1);
@@ -1236,7 +1230,7 @@ contract RulesEngineCommon is DiamondMine, Test {
             // negative effect
             uint256[] memory banEffectBytecode = new uint256[](2);
             banEffectBytecode[0] = uint(LogicalOp.PLH);
-            banEffectBytecode[1] = 1; // we flag that we will be using placeholder 1
+            banEffectBytecode[1] = 0; // we flag that we will be using placeholder 1
             Effect memory banEffect = Effect({
                 valid: true,
                 dynamicParam: false,
@@ -1244,7 +1238,7 @@ contract RulesEngineCommon is DiamondMine, Test {
                 pType: ParamTypes.ADDR,
                 param: "",
                 text: EVENTTEXT,
-                errorMessage: "deny listing call failed",
+                errorMessage: "",
                 instructionSet: banEffectBytecode
             });
             rule.negEffects = new Effect[](1);
@@ -1253,7 +1247,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         bytes4[] memory functions = new bytes4[](1);
-        bytes memory _callingFunction = bytes(callingFunction);
+        bytes memory _callingFunction = bytes("transferFrom(address,address,uint256)");
         functions[0] = bytes4(keccak256(_callingFunction));
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;

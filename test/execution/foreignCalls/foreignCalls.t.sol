@@ -92,6 +92,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         assertEq(testContract.getInternalValue(), 5);
     }
 
+    // todo: fix this test so that it uses a proper transferFrom signature
     function testRulesEngine_Unit_ForeignCall_Bytes() public ifDeploymentTestsEnabled resetsGlobalVariables {
         vm.skip(true);
         uint256 policyId;
@@ -152,11 +153,6 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
             rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 0;
             rule.positiveEffectPlaceHolders[0].flags = 0;
 
-            rule.negativeEffectPlaceHolders = new Placeholder[](1);
-            rule.negativeEffectPlaceHolders[0].pType = ParamTypes.BYTES;
-            rule.negativeEffectPlaceHolders[0].typeSpecificIndex = 0;
-            rule.negativeEffectPlaceHolders[0].flags = 0;
-
             rule.negEffects = new Effect[](1);
             rule.negEffects[0] = effectId_revert;
             rule.posEffects = new Effect[](1);
@@ -165,7 +161,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
             ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
             {
-                bytes4 transferSelector = ExampleUserContract.transferFrom.selector;
+                bytes4 transferSelector = bytes4(keccak256(bytes("transferFrom(address,uint256,bytes)")));
                 ParamTypes[] memory pTypes = new ParamTypes[](3);
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
@@ -207,8 +203,8 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSelector(
-                ExampleUserContract.transferFrom.selector,
+            bytes memory transferCalldata = abi.encodeWithSignature(
+                "transferFrom(address,uint256,bytes)",
                 to,
                 value,
                 abi.encode("TESTER")
@@ -1437,18 +1433,18 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
     }
 
     function testRulesEngine_Unit_ForeignCall_MintPosEffect() public ifDeploymentTestsEnabled endWithStopPrank {
-        vm.skip(true);
         uint ruleAmount = 1e18;
         // we setup the rule: if amount > ruleAmount -> mint NFT else get banned
         _setupRuleWithMintEffect(ruleAmount, address(userContract));
         // we check the nft balance of user1 before we make the transfer that triggers a mint
         uint balanceBefore = nftContract.balanceOf(user1);
         bool statusBefore = testContract2.getNaughty(user1);
+        
         assertFalse(statusBefore);
         vm.startPrank(user1);
         vm.startSnapshotGas("checkRule_Effect_Positive_ForeignCallMint");
         // the transfer should trigger the mint effect since we are transferring above the rule's amount
-        userContract.transfer(address(0x7654321), ruleAmount + 1);
+        userContract.transferFrom(address(user1), address(0x7654321), ruleAmount + 1);
         vm.stopSnapshotGas();
         // we check that the nft balance increased by 1, and that the user didn't get banned
         assertEq(balanceBefore + 1, nftContract.balanceOf(user1), "NFT balance should increase by 1");
@@ -1456,7 +1452,6 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
     }
 
     function testRulesEngine_Unit_ForeignCall_BanNegEffect() public {
-        vm.skip(true);
         uint ruleAmount = 1e18;
         // we setup the rule: if amount > ruleAmount -> mint NFT else get banned
         _setupRuleWithMintEffect(ruleAmount, address(userContract));
@@ -1467,7 +1462,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         vm.startPrank(user1);
         vm.startSnapshotGas("checkRule_Effect_Negative_ForeignCallBan");
         // the transfer should trigger the mint effect since we are transferring above the rule's amount
-        userContract.transfer(address(0x7654321), ruleAmount - 1);
+        userContract.transferFrom(address(user1), address(0x7654321), ruleAmount - 1);
         // we check that the nft balance didn't increased, and that user got banned
         assertTrue(testContract2.getNaughty(user1), "user should be banned");
         assertEq(balanceBefore, nftContract.balanceOf(user1), "NFT balance should stay the same");

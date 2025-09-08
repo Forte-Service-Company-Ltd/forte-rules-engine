@@ -30,11 +30,20 @@ contract ExampleUserContract is RulesEngineClient {
         return true;
     }
 
-    function transferFrom(address to, uint256 value, bytes memory _bytes) public returns (bool) {
+    function transferFrom(address from, address to, uint256 value) public returns (bool) {
         _invokeRulesEngine(msg.data);
         to; // added to silence compiler warnings
         value; // added to silence compiler warnings
-        _bytes; // added to silence compiler warnings
+        from; // added to silence compiler warnings
+        return true;
+    }
+
+    // todo: fix this function so it conforms to actual transferFrom signature
+    function transferFrom(address to, uint256 value, bytes memory _bytes) public returns (bool) {
+        _invokeRulesEngine(abi.encodePacked(msg.data, uint(uint160(msg.sender)))); // msg.sender address needs to be encoded as 32 bytes
+        to;
+        value;
+        _bytes;
         return true;
     }
 
@@ -47,7 +56,7 @@ contract ExampleUserContract is RulesEngineClient {
     }
 
     function transferSigTest(address to, uint256 value, string memory _str, string memory _str2) public returns (bool) {
-        _invokeRulesEngine(abi.encodeWithSelector(this.transferFrom.selector, to, value, _str, _str2, 22));
+        _invokeRulesEngine(abi.encodeWithSignature("transferFrom(address,uint256,bytes)", to, value, _str, _str2, 22));
         to; // added to silence compiler warnings
         value; // added to silence compiler warnings
         _str; // added to silence compiler warnings

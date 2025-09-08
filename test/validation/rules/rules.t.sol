@@ -645,6 +645,7 @@ abstract contract rules is RulesEngineCommon {
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 
+    // todo: fix this test so that it uses a proper transferFrom signature
     function testRulesEngine_Unit_ForeignCall_Bytes_Param() public ifDeploymentTestsEnabled resetsGlobalVariables {
         uint256 policyId;
         uint256 ruleId;
@@ -718,7 +719,7 @@ abstract contract rules is RulesEngineCommon {
             ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
             {
-                bytes4 transferSelector = ExampleUserContract.transferFrom.selector;
+                bytes4 transferSelector = bytes4(keccak256(bytes("transferFrom(address,uint256,bytes)")));
                 ParamTypes[] memory pTypes = new ParamTypes[](3);
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
@@ -760,8 +761,8 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSelector(
-                ExampleUserContract.transferFrom.selector,
+            bytes memory transferCalldata = abi.encodeWithSignature(
+                "transferFrom(address,uint256,bytes)",
                 to,
                 value,
                 abi.encode("TESTER")
@@ -848,7 +849,7 @@ abstract contract rules is RulesEngineCommon {
             ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
             {
-                bytes4 transferSelector = ExampleUserContract.transferFrom.selector;
+                bytes4 transferSelector = bytes4(keccak256(bytes("transferFrom(address,uint256,bytes)")));
                 ParamTypes[] memory pTypes = new ParamTypes[](3);
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
@@ -889,8 +890,8 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSelector(
-                ExampleUserContract.transferFrom.selector,
+            bytes memory transferCalldata = abi.encodeWithSignature(
+                "transferFrom(address,uint256,bytes)",
                 to,
                 value,
                 abi.encode("TESTER")
@@ -961,7 +962,7 @@ abstract contract rules is RulesEngineCommon {
             ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
             {
-                bytes4 transferSelector = ExampleUserContract.transferFrom.selector;
+                bytes4 transferSelector = bytes4(keccak256(bytes("transferFrom(address,uint256,bytes)")));
                 ParamTypes[] memory pTypes = new ParamTypes[](3);
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
@@ -1003,8 +1004,8 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSelector(
-                ExampleUserContract.transferFrom.selector,
+            bytes memory transferCalldata = abi.encodeWithSignature(
+                "transferFrom(address,uint256,bytes)",
                 to,
                 value,
                 abi.encode("TESTER")
@@ -1072,7 +1073,7 @@ abstract contract rules is RulesEngineCommon {
             ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
             {
-                bytes4 transferSelector = ExampleUserContract.transferFrom.selector;
+                bytes4 transferSelector = bytes4(keccak256(bytes("transferFrom(address,uint256,bytes)")));
                 ParamTypes[] memory pTypes = new ParamTypes[](3);
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
@@ -1118,8 +1119,8 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSelector(
-                ExampleUserContract.transferFrom.selector,
+            bytes memory transferCalldata = abi.encodeWithSignature(
+                "transferFrom(address,uint256,bytes)",
                 to,
                 value,
                 abi.encode("TESTER")
@@ -1188,7 +1189,7 @@ abstract contract rules is RulesEngineCommon {
             ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
             {
-                bytes4 transferSelector = ExampleUserContract.transferFrom.selector;
+                bytes4 transferSelector = bytes4(keccak256(bytes("transferFrom(address,uint256,bytes)")));
                 ParamTypes[] memory pTypes = new ParamTypes[](3);
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
@@ -1234,8 +1235,8 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSelector(
-                ExampleUserContract.transferFrom.selector,
+            bytes memory transferCalldata = abi.encodeWithSignature(
+                "transferFrom(address,uint256,bytes)",
                 to,
                 value,
                 abi.encode("TESTER")
@@ -1304,7 +1305,7 @@ abstract contract rules is RulesEngineCommon {
             ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
 
             {
-                bytes4 transferSelector = ExampleUserContract.transferFrom.selector;
+                bytes4 transferSelector = bytes4(keccak256(bytes("transferFrom(address,uint256,bytes)")));
                 ParamTypes[] memory pTypes = new ParamTypes[](3);
                 pTypes[0] = ParamTypes.ADDR;
                 pTypes[1] = ParamTypes.UINT;
@@ -1349,8 +1350,8 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress, txOriginAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSelector(
-                ExampleUserContract.transferFrom.selector,
+            bytes memory transferCalldata = abi.encodeWithSignature(
+                "transferFrom(address,uint256,bytes)",
                 to,
                 value,
                 abi.encode("TESTER")

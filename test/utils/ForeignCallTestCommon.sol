@@ -297,6 +297,7 @@ contract ForeignCallTestContractOFAC {
     mapping(uint => bool) public approvedIdList;
 
     function addToNaughtyList(address addr) public {
+        console.log("addToNaughtyList", addr);
         onTheNaughtyList[addr] = true;
     }
 
