@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.24;
-
 import "src/engine/facets/RulesEngineAdminRolesFacet.sol";
 import "src/engine/facets/RulesEngineComponentFacet.sol";
 import {RulesEngineStorageLib as StorageLib} from "src/engine/facets/RulesEngineStorageLib.sol";
-import "forge-std/src/console2.sol";
 /**
  * @title Rules Engine Policy Facet
  * @dev This contract serves as the primary data facet for the Rules Engine rules. It is responsible for creating, updating,
@@ -379,7 +377,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
      * @param placeholders The placeholders to validate.
      */
     function _validatePlaceholders(Placeholder[] calldata placeholders) internal pure {
-        if (placeholders.length > memorySize) revert(MEMORY_OVERFLOW);
+        if (placeholders.length > MAX_LOOP) revert(MEMORY_OVERFLOW);
         for (uint256 i = 0; i < placeholders.length; i++) {
             _validateParamType(placeholders[i].pType);
         }
@@ -404,15 +402,14 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                 dataCounter++;
                 if (!_isLessLimitedOpCode(instructionHold)) {  
                     // if the instruction is data, we just check that it won't point to an index outside of max memory size
-                    if (instruction > memorySize) revert(MEMORY_OVERFLOW);            
+                    if (instruction > memorySize) revert(MEMORY_OVERFLOW);             
                 } else {
                     // Verify that the tracker exists in the policy
                     TrackerStorage storage trackerData = lib._getTrackerStorage();
                     if (dataCounter == 1){
-                        console2.log("instructionHold",instructionHold);
-                        console2.log("instruction",instruction);
-                        console2.log("i",i);
-                        if (!trackerData.trackers[policyId][instruction].set) revert(TRACKER_NOT_SET);
+                        if (instructionHold == uint(LogicalOp.PLH)) {// PLH is only limited by the Max loop size
+                            if (instruction > MAX_LOOP) revert(MEMORY_OVERFLOW);
+                        } else if (!trackerData.trackers[policyId][instruction].set) revert(TRACKER_NOT_SET);
                     }
 
                 }
@@ -424,7 +421,6 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                     delete expectedDataElements;
                 }
             } else {
-                instructionHold = instructionSet[i]; // load the hold variable with the actual op code
                 ++totalInstructions;
                 // if the instruction is not data, we check that it is a valid opcode
                 if (instruction > opsTotalSize) revert(INVALID_INSTRUCTION);
@@ -443,6 +439,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                 else expectedDataElements = 4;
                 isData = true; // we know that following instruction(s) is a data pointer
                 dataCounter = 0;
+                instructionHold = instructionSet[i]; // load the hold variable with the actual op code
             }
         }
         // if we have any expected data elements left, it means the instruction set is invalid
@@ -459,6 +456,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
     function _isLessLimitedOpCode(uint opCode) internal pure returns (bool) {
         if (
             opCode == uint(LogicalOp.PLHM) ||
+            opCode == uint(LogicalOp.PLH) ||
             opCode == uint(LogicalOp.TRUM) ||
             opCode == uint(LogicalOp.TRU)
         ) return true;

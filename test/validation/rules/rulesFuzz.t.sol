@@ -94,6 +94,35 @@ abstract contract rulesFuzz is RulesEngineCommon {
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
+    function testRulesEngine_Fuzz_createRule_WithPLHmemoryOverFlow(uint8 _plhIdx, uint8 _data) public {
+        // we avoid opcode 0 as it is the only one whose element won't be checked
+        uint256 opA = 2;
+        uint256 opB = 2;
+
+        (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
+        uint256[] memory instructionSet = buildInstructionSet2Opcodes(opA, opB, opAElements, opBElements, uint256(_data));
+
+        // rule setup
+        Rule memory rule;
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        rule.instructionSet = instructionSet;
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0] = effectId_event;
+        rule.placeHolders = new Placeholder[](2);
+        rule.placeHolders[0].pType = ParamTypes.UINT;
+        rule.placeHolders[0].typeSpecificIndex = 1;
+        rule.placeHolders[1].pType = ParamTypes.UINT;
+        rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
+        rule.placeHolders[1].typeSpecificIndex = _plhIdx;
+        // test
+
+        if (_data > RulesEngineRuleFacet(address(red)).getMaxLoopSize()){
+            vm.expectRevert("Memory Overflow");
+        } 
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+    }
+
     function testRulesEngine_Fuzz_createRule_instructionSetLength(uint opA, uint opB, bool causesOverflow) public {
         opA = bound(opA, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
         opB = bound(opB, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);

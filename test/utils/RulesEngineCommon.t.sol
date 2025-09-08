@@ -1980,7 +1980,6 @@ contract RulesEngineCommon is DiamondMine, Test {
             trackerValues,
             TrackerArrayTypes.VOID
         );
-        console2.log("TRACKER INDEx", trackerIndex);
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
