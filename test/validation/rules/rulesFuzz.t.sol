@@ -150,6 +150,39 @@ abstract contract rulesFuzz is RulesEngineCommon {
         if (!causesOverflow) savePolicyAndExecuteInstructionSet(ruleId, policyIds);
     }
 
+    function testRulesEngine_Fuzz_createRule_instructionSetLengthForLessLimited(uint opA, uint opB, bool causesTrackerNotSet) public {
+        opA = bound(opA, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
+        opB = bound(opB, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
+        uint8[3] memory lessLimitedOps = [4,17,18];
+        // we only use less limited opcodes: PLHM, TRU, TRUM
+        opA = lessLimitedOps[opA% 3];
+        opB = lessLimitedOps[opB% 3];
+        (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
+        // the instruction set will have 90 or 91 instructions depending on the causesOverflow flag.
+        uint[] memory instructionSet = buildInstructionSetMax(opA, opB, opAElements, opBElements, false, 1);
+        // rule setup
+        Rule memory rule;
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        // Only create a tracker some of the time
+        if (!causesTrackerNotSet){
+            Trackers memory tracker;
+            /// build the members of the struct
+            tracker.pType = ParamTypes.UINT;
+            tracker.trackerValue = abi.encode(2);
+            // Add the tracker
+            RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
+        }
+        rule.instructionSet = instructionSet;
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0] = effectId_revert;
+        // test
+        if (causesTrackerNotSet) vm.expectRevert("Tracker referenced in rule not set");
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+    }
+
     function testRulesEngine_Fuzz_createRule_simple(uint256 _ruleValue, uint256 _transferValue) public {
         // Rule: amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
 
