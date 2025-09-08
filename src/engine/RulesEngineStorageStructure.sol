@@ -90,7 +90,7 @@ enum EffectTypes {
     EXPRESSION
 }
 
-enum BuildArgumentsPlaceholders {
+enum PlaceholderType {
     CONDITIONAL,
     POSITIVE_EFFECT,
     NEGATIVE_EFFECT

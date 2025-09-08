@@ -252,7 +252,6 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                 // check if the rule ID is already in the array
                 bool exists = false;
                 for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][trackerId].length; l++) {
-                    // check if the rule ID is already in the array
                     if (trackerData.trackerIdToRuleIds[_policyId][trackerId][l] == _ruleId) {
                         exists = true;
                         break;
@@ -269,7 +268,6 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             if (FacetUtils._isTrackerValue(negativeEffectPlaceHolders[k])) {
                 // retrieve the tracker ID from the placeholder
                 trackerId = negativeEffectPlaceHolders[k].typeSpecificIndex;
-                // check if the rule ID is already in the array
                 bool exists = false;
                 for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][trackerId].length; l++) {
                     // check if the rule ID is already in the array
