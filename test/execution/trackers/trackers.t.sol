@@ -223,6 +223,44 @@ abstract contract trackers is RulesEngineCommon {
     }
 
     //// Mapped Trackers
+
+    /// Empty initial key/value arrays
+    function testRulesEngine_Unit_MappedTrackerEmptyKeyValueArrays() public ifDeploymentTestsEnabled resetsGlobalVariables {
+        uint256 policyId = _createBlankPolicy();
+        /// create tracker struct
+        Trackers memory tracker;
+        tracker.mapped = true;
+        tracker.pType = ParamTypes.UINT;
+        tracker.trackerKeyType = ParamTypes.UINT;
+
+        /// create tracker key arrays (empty)
+        bytes[] memory trackerKeys;
+
+        /// create tracker value arrays (empty)
+        bytes[] memory trackerValues;
+
+        /// create tracker name
+        string memory trackerName = "tracker1";
+
+        /// set up rule for test
+        uint256 trackerIndex = _setupRuleWithMappedTracker(
+            policyId,
+            tracker,
+            ParamTypes.UINT, // key type
+            ParamTypes.UINT, // value type
+            ParamTypes.UINT, // tracker type
+            2, // key type specific index
+            1, // value type specific index
+            trackerKeys,
+            trackerValues,
+            trackerName
+        );
+        // validate tracker
+        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
+        assertTrue(returnedTracker.mapped);
+        assertTrue(returnedTracker.set);
+    }
+
     /// trackers as a rule conditional
     /// uint to uint trackers
     function testRulesEngine_Unit_MappedTrackerAsConditional_Uint() public ifDeploymentTestsEnabled resetsGlobalVariables {

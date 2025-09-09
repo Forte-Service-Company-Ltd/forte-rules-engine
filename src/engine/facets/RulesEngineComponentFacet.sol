@@ -63,7 +63,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
      */
     function createMappedTracker(
         uint256 policyId,
-        Trackers calldata tracker,
+        Trackers memory tracker,
         string calldata trackerName,
         bytes[] calldata trackerKeys,
         bytes[] calldata trackerValues,
@@ -71,6 +71,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
     ) external returns (uint256) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
+
         if (!tracker.mapped) revert(INVALID_TYPE);
         // ensure mapped tracker value types (pType) of arrays are not VOID type (used for non array value types)
         if (
@@ -81,6 +82,12 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         if (trackerKeys.length != trackerValues.length) revert(KEY_AND_VALUE_SAME);
         uint256 trackerIndex = lib._getTrackerStorage().trackerIndexCounter[policyId];
         trackerIndex = _incrementTrackerIndex(policyId);
+        require(trackerIndex < MAX_LOOP, MAX_TRACKERS);
+        tracker.mapped = true;
+        tracker.set = true;
+        tracker.trackerIndex = trackerIndex;
+        TrackerStorage storage data = lib._getTrackerStorage();
+        data.trackers[policyId][trackerIndex] = tracker;
         for (uint256 i = 0; i < trackerKeys.length; i++) {
             // Step 2: Store tracker data
             _storeTrackerData(policyId, trackerIndex, tracker, trackerKeys[i], trackerValues[i]);
@@ -91,7 +98,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         return trackerIndex;
     }
 
-    function _validateTrackerType(Trackers calldata _tracker) internal pure {
+    function _validateTrackerType(Trackers memory _tracker) internal pure {
         // Ensure tracker value pType is a valid type
         require(
             _tracker.pType == ParamTypes.STR ||
@@ -143,7 +150,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
     function _storeTrackerData(
         uint256 _policyId,
         uint256 _trackerIndex,
-        Trackers calldata _tracker,
+        Trackers memory _tracker,
         bytes calldata _trackerKey,
         bytes calldata _trackerValue
     ) internal {
@@ -226,11 +233,6 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         bytes memory _trackerKey,
         bytes memory _trackerValue
     ) internal {
-        require(_trackerIndex < MAX_LOOP, MAX_TRACKERS);
-        _tracker.mapped = true;
-        _tracker.set = true;
-        _tracker.trackerIndex = _trackerIndex;
-        _data.trackers[_policyId][_trackerIndex] = _tracker;
         if (_tracker.trackerKeyType == ParamTypes.BYTES || _tracker.trackerKeyType == ParamTypes.STR) {
             _trackerKey = abi.encode(keccak256(_trackerKey));
         }
