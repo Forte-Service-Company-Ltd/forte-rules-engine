@@ -3204,20 +3204,25 @@ abstract contract trackers is RulesEngineCommon {
 
     function _createMsgDataMappedTracker(uint256 policyId) internal returns (uint256) {
         Trackers memory tracker;
+        tracker.set = true;
         tracker.mapped = true;
         tracker.pType = ParamTypes.BYTES; // Value type: bytes (for msg.data)
         tracker.trackerKeyType = ParamTypes.ADDR; // Key type: address (for msg.sender)
 
-        bytes[] memory emptyKeys = new bytes[](0);
-        bytes[] memory emptyValues = new bytes[](0);
+        // Need to provide at least one key-value pair to ensure tracker is properly stored
+        bytes[] memory trackerKeys = new bytes[](1);
+        trackerKeys[0] = abi.encode(address(0x0123)); // dummy key
+
+        bytes[] memory trackerValues = new bytes[](1);
+        trackerValues[0] = abi.encode(bytes("dummy")); // dummy value
 
         return
             RulesEngineComponentFacet(address(red)).createMappedTracker(
                 policyId,
                 tracker,
                 "msgDataTracker",
-                emptyKeys,
-                emptyValues,
+                trackerKeys,
+                trackerValues,
                 TrackerArrayTypes.VOID
             );
     }
@@ -3274,7 +3279,7 @@ abstract contract trackers is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        uint256 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+        bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyId,
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
@@ -3284,9 +3289,7 @@ abstract contract trackers is RulesEngineCommon {
 
         // Update policy
         bytes4[] memory callingFunctions = new bytes4[](1);
-        callingFunctions[0] = bytes4(keccak256(bytes(callingFunction)));
-        uint256[] memory callingFunctionIds = new uint256[](1);
-        callingFunctionIds[0] = callingFunctionId;
+        callingFunctions[0] = callingFunctionId;
         uint256[][] memory ruleIds = new uint256[][](1);
         ruleIds[0] = new uint256[](1);
         ruleIds[0][0] = ruleId;
@@ -3294,7 +3297,6 @@ abstract contract trackers is RulesEngineCommon {
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyId,
             callingFunctions,
-            callingFunctionIds,
             ruleIds,
             PolicyType.OPEN_POLICY,
             policyName,
@@ -3324,87 +3326,30 @@ abstract contract trackers is RulesEngineCommon {
         // Verify that some data was stored (non-empty)
         assertTrue(storedValue.length > 0, "No data stored in mapped tracker");
 
-        // Decode the first layer (tracker storage encoding)
-        bytes memory firstDecode = abi.decode(storedValue, (bytes));
-        assertTrue(firstDecode.length > 0, "First decode yielded empty data");
+        // Decode the stored hash
+        bytes32 storedHash = abi.decode(storedValue, (bytes32));
 
-        // Check for function selector (a9059cbb)
-        bool hasSelector = false;
-        bytes4 expectedSelector = bytes4(keccak256(bytes(callingFunction)));
+        // Calculate the expected hash of the msg.data
+        bytes memory actualMsgData = abi.encodeWithSelector(RulesEngineProcessorFacet.checkPolicies.selector, arguments);
 
-        // The selector a9059cbb should be at some 4-byte aligned position in the data
-        for (uint256 i = 0; i <= firstDecode.length - 4; i += 1) {
-            // Extract 4 bytes starting at position i
-            bytes4 found = bytes4(
-                uint32(
-                    (uint32(uint8(firstDecode[i])) << 24) |
-                        (uint32(uint8(firstDecode[i + 1])) << 16) |
-                        (uint32(uint8(firstDecode[i + 2])) << 8) |
-                        uint32(uint8(firstDecode[i + 3]))
-                )
-            );
+        // Replicate the exact _handleGlobalVar implementation
+        bytes memory encodedData = new bytes(actualMsgData.length + 64);
 
-            if (found == expectedSelector) {
-                hasSelector = true;
-                break;
-            }
-        }
-        assertTrue(hasSelector, "Should contain function selector"); // Check for our test address (0x7654321)
-        bool hasAddress = false;
-        bytes32 expectedAddr = bytes32(uint256(0x7654321));
-        for (uint256 i = 0; i <= firstDecode.length - 32; i++) {
-            bytes32 found;
-            assembly {
-                found := mload(add(add(firstDecode, 32), i))
-            }
-            if (found == expectedAddr) {
-                hasAddress = true;
-                break;
-            }
-        }
-        assertTrue(hasAddress, "Should contain test address");
-
-        // Check for our test uint (100 = 0x64)
-        bool hasValue = false;
-        bytes32 expectedValue = bytes32(uint256(100));
-        for (uint256 i = 0; i <= firstDecode.length - 32; i++) {
-            bytes32 found;
-            assembly {
-                found := mload(add(add(firstDecode, 32), i))
-            }
-            if (found == expectedValue) {
-                hasValue = true;
-                break;
-            }
-        }
-        assertTrue(hasValue, "Should contain test value (100)");
-
-        // The firstDecode contains the raw _handleGlobalVar format:
-        // [32 bytes: offset] [32 bytes: length] [length bytes: actual msg.data]
-
-        // firstDecode length should be 164 bytes (0xa4)
-        assertEq(firstDecode.length, 164, "Decoded data should be exactly 164 bytes");
-
-        // check that the original msg.data appears in the stored data
-        bytes memory expectedMsgData = abi.encodeWithSelector(expectedSelector, address(0x7654321), uint256(100));
-
-        // search for the exact msg.data sequence within the decoded data
-        bool msgDataFound = false;
-        if (firstDecode.length >= expectedMsgData.length) {
-            for (uint256 i = 0; i <= firstDecode.length - expectedMsgData.length; i++) {
-                bool matches = true;
-                for (uint256 j = 0; j < expectedMsgData.length && matches; j++) {
-                    if (firstDecode[i + j] != expectedMsgData[j]) {
-                        matches = false;
-                    }
-                }
-                if (matches) {
-                    msgDataFound = true;
-                    break;
-                }
-            }
+        // Replicate the exact assembly from _handleGlobalVar
+        assembly {
+            mstore(add(encodedData, 32), 0x20)
+            mstore(add(encodedData, 64), mload(actualMsgData))
         }
 
-        assertTrue(msgDataFound, "Original msg.data should be preserved intact within stored tracker data");
+        // Copy the actual data starting at position 64
+        // This overwrites the length that was stored at position 64
+        for (uint256 i = 0; i < actualMsgData.length; i++) {
+            encodedData[i + 64] = actualMsgData[i];
+        }
+
+        bytes32 expectedHash = keccak256(encodedData);
+
+        // Verify that the stored hash matches the expected hash
+        assertEq(storedHash, expectedHash, "Stored hash should match expected hash of msg.data");
     }
 }
