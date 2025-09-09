@@ -31,6 +31,7 @@ string constant NAME_REQ = "Name is required";
 string constant INVALID_RULE_LENGTH = "Invalid rule array length";
 string constant RULE_NOT_SET = "Rule not set";
 string constant ADDRESS_NOT_ALLOWED = "Address not allowed to be a foreign call";
+string constant FAILED_FOREIGN_CALL = "Failed Foreign Call";
 
 string constant MAX_FC = "Max foreign calls reached";
 string constant MAX_FC_PT = "Max foreign parameter types reached.";

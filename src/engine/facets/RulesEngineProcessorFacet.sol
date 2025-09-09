@@ -138,6 +138,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             // Decode the return value based on the specified return value parameter type in the foreign call structure
             retVal.pType = fc.returnType;
             retVal.value = data;
+        } else {
+            revert(FAILED_FOREIGN_CALL);
         }
     }
 
