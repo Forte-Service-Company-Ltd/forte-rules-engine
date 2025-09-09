@@ -3255,13 +3255,13 @@ abstract contract trackers is RulesEngineCommon {
         rule.instructionSet[6] = 1;
 
         // Set up effect placeholders for storing data
-        rule.effectPlaceHolders = new Placeholder[](2);
-        rule.effectPlaceHolders[0].pType = ParamTypes.BYTES;
-        rule.effectPlaceHolders[0].typeSpecificIndex = 0;
-        rule.effectPlaceHolders[0].flags = uint8(GLOBAL_MSG_DATA << SHIFT_GLOBAL_VAR);
-        rule.effectPlaceHolders[1].pType = ParamTypes.ADDR;
-        rule.effectPlaceHolders[1].typeSpecificIndex = 0;
-        rule.effectPlaceHolders[1].flags = uint8(GLOBAL_MSG_SENDER << SHIFT_GLOBAL_VAR);
+        rule.positiveEffectPlaceHolders = new Placeholder[](2);
+        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.BYTES;
+        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 0;
+        rule.positiveEffectPlaceHolders[0].flags = uint8(GLOBAL_MSG_DATA << SHIFT_GLOBAL_VAR);
+        rule.positiveEffectPlaceHolders[1].pType = ParamTypes.ADDR;
+        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 0;
+        rule.positiveEffectPlaceHolders[1].flags = uint8(GLOBAL_MSG_SENDER << SHIFT_GLOBAL_VAR);
 
         // Create positive effect: Store msg.data in mapped tracker using TRUM
         rule.posEffects = new Effect[](1);
