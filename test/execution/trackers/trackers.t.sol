@@ -765,16 +765,17 @@ abstract contract trackers is RulesEngineCommon {
             Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
             assertTrue(returnedTracker.mapped);
         }
+
         {
             // Verify mapping: 0x7654321 → "trackerValue1"
-            bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, abi.encode(addy1));
-            assertEq(value, abi.encodePacked(keccak256(abi.encode(val1))), "not val1");
+            bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
+            assertEq(value, abi.encode("trackerValue1"));
 
             // Verify mapping: 0x1234567 → "trackerValue2"
-            value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, abi.encode(addy2));
-            assertEq(value, abi.encodePacked(keccak256(abi.encode(val2))), "not val2");
+            value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x1234567)));
+            assertEq(value, abi.encode("trackerValue2"));
 
-            assertEq(trackerIndex, 1, "not trackerIndex");
+            assertEq(trackerIndex, 1);
         }
 
         /// positive path: address 0x7654321 maps to "trackerValue1", condition should pass
@@ -1036,7 +1037,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertEq(value, abi.encode(keccak256(abi.encode(string("value1")))));
+        assertEq(value, abi.encode(string("value1")));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1167,7 +1168,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(true));
-        assertEq(value, abi.encode(keccak256(abi.encode(string("enabled")))));
+        assertEq(value, abi.encode(string("enabled")));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1237,7 +1238,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(string("user1")));
-        assertEq(value, abi.encode(keccak256(abi.encode(string("admin")))));
+        assertEq(value, abi.encode(string("admin")));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1373,7 +1374,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
-        assertEq(value, abi.encode(keccak256(abi.encode(bytes("response1")))));
+        assertEq(value, abi.encode(bytes("response1")));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1504,8 +1505,8 @@ abstract contract trackers is RulesEngineCommon {
             Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
             assertTrue(returnedTracker.mapped);
 
-            bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(addy1));
-            assertEq(value, abi.encodePacked(keccak256(abi.encode(val1))), "not val1");
+            bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(address(0x7654321)));
+            assertEq(value, abi.encode(bytes("metadata1")));
             assertEq(trackerIndex, 1);
 
             /// validate tracker is checked as conditional - positive path
@@ -1696,7 +1697,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(true));
-        assertEq(value, abi.encode(keccak256(abi.encode(bytes("success")))));
+        assertEq(value, abi.encode(bytes("success")));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1764,7 +1765,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(bytes("key1")));
-        assertEq(value, abi.encode(keccak256(abi.encode(string("name1")))));
+        assertEq(value, abi.encode(string("name1")));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1834,7 +1835,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(string("config1")));
-        assertEq(value, abi.encode(keccak256(abi.encode(bytes("data1")))));
+        assertEq(value, abi.encode(bytes("data1")));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -1905,7 +1906,7 @@ abstract contract trackers is RulesEngineCommon {
         assertTrue(returnedTracker.mapped);
 
         bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(bytes("hash1")));
-        assertEq(value, abi.encode(keccak256(abi.encode(bytes("signature1")))));
+        assertEq(value, abi.encode(bytes("signature1")));
         assertEq(trackerIndex, 1);
 
         /// validate tracker is checked as conditional - positive path
@@ -4166,5 +4167,434 @@ abstract contract trackers is RulesEngineCommon {
             bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, abi.encode(1));
             assertEq(value, abi.encode(6), "Manual update should store new array length");
         }
+    }
+
+    function test_ForeignCall_RawStringMappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
+        // Create policy and setup tracker with raw string data
+        uint256 policyId = _setupRawStringMappedTrackerPolicy();
+
+        // Verify the mapped tracker contains raw string data (not ABI-encoded)
+        bytes memory storedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
+        assertEq(storedValue, bytes("Hello World"));
+        assertTrue(keccak256(storedValue) != keccak256(abi.encode("Hello World")));
+
+        // Test that the foreign call now succeeds with the fix
+        vm.startPrank(userContractAddress);
+        bytes memory transferCalldata = abi.encodeWithSelector(ExampleUserContract.transfer.selector, address(0x1234567), 1);
+
+        // With the fix, this should now succeed and emit the expected event
+        vm.expectEmit(true, true, false, false);
+        emit RulesEngineEvent(1, EVENTTEXT, event_text);
+        RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
+    }
+
+    function _setupRawStringMappedTrackerPolicy() private returns (uint256 policyId) {
+        vm.startPrank(policyAdmin);
+        policyId = _createBlankPolicy();
+
+        // Create raw string mapped tracker
+        uint256 trackerId = _createRawStringMappedTracker(policyId);
+
+        // Create foreign call using the tracker
+        uint256 foreignCallId = _createStringForeignCall(policyId, trackerId);
+
+        // Create rule with foreign call
+        uint256 ruleId = _createForeignCallRule(policyId, foreignCallId);
+
+        // Setup calling function and policy
+        _finalizePolicySetup(policyId, ruleId);
+
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+        vm.stopPrank();
+    }
+
+    function _createRawStringMappedTracker(uint256 policyId) private returns (uint256 trackerId) {
+        Trackers memory tracker;
+        tracker.pType = ParamTypes.STR;
+        tracker.trackerKeyType = ParamTypes.UINT;
+        tracker.mapped = true;
+
+        bytes[] memory trackerKeys = new bytes[](1);
+        bytes[] memory trackerValues = new bytes[](1);
+        trackerKeys[0] = abi.encode(1);
+        trackerValues[0] = bytes("Hello World"); // Raw string bytes
+
+        trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyId,
+            tracker,
+            "rawStringTracker",
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.VOID
+        );
+    }
+
+    function _createStringForeignCall(uint256 policyId, uint256 trackerId) private returns (uint256 foreignCallId) {
+        ForeignCall memory fc;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = trackerId;
+        fc.encodedIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
+
+        fc.mappedTrackerKeyIndices = new ForeignCallEncodedIndex[](1);
+        fc.mappedTrackerKeyIndices[0].index = 0;
+        fc.mappedTrackerKeyIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        fc.foreignCallAddress = address(pfcContractAddress);
+        fc.signature = bytes4(keccak256(bytes("testSig(string)")));
+        fc.returnType = ParamTypes.BOOL;
+
+        ParamTypes[] memory fcArgs = new ParamTypes[](1);
+        fcArgs[0] = ParamTypes.STR;
+        fc.parameterTypes = fcArgs;
+
+        foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "testSig(string)");
+    }
+
+    function _createForeignCallRule(uint256 policyId, uint256 foreignCallId) private returns (uint256 ruleId) {
+        Rule memory rule;
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.PLH);
+        rule.instructionSet[1] = 0;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 1;
+        rule.instructionSet[4] = uint(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].flags = uint8(FLAG_FOREIGN_CALL);
+        rule.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
+
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0] = effectId_event;
+
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "testRule", "testRule");
+    }
+
+    function _finalizePolicySetup(uint256 policyId, uint256 ruleId) private {
+        bytes4 transferSelector = ExampleUserContract.transfer.selector;
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+
+        bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            transferSelector,
+            pTypes,
+            "transfer(address,uint256)",
+            ""
+        );
+
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = transferSelector;
+        uint256[][] memory ruleIdsArr = new uint256[][](1);
+        ruleIdsArr[0] = new uint256[](1);
+        ruleIdsArr[0][0] = ruleId;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            ruleIdsArr,
+            PolicyType.CLOSED_POLICY,
+            "testPolicy",
+            "testPolicy"
+        );
+    }
+
+    function test_ForeignCall_RawBytesMappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
+        // Create policy and setup tracker with raw bytes data
+        uint256 policyId = _setupRawBytesMappedTrackerPolicy();
+
+        // Verify the mapped tracker contains raw bytes data (not ABI-encoded)
+        bytes memory storedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
+        assertEq(storedValue, hex"deadbeef");
+        assertTrue(keccak256(storedValue) != keccak256(abi.encode(hex"deadbeef")));
+
+        // Test that the foreign call now succeeds with the fix
+        vm.startPrank(userContractAddress);
+        bytes memory transferCalldata = abi.encodeWithSelector(ExampleUserContract.transfer.selector, address(0x1234567), 1);
+
+        // With the fix, this should now succeed and emit the expected event
+        vm.expectEmit(true, true, false, false);
+        emit RulesEngineEvent(1, EVENTTEXT, event_text);
+        RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
+    }
+
+    function _setupRawBytesMappedTrackerPolicy() private returns (uint256 policyId) {
+        vm.startPrank(policyAdmin);
+        policyId = _createBlankPolicy();
+
+        // Create raw bytes mapped tracker
+        uint256 trackerId = _createRawBytesMappedTracker(policyId);
+
+        // Create foreign call using the tracker
+        uint256 foreignCallId = _createBytesForeignCall(policyId, trackerId);
+
+        // Create rule with foreign call
+        uint256 ruleId = _createForeignCallRule(policyId, foreignCallId);
+
+        // Setup calling function and policy
+        _finalizePolicySetup(policyId, ruleId);
+
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+        vm.stopPrank();
+    }
+
+    function _createRawBytesMappedTracker(uint256 policyId) private returns (uint256 trackerId) {
+        Trackers memory tracker;
+        tracker.pType = ParamTypes.BYTES;
+        tracker.trackerKeyType = ParamTypes.UINT;
+        tracker.mapped = true;
+
+        bytes[] memory trackerKeys = new bytes[](1);
+        bytes[] memory trackerValues = new bytes[](1);
+        trackerKeys[0] = abi.encode(1);
+        trackerValues[0] = hex"deadbeef"; // Raw bytes
+
+        trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyId,
+            tracker,
+            "rawBytesTracker",
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.VOID
+        );
+    }
+
+    function _createBytesForeignCall(uint256 policyId, uint256 trackerId) private returns (uint256 foreignCallId) {
+        ForeignCall memory fc;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = trackerId;
+        fc.encodedIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;
+
+        fc.mappedTrackerKeyIndices = new ForeignCallEncodedIndex[](1);
+        fc.mappedTrackerKeyIndices[0].index = 0;
+        fc.mappedTrackerKeyIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        fc.foreignCallAddress = address(pfcContractAddress);
+        fc.signature = bytes4(keccak256(bytes("testSigWithBytes(bytes)")));
+        fc.returnType = ParamTypes.BOOL;
+
+        ParamTypes[] memory fcArgs = new ParamTypes[](1);
+        fcArgs[0] = ParamTypes.BYTES;
+        fc.parameterTypes = fcArgs;
+
+        foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "testSigWithBytes(bytes)");
+    }
+
+    function test_ForeignCall_RawMappedTracker_EdgeCases() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.startPrank(policyAdmin);
+        uint256 policyId = _createBlankPolicy();
+
+        // Empty string
+        {
+            uint256 trackerId = _createRawStringMappedTrackerWithValue(policyId, "");
+            uint256 foreignCallId = _createStringForeignCall(policyId, trackerId);
+            uint256 ruleId = _createForeignCallRule(policyId, foreignCallId);
+            _finalizePolicySetup(policyId, ruleId);
+
+            vm.stopPrank();
+            vm.startPrank(callingContractAdmin);
+            uint256[] memory policyIds = new uint256[](1);
+            policyIds[0] = policyId;
+            RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+            vm.stopPrank();
+
+            // Verify empty string is stored as raw bytes
+            bytes memory emptyStringValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
+            assertEq(emptyStringValue.length, 0, "Empty string should have zero length");
+            assertEq(emptyStringValue, bytes(""), "Empty string should match expected value");
+
+            // Test foreign call with empty string succeeds
+            vm.startPrank(userContractAddress);
+            bytes memory transferCalldata = abi.encodeWithSelector(ExampleUserContract.transfer.selector, address(0x1234567), 1);
+            vm.expectEmit(true, true, false, false);
+            emit RulesEngineEvent(1, EVENTTEXT, event_text);
+            RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
+
+            // tracker values should remain unchanged
+            bytes memory emptyStringValueAfter = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, 1, abi.encode(1));
+            assertEq(emptyStringValueAfter.length, 0, "Empty string tracker should remain unchanged");
+            assertEq(emptyStringValueAfter, bytes(""), "Empty string value should remain unchanged");
+
+            vm.stopPrank();
+        }
+
+        // Very long string
+        {
+            vm.startPrank(policyAdmin);
+            uint256 policyId2 = _createBlankPolicy();
+
+            // Create a very long string (1000 characters)
+            string memory longString = "";
+            for (uint256 i = 0; i < 100; i++) {
+                longString = string(abi.encodePacked(longString, "0123456789"));
+            }
+
+            uint256 trackerId2 = _createRawStringMappedTrackerWithValue(policyId2, longString);
+            uint256 foreignCallId2 = _createStringForeignCall(policyId2, trackerId2);
+            uint256 ruleId2 = _createForeignCallRule(policyId2, foreignCallId2);
+            _finalizePolicySetup(policyId2, ruleId2);
+
+            vm.stopPrank();
+            vm.startPrank(callingContractAdmin);
+            uint256[] memory policyIds2 = new uint256[](1);
+            policyIds2[0] = policyId2;
+            RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds2);
+            vm.stopPrank();
+
+            // Verify long string is stored correctly
+            bytes memory longStringValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId2, 1, abi.encode(1));
+            assertEq(longStringValue.length, 1000, "Long string should have correct length");
+            assertEq(string(longStringValue), longString, "Long string content should match");
+
+            // Test foreign call with long string succeeds
+            vm.startPrank(userContractAddress);
+            bytes memory transferCalldata2 = abi.encodeWithSelector(ExampleUserContract.transfer.selector, address(0x1234567), 1);
+            vm.expectEmit(true, true, false, false);
+            emit RulesEngineEvent(2, EVENTTEXT, event_text); // Policy ID 2
+            RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata2);
+
+            // long string tracker should remain unchanged
+            bytes memory longStringValueAfter = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId2, 1, abi.encode(1));
+            assertEq(longStringValueAfter.length, 1000, "Long string tracker length should remain unchanged");
+            assertEq(string(longStringValueAfter), longString, "Long string tracker content should remain unchanged");
+
+            vm.stopPrank();
+        }
+
+        // String with valid special characters (UTF-8 compatible)
+        {
+            vm.startPrank(policyAdmin);
+            uint256 policyId3 = _createBlankPolicy();
+            string memory specialString = "Hello World! @#$%^&*()_+-=[]{}|;':\"<>,.?/~`\n\r\t";
+
+            uint256 trackerId3 = _createRawStringMappedTrackerWithValue(policyId3, specialString);
+            uint256 foreignCallId3 = _createStringForeignCall(policyId3, trackerId3);
+            uint256 ruleId3 = _createForeignCallRule(policyId3, foreignCallId3);
+            _finalizePolicySetup(policyId3, ruleId3);
+
+            vm.stopPrank();
+            vm.startPrank(callingContractAdmin);
+            uint256[] memory policyIds3 = new uint256[](1);
+            policyIds3[0] = policyId3;
+            RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds3);
+            vm.stopPrank();
+
+            // Verify special character string is handled correctly
+            bytes memory specialStringValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId3, 1, abi.encode(1));
+            assertEq(string(specialStringValue), specialString, "Special character string should match");
+
+            // Test foreign call with special characters succeeds
+            vm.startPrank(userContractAddress);
+            bytes memory transferCalldata3 = abi.encodeWithSelector(ExampleUserContract.transfer.selector, address(0x1234567), 1);
+            vm.expectEmit(true, true, false, false);
+            emit RulesEngineEvent(3, EVENTTEXT, event_text); // Policy ID 3
+            RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata3);
+
+            // special character string should remain unchanged
+            bytes memory specialStringValueAfter = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+                policyId3,
+                1,
+                abi.encode(1)
+            );
+            assertEq(
+                string(specialStringValueAfter),
+                specialString,
+                "Special character string should remain unchanged after rule execution"
+            );
+
+            vm.stopPrank();
+        }
+
+        // Raw bytes with non-UTF-8 sequences (for BYTES type)
+        {
+            vm.startPrank(policyAdmin);
+            uint256 policyId4 = _createBlankPolicy();
+            bytes memory rawBytesData = hex"48656c6c6f00576f726c64ff01546573740a0d09"; // "Hello" + null + "World" + 0xFF + 0x01 + "Test" + \n\r\t
+
+            uint256 trackerId4 = _createRawBytesMappedTrackerWithValue(policyId4, rawBytesData);
+            uint256 foreignCallId4 = _createBytesForeignCall(policyId4, trackerId4);
+            uint256 ruleId4 = _createForeignCallRule(policyId4, foreignCallId4);
+            _finalizePolicySetup(policyId4, ruleId4);
+
+            vm.stopPrank();
+            vm.startPrank(callingContractAdmin);
+            uint256[] memory policyIds4 = new uint256[](1);
+            policyIds4[0] = policyId4;
+            RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds4);
+            vm.stopPrank();
+
+            // Verify raw bytes data is stored correctly
+            bytes memory rawBytesValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId4, 1, abi.encode(1));
+            assertEq(rawBytesValue, rawBytesData, "Raw bytes data should match exactly");
+            assertTrue(rawBytesValue.length > 0, "Raw bytes should not be empty");
+
+            // Test foreign call with raw bytes succeeds
+            vm.startPrank(userContractAddress);
+            bytes memory transferCalldata4 = abi.encodeWithSelector(ExampleUserContract.transfer.selector, address(0x1234567), 1);
+            vm.expectEmit(true, true, false, false);
+            emit RulesEngineEvent(4, EVENTTEXT, event_text); // Policy ID 4
+            RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata4);
+
+            // raw bytes should remain unchanged
+            bytes memory rawBytesValueAfter = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId4, 1, abi.encode(1));
+            assertEq(rawBytesValueAfter, rawBytesData, "Raw bytes data should remain unchanged after rule execution");
+            assertEq(rawBytesValueAfter.length, rawBytesData.length, "Raw bytes length should remain unchanged");
+
+            vm.stopPrank();
+        }
+    }
+
+    function _createRawStringMappedTrackerWithValue(uint256 policyId, string memory value) private returns (uint256 trackerId) {
+        Trackers memory tracker;
+        tracker.pType = ParamTypes.STR;
+        tracker.trackerKeyType = ParamTypes.UINT;
+        tracker.mapped = true;
+
+        bytes[] memory trackerKeys = new bytes[](1);
+        bytes[] memory trackerValues = new bytes[](1);
+        trackerKeys[0] = abi.encode(1);
+        trackerValues[0] = bytes(value); // Raw string bytes
+
+        trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyId,
+            tracker,
+            "rawStringTracker",
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.VOID
+        );
+    }
+
+    function _createRawBytesMappedTrackerWithValue(uint256 policyId, bytes memory value) private returns (uint256 trackerId) {
+        Trackers memory tracker;
+        tracker.pType = ParamTypes.BYTES;
+        tracker.trackerKeyType = ParamTypes.UINT;
+        tracker.mapped = true;
+
+        bytes[] memory trackerKeys = new bytes[](1);
+        bytes[] memory trackerValues = new bytes[](1);
+        trackerKeys[0] = abi.encode(1);
+        trackerValues[0] = value; // Raw bytes
+
+        trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyId,
+            tracker,
+            "rawBytesTracker",
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.VOID
+        );
     }
 }

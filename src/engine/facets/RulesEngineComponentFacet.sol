@@ -210,9 +210,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         _tracker.set = true;
         _tracker.mapped = false;
         _tracker.trackerIndex = _trackerIndex;
-        if (_tracker.pType == ParamTypes.STR || _tracker.pType == ParamTypes.BYTES) {
-            _tracker.trackerValue = abi.encode(keccak256(_tracker.trackerValue));
-        }
+        // Store original value (no hashing) - comparisons will hash at runtime, consistent with mapped trackers
         _data.trackers[_policyId][_trackerIndex] = _tracker;
     }
 
@@ -237,10 +235,8 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         if (_tracker.trackerKeyType == ParamTypes.BYTES || _tracker.trackerKeyType == ParamTypes.STR) {
             _trackerKey = abi.encode(keccak256(_trackerKey));
         }
-        // use trackerKey and assign value
-        if (_tracker.pType == ParamTypes.STR || _tracker.pType == ParamTypes.BYTES) {
-            _trackerValue = abi.encode(keccak256(_trackerValue));
-        }
+
+        // Store original value (no hashing) - comparisons will hash at runtime
         _data.mappedTrackerValues[_policyId][_trackerIndex][_trackerKey] = _trackerValue;
     }
 
