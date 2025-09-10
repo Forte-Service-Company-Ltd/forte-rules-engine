@@ -2828,7 +2828,7 @@ abstract contract trackers is RulesEngineCommon {
             // validate tracker
             Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
             assertFalse(returnedTracker.mapped);
-            assertEq(returnedTracker.trackerValue, abi.encodePacked(keccak256(abi.encode(val1))), "not val1");
+            assertEq(returnedTracker.trackerValue, abi.encode(val1), "not val1");
             assertEq(trackerIndex, 1);
         }
 
@@ -2922,7 +2922,7 @@ abstract contract trackers is RulesEngineCommon {
             // validate tracker
             Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
             assertFalse(returnedTracker.mapped);
-            assertEq(returnedTracker.trackerValue, abi.encodePacked(keccak256(abi.encode(val1))), "not val1");
+            assertEq(returnedTracker.trackerValue, abi.encode(val1), "not val1");
             assertEq(trackerIndex, 1);
         }
 
@@ -4283,13 +4283,7 @@ abstract contract trackers is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
 
-        bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
-            policyId,
-            transferSelector,
-            pTypes,
-            "transfer(address,uint256)",
-            ""
-        );
+        RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, transferSelector, pTypes, "transfer(address,uint256)", "");
 
         bytes4[] memory selectors = new bytes4[](1);
         selectors[0] = transferSelector;
