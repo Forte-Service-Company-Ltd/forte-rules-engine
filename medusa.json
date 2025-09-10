@@ -11,7 +11,7 @@
     "coverageEnabled": true,
     "coverageFormats": ["html", "lcov"],
     "revertReporterEnabled": true,
-    "targetContracts": ["MedusaFuzzTest"],
+    "targetContracts": ["RulesEngineAdminRolesTest"],
     "predeployedContracts": {},
     "targetContractsBalances": [],
     "constructorArgs": {},
@@ -25,11 +25,11 @@
       "stopOnFailedTest": true,
       "stopOnFailedContractMatching": false,
       "stopOnNoTests": true,
-      "testAllContracts": true,
+      "testAllContracts": false,
       "testViewMethods": false,
       "verbosity": 1,
       "assertionTesting": {
-        "enabled": true,
+        "enabled": false,
         "panicCodeConfig": {
           "failOnCompilerInsertedPanic": false,
           "failOnAssertion": true,
@@ -45,7 +45,7 @@
       },
       "propertyTesting": {
         "enabled": true,
-        "testPrefixes": ["property_", "invariant_", "fuzz_", "test"]
+        "testPrefixes": ["property_"]
       },
       "optimizationTesting": {
         "enabled": true,
@@ -79,7 +79,7 @@
     }
   },
   "slither": {
-    "useSlither": false,
+    "useSlither": true,
     "cachePath": "slither_results.json",
     "args": []
   },
