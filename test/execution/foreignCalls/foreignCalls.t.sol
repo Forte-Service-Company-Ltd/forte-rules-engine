@@ -1507,7 +1507,6 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         ifDeploymentTestsEnabled
         endWithStopPrank
     {
-        //vm.skip(true);
         // create policy
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
