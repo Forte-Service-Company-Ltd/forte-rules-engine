@@ -3617,13 +3617,35 @@ abstract contract trackers is RulesEngineCommon {
         uint256 trackerIndex = _createMsgDataMappedTracker(policyId);
 
         // Create and setup rule with TRUM opcode
-        uint256 ruleId = _createMsgDataStorageRule(policyId, trackerIndex);
+        uint256 ruleId = _createMsgDataRule(true, policyId, trackerIndex);
 
         // Setup policy with calling function and rule
         _setupPolicyWithMsgDataRule(policyId, ruleId);
 
         // Execute test and verify results
-        _executeMsgDataTest(policyId, trackerIndex);
+        _executeMsgDataTestShared(true, policyId, trackerIndex, 100);
+
+        // Execute again with different data
+        _executeMsgDataTestShared(true, policyId, trackerIndex, 200);
+    }
+
+    function testRulesEngine_Unit_Tracker_MsgData_Storage() public ifDeploymentTestsEnabled resetsGlobalVariables {
+        uint256 policyId = _createBlankPolicy();
+
+        // Create and setup regular tracker for msg.data storage
+        uint256 trackerIndex = _createMsgDataRegularTracker(policyId);
+
+        // Create and setup rule with TRU opcode
+        uint256 ruleId = _createMsgDataRule(false, policyId, trackerIndex);
+
+        // Setup policy with calling function and rule
+        _setupPolicyWithMsgDataRule(policyId, ruleId);
+
+        // Execute test and verify results
+        _executeMsgDataTestShared(false, policyId, trackerIndex, 100);
+
+        // Execute again with different data
+        _executeMsgDataTestShared(false, policyId, trackerIndex, 200);
     }
 
     function testRulesEngine_Unit_DeletedTrackerCannotBeUsed() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -3666,53 +3688,6 @@ abstract contract trackers is RulesEngineCommon {
             );
     }
 
-    function _createMsgDataStorageRule(uint256 policyId, uint256 trackerIndex) internal returns (uint256) {
-        Rule memory rule;
-
-        // Simple condition that always passes (1 == 1)
-        rule.instructionSet = new uint256[](7);
-        rule.instructionSet[0] = uint(LogicalOp.NUM);
-        rule.instructionSet[1] = 1;
-        rule.instructionSet[2] = uint(LogicalOp.NUM);
-        rule.instructionSet[3] = 1;
-        rule.instructionSet[4] = uint(LogicalOp.EQ);
-        rule.instructionSet[5] = 0;
-        rule.instructionSet[6] = 1;
-
-        // Set up effect placeholders for storing data
-        rule.positiveEffectPlaceHolders = new Placeholder[](2);
-        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.BYTES;
-        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 0;
-        rule.positiveEffectPlaceHolders[0].flags = uint8(GLOBAL_MSG_DATA << SHIFT_GLOBAL_VAR);
-        rule.positiveEffectPlaceHolders[1].pType = ParamTypes.ADDR;
-        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 0;
-        rule.positiveEffectPlaceHolders[1].flags = uint8(GLOBAL_MSG_SENDER << SHIFT_GLOBAL_VAR);
-
-        // Create positive effect: Store msg.data in mapped tracker using TRUM
-        rule.posEffects = new Effect[](1);
-        rule.posEffects[0].valid = true;
-        rule.posEffects[0].effectType = EffectTypes.EXPRESSION;
-        rule.posEffects[0].text = "";
-        rule.posEffects[0].errorMessage = "";
-
-        // TRUM instruction to store msg.data with sender key
-        // PLH(value) PLH(key) TRUM trackerIndex valueIndex keyIndex PLACE_HOLDER
-        rule.posEffects[0].instructionSet = new uint256[](9);
-        rule.posEffects[0].instructionSet[0] = uint(LogicalOp.PLH);
-        rule.posEffects[0].instructionSet[1] = 0; // msg.data placeholder index
-        rule.posEffects[0].instructionSet[2] = uint(LogicalOp.PLH);
-        rule.posEffects[0].instructionSet[3] = 1; // msg.sender placeholder index
-        rule.posEffects[0].instructionSet[4] = uint(LogicalOp.TRUM);
-        rule.posEffects[0].instructionSet[5] = trackerIndex;
-        rule.posEffects[0].instructionSet[6] = 0; // value (msg.data) from placeholder 0
-        rule.posEffects[0].instructionSet[7] = 1; // key (msg.sender) from placeholder 1
-        rule.posEffects[0].instructionSet[8] = uint(TrackerTypes.PLACE_HOLDER);
-
-        rule.negEffects = new Effect[](0);
-
-        return RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "msgDataStorageRule", "Stores msg.data in mapped tracker");
-    }
-
     function _setupPolicyWithMsgDataRule(uint256 policyId, uint256 ruleId) internal {
         // Set up calling function
         ParamTypes[] memory pTypes = new ParamTypes[](2);
@@ -3751,24 +3726,93 @@ abstract contract trackers is RulesEngineCommon {
         vm.stopPrank();
     }
 
-    function _executeMsgDataTest(uint256 policyId, uint256 trackerIndex) internal {
-        // Execute the policy with specific calldata to store msg.data
-        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), uint256(100));
+    function _createMsgDataRule(bool isMappedTracker, uint256 policyId, uint256 trackerIndex) internal returns (uint256) {
+        Rule memory rule;
 
-        // Execute policy - this should store msg.data in the mapped tracker
-        vm.prank(address(userContract));
-        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+        // Simple condition that always passes (1 == 1)
+        rule.instructionSet = _createAlwaysPassCondition();
 
-        // Check that data was stored using the correct key format (abi.encoded address)
-        bytes memory keyAsBytes = abi.encode(address(userContract));
-        bytes memory storedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, keyAsBytes);
+        if (isMappedTracker) {
+            // Set up effect placeholders for storing data (mapped tracker needs key + value)
+            rule.positiveEffectPlaceHolders = new Placeholder[](2);
+            rule.positiveEffectPlaceHolders[0].pType = ParamTypes.BYTES;
+            rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 0;
+            rule.positiveEffectPlaceHolders[0].flags = uint8(GLOBAL_MSG_DATA << SHIFT_GLOBAL_VAR);
+            rule.positiveEffectPlaceHolders[1].pType = ParamTypes.ADDR;
+            rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 0;
+            rule.positiveEffectPlaceHolders[1].flags = uint8(GLOBAL_MSG_SENDER << SHIFT_GLOBAL_VAR);
 
-        // Verify that some data was stored (non-empty)
-        assertTrue(storedValue.length > 0, "No data stored in mapped tracker");
+            // TRUM instruction to store msg.data with sender key
+            rule.posEffects = new Effect[](1);
+            rule.posEffects[0].valid = true;
+            rule.posEffects[0].effectType = EffectTypes.EXPRESSION;
+            rule.posEffects[0].text = "";
+            rule.posEffects[0].errorMessage = "";
+            rule.posEffects[0].instructionSet = _createTRUMInstruction(trackerIndex);
+        } else {
+            // Set up effect placeholder for storing msg.data (regular tracker only needs value)
+            rule.positiveEffectPlaceHolders = new Placeholder[](1);
+            rule.positiveEffectPlaceHolders[0].pType = ParamTypes.BYTES;
+            rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 0;
+            rule.positiveEffectPlaceHolders[0].flags = uint8(GLOBAL_MSG_DATA << SHIFT_GLOBAL_VAR);
 
-        // Decode the stored hash
-        bytes32 storedHash = abi.decode(storedValue, (bytes32));
+            // TRU instruction to store msg.data
+            rule.posEffects = new Effect[](1);
+            rule.posEffects[0].valid = true;
+            rule.posEffects[0].effectType = EffectTypes.EXPRESSION;
+            rule.posEffects[0].text = "";
+            rule.posEffects[0].errorMessage = "";
+            rule.posEffects[0].instructionSet = _createTRUInstruction(trackerIndex);
+        }
 
+        rule.negEffects = new Effect[](0);
+
+        string memory ruleName = isMappedTracker ? "msgDataMappedStorageRule" : "msgDataRegularStorageRule";
+        string memory description = isMappedTracker ? "Stores msg.data in mapped tracker" : "Stores msg.data in regular tracker";
+
+        return RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, description);
+    }
+
+    function _createAlwaysPassCondition() internal pure returns (uint256[] memory) {
+        uint256[] memory instructionSet = new uint256[](7);
+        instructionSet[0] = uint(LogicalOp.NUM);
+        instructionSet[1] = 1;
+        instructionSet[2] = uint(LogicalOp.NUM);
+        instructionSet[3] = 1;
+        instructionSet[4] = uint(LogicalOp.EQ);
+        instructionSet[5] = 0;
+        instructionSet[6] = 1;
+        return instructionSet;
+    }
+
+    function _createTRUMInstruction(uint256 trackerIndex) internal pure returns (uint256[] memory) {
+        // PLH(value) PLH(key) TRUM trackerIndex valueIndex keyIndex PLACE_HOLDER
+        uint256[] memory instructionSet = new uint256[](9);
+        instructionSet[0] = uint(LogicalOp.PLH);
+        instructionSet[1] = 0; // msg.data placeholder index
+        instructionSet[2] = uint(LogicalOp.PLH);
+        instructionSet[3] = 1; // msg.sender placeholder index
+        instructionSet[4] = uint(LogicalOp.TRUM);
+        instructionSet[5] = trackerIndex;
+        instructionSet[6] = 0; // value (msg.data) from placeholder 0
+        instructionSet[7] = 1; // key (msg.sender) from placeholder 1
+        instructionSet[8] = uint(TrackerTypes.PLACE_HOLDER);
+        return instructionSet;
+    }
+
+    function _createTRUInstruction(uint256 trackerIndex) internal pure returns (uint256[] memory) {
+        // PLH(value) TRU trackerIndex valueIndex TrackerType
+        uint256[] memory instructionSet = new uint256[](6);
+        instructionSet[0] = uint(LogicalOp.PLH);
+        instructionSet[1] = 0; // msg.data placeholder index
+        instructionSet[2] = uint(LogicalOp.TRU);
+        instructionSet[3] = trackerIndex;
+        instructionSet[4] = 0; // value (msg.data) from placeholder 0
+        instructionSet[5] = uint(TrackerTypes.PLACE_HOLDER);
+        return instructionSet;
+    }
+
+    function _calculateExpectedMsgDataHash(bytes memory arguments) internal pure returns (bytes32) {
         // Calculate the expected hash of the msg.data
         bytes memory actualMsgData = abi.encodeWithSelector(RulesEngineProcessorFacet.checkPolicies.selector, arguments);
 
@@ -4167,6 +4211,72 @@ abstract contract trackers is RulesEngineCommon {
             bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, abi.encode(1));
             assertEq(value, abi.encode(6), "Manual update should store new array length");
         }
+        // Replicate the exact _handleGlobalVar implementation
+        bytes memory encodedData = new bytes(actualMsgData.length + 64);
+
+        // Replicate the exact assembly from _handleGlobalVar
+        assembly {
+            mstore(add(encodedData, 32), 0x20)
+            mstore(add(encodedData, 64), mload(actualMsgData))
+        }
+
+        // Copy the actual data starting at position 64
+        // This overwrites the length that was stored at position 64
+        for (uint256 i = 0; i < actualMsgData.length; i++) {
+            encodedData[i + 64] = actualMsgData[i];
+        }
+
+        return keccak256(encodedData);
+    }
+
+    function _executeMsgDataTestShared(bool isMappedTracker, uint256 policyId, uint256 trackerIndex, uint256 value) internal {
+        // Execute the policy with specific calldata to store msg.data
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), value);
+
+        // Execute policy - this should store msg.data in the tracker
+        vm.prank(address(userContract));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+
+        bytes memory storedValue;
+        if (isMappedTracker) {
+            // Check that data was stored using the correct key format (abi.encoded address)
+            bytes memory keyAsBytes = abi.encode(address(userContract));
+            storedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, keyAsBytes);
+        } else {
+            // Get the stored value from the regular tracker
+            storedValue = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex).trackerValue;
+        }
+
+        // Verify that some data was stored (non-empty)
+        string memory trackerType = isMappedTracker ? "mapped tracker" : "regular tracker";
+        assertTrue(storedValue.length > 0, string.concat("No data stored in ", trackerType));
+
+        // Decode the stored hash
+        bytes32 storedHash = abi.decode(storedValue, (bytes32));
+
+        // Calculate the expected hash using shared method
+        bytes32 expectedHash = _calculateExpectedMsgDataHash(arguments);
+
+        // Verify that the stored hash matches the expected hash
+        assertEq(storedHash, expectedHash, "Stored hash should match expected hash of msg.data");
+
+        // For regular tracker, verify that the value was actually updated from initial value
+        if (!isMappedTracker) {
+            bytes32 initialHash = keccak256(abi.encode(bytes("initial")));
+            assertTrue(storedHash != initialHash, "Tracker value should have changed from initial value");
+        }
+    }
+
+    function _createMsgDataRegularTracker(uint256 policyId) internal returns (uint256) {
+        Trackers memory tracker;
+        tracker.set = true;
+        tracker.mapped = false; // Regular tracker, not mapped
+        tracker.pType = ParamTypes.BYTES; // Value type: bytes (for msg.data)
+
+        // Initialize with dummy value
+        tracker.trackerValue = abi.encode(bytes("initial"));
+
+        return RulesEngineComponentFacet(address(red)).createTracker(policyId, tracker, "msgDataRegularTracker", TrackerArrayTypes.VOID);
     }
 
     function test_ForeignCall_RawStringMappedTracker() public ifDeploymentTestsEnabled endWithStopPrank {
