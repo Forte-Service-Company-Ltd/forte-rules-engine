@@ -68,7 +68,7 @@ library RulesEngineStoragePositionLib {
      * @dev Uses a fixed storage slot to avoid conflicts with other contracts.
      * @return _ds The storage structure for the foreign call metadata map.
      */
-    function _getForeignCallMetadataStorage() internal pure returns (ForeignCallMetadataStruct storage _ds) {
+    function _getForeignCallMetadataStorage() internal pure returns (ForeignCallMetadataMappingStruct storage _ds) {
         bytes32 position = FOREIGN_CALL_METADATA_POSITION;
         assembly {
             _ds.slot := position

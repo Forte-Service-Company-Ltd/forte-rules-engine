@@ -658,7 +658,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setMsgData(bytes)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setMsgData(bytes)",
+                    "setMsgData(bytes memory data)"
+                );
             }
 
             // Effect for the foreign call
@@ -789,7 +794,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setMsgData(bytes)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setMsgData(bytes)",
+                    "setMsgData(bytes memory data)"
+                );
             }
 
             // Effect for the foreign call
@@ -920,7 +930,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setUserAddress(address)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setUserAddress(address)",
+                    "setUserAddress(address user)"
+                );
             }
 
             Rule memory rule;
@@ -1031,7 +1046,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setNumber(uint256)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setNumber(uint256)",
+                    "setNumber(uint256 value)"
+                );
             }
 
             Rule memory rule;
@@ -1147,7 +1167,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setNumber(uint256)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setNumber(uint256)",
+                    "setNumber(uint256 value)"
+                );
             }
 
             Rule memory rule;
@@ -1263,7 +1288,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setUserAddress(address)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setUserAddress(address)",
+                    "setUserAddress(address user)"
+                );
             }
 
             Rule memory rule;

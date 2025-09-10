@@ -118,7 +118,12 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
                 fc.signature = setMsgDataSelector;
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setMsgData(bytes)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setMsgData(bytes)",
+                    "setMsgData(bytes memory data)"
+                );
             }
 
             // Effect for the foreign call
@@ -269,6 +274,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
                 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
                     policyId,
                     fc,
+                    "testSig(uint256,string,uint256,string,address)",
                     "testSig(uint256,string,uint256,string,address)"
                 );
             }
@@ -455,6 +461,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
                 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
                     policyId,
                     fc,
+                    "testSig(uint256,string,uint256,string,address)",
                     "testSig(uint256,string,uint256,string,address)"
                 );
             }
@@ -786,7 +793,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
     }
 
     function testRulesEngine_Unit_PermissionedForeignCall_AddPermissionedFCToPolicy_Negative()
@@ -830,7 +837,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
         vm.expectRevert("Not Permissioned For Foreign Call");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
     }
 
     function testRulesEngine_Unit_PermissionedForeignCall_UpdatePermissionedFC_Simple() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -865,7 +872,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
 
         ForeignCall[] memory fcs = RulesEngineForeignCallFacet(address(red)).getAllForeignCalls(policyId);
         assertEq(fcs.length, 1, "There should be one foreign call in the policy");
@@ -883,7 +890,12 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         fc2.signature = bytes4(keccak256(bytes("anotherSimpleCheck(uint256)")));
         fc2.returnType = ParamTypes.UINT;
         fc2.foreignCallIndex = 2;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc2, "anotherSimpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc2,
+            "anotherSimpleCheck(uint256)",
+            "anotherSimpleCheck(uint256)"
+        );
 
         fcs = RulesEngineForeignCallFacet(address(red)).getAllForeignCalls(policyId);
         assertEq(fcs.length, 2, "There should be two foreign calls in the policy");
@@ -926,10 +938,10 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
 
         for (uint i; i < 9_997; i++) {
             vm.pauseGasMetering();
-            RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+            RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
         }
         vm.expectRevert("Max foreign calls reached");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
     }
 
     function testRulesEngine_Unit_PermissionedForeignCall_UpdatePermissionedFC_NewPolicyAdmin_Negative()
@@ -968,7 +980,12 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+        uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "simpleCheck(uint256)",
+            "simpleCheck(uint256)"
+        );
 
         // transfer policyAdmin role to new, non permissioned address and test update fails as expected
         RulesEngineAdminRolesFacet(address(red)).proposeNewPolicyAdmin(newPolicyAdmin, policyId);
@@ -1070,7 +1087,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         fc.signature = bytes4(keccak256(bytes("square(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "square(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "square(uint256)", "square(uint256)");
     }
 
     function testRulesEngine_Unit_PermissionedForeignCall_updatePermissionList_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
