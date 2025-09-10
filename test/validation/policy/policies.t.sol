@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "test/utils/RulesEngineCommon.t.sol";
+import {Strings} from "@openzeppelin/utils/Strings.sol";
 
 abstract contract policies is RulesEngineCommon {
     /**
@@ -356,6 +357,61 @@ abstract contract policies is RulesEngineCommon {
             policyName,
             policyDescription
         );
+    }
+
+    function testRulesEngine_Unit_UpdatePolicy_With_CallingFunctionDelete_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.startPrank(policyAdmin);
+        uint256 ruleCount = 50;
+        uint256 policyId = _createBlankPolicy();
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        Rule memory r;
+        // Set up the parameter types for the calling function
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        bytes4 callingFunctionId;        
+
+        uint256[][] memory ruleIds = new uint256[][](50);        
+        ruleIds[0] = new uint256[](50);
+        bytes4[] memory selectors = new bytes4[](50);
+        uint256[] memory functionIds = new uint256[](50);
+        r = _createLTRule();
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], r, "rule", "ruleDescription");
+        string memory caller = "transfer";
+        string memory parenthesis = "()";
+        string memory builtCaller;
+        // This loop will create 50 calling functions with the same rule on each one.
+        for (uint i = 0; i < ruleCount; i++) {
+            builtCaller = string.concat(caller, Strings.toString(i), parenthesis);
+            console2.log("builtCaller", builtCaller);
+            callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyId,
+                bytes4(keccak256(bytes(builtCaller))),
+                pTypes,
+                callingFunction,
+                ""
+            );
+            
+            selectors[i] = bytes4(keccak256(bytes(builtCaller)));
+            
+            ruleIds[i] = new uint256[](1);
+            ruleIds[i][0] = ruleId;
+        }
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            ruleIds,
+            PolicyType.OPEN_POLICY,
+            policyName,
+            policyDescription
+        );
+        
+        // Delete the calling function
+        RulesEngineComponentFacet(address(red)).deleteCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction))));
+        // retrieve the rule
+        RuleStorageSet memory ruleStorage = RulesEngineRuleFacet(address(red)).getRule(policyId, ruleId);
+        assertTrue(ruleStorage.set);
     }
 
     function testRulesEngine_Unit_ClosePolicy_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
