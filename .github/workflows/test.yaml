@@ -1,0 +1,64 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  check:
+    strategy:
+      fail-fast: true
+
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.2.1
+      - name: Install python dependencies for tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install -r requirements.txt
+          forge soldeer install
+      - name: Go setup
+        uses: actions/setup-go@v4
+        with:
+            go-version: "^1.18.1"
+
+      - name: Install medusa
+        run: |
+            git clone https://github.com/crytic/medusa.git
+            cd medusa
+            go build -o medusa -v .
+            go install -v .
+            sudo cp medusa /usr/bin
+            pip install crytic-compile
+      - name: Display Foundry version
+        run: forge --version
+      - name: Build the repository
+        run: |
+          forge build
+        id: build
+      - name: Run Foundry tests
+        env:
+          ETHEREUM_RPC_KEY: ${{ secrets.ALCHEMY_KEY }}
+        run: |
+          forge test --ffi -vvv 
+        id: forge-test
+      - name: Run Medusa tests
+        run: |
+          medusa fuzz --config medusa.json
+        id: medusa-test
