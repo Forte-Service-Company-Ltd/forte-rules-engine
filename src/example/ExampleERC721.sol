@@ -97,12 +97,10 @@ contract ExampleERC721 is ERC721, ReentrancyGuard, ERC721Burnable, RulesEngineCl
 
     /**
      * @notice Withdraws Ether stored in the contract.
-     * @dev This function allows only App Administrators to withdraw Ether. It uses the appManagerAddress to enforce
-     *      access control. The function is payable to allow flexibility in child contracts.
+     * @dev This function allows only the owner to withdraw Ether. The function is payable to allow flexibility in child contracts.
      */
-    function withdraw() public payable virtual {
-        // Disabling this finding as a false positive. The address is not arbitrary, the funciton modifier guarantees
-        // it is a App Admin.
+    function withdraw() public payable virtual onlyOwner {
+        // Disabling this finding as a false positive. The address is not arbitrary, the function modifier guarantees only the owner can call this function.
         // slither-disable-next-line arbitrary-send-eth
         (bool success, ) = payable(msg.sender).call{value: address(this).balance}("");
         require(success);

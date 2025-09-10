@@ -208,4 +208,23 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
         );
         vm.stopPrank();
     }
+
+    function testERC721_withdraw_AccessControlCheck() public ifDeploymentTestsEnabled endWithStopPrank {
+        // Send some ether to the contract
+        vm.deal(address(userContract721), 1 ether);
+
+        // owner can withdraw
+        uint256 ownerBalanceBefore = callingContractAdmin.balance;
+        vm.startPrank(callingContractAdmin);
+        userContract721.withdraw();
+        vm.stopPrank();
+        assertEq(callingContractAdmin.balance, ownerBalanceBefore + 1 ether, "Owner should receive withdrawn ether");
+
+        // non-owner cannot withdraw
+        vm.deal(address(userContract721), 1 ether);
+        vm.startPrank(USER_ADDRESS);
+        vm.expectRevert("OwnableUnauthorizedAccount(0x000000000000000000000000000000000000D00d)");
+        userContract721.withdraw();
+        vm.stopPrank();
+    }
 }
