@@ -300,7 +300,12 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             fc.encodedIndices[0].index = 1; // Use the amount parameter from transfer function
             fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-            uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, nonExistentFunctionSig);
+            uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                policyId,
+                fc,
+                nonExistentFunctionSig,
+                nonExistentFunctionSig
+            );
 
             Rule memory rule;
             rule.instructionSet = new uint256[](2);
@@ -430,7 +435,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             fc.encodedIndices[0].index = 1;
             fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-            uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig);
+            uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig, functionSig);
 
             Rule memory rule;
             rule.instructionSet = new uint256[](2);
@@ -516,7 +521,12 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
 
         // Modify foreign call to use transfer amount parameter
         fc.encodedIndices[0].index = 1;
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "testSig(uint256)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "testSig(uint256)",
+            "testSig(uint256)"
+        );
 
         Rule memory rule;
         rule.instructionSet = new uint256[](2);
@@ -612,7 +622,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         rule.placeHolders = new Placeholder[](1);
         rule.placeHolders[0].pType = ParamTypes.UINT; // Expecting uint but will get bool
         rule.placeHolders[0].typeSpecificIndex = uint128(
-            RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig)
+            RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig, functionSig)
         );
         rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
 
@@ -702,7 +712,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
 
         // Modify foreign call to use transfer amount parameter
         fc.encodedIndices[0].index = 1; // Use amount parameter from transfer
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig);
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig, functionSig);
 
         Rule memory rule;
         rule.instructionSet = new uint256[](2);
@@ -776,8 +786,13 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.returnType = ParamTypes.VOID;
 
         uint256 policyId = _createBlankPolicy();
-        
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "testSig(uint256)");
+
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "testSig(uint256)",
+            "testSig(uint256 value)"
+        );
 
         Rule memory rule;
         rule.instructionSet = new uint256[](7);
@@ -849,7 +864,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         userContract.transfer(address(0x1234), 100);
 
         vm.stopPrank();
-        
+
         assertEq(foreignCall.getDecodedIntOne(), 0);
     }
 
@@ -867,8 +882,13 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.returnType = ParamTypes.VOID;
 
         uint256 policyId = _createBlankPolicy();
-        
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "testSig(uint256)");
+
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "testSig(uint256)",
+            "testSig(uint256 value)"
+        );
 
         Rule memory rule;
         rule.instructionSet = new uint256[](7);
@@ -940,7 +960,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         userContract.transfer(address(0x1234), 100);
 
         vm.stopPrank();
-        
+
         assertEq(foreignCall.getDecodedIntOne(), 0);
     }
 
@@ -980,7 +1000,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         rule.placeHolders = new Placeholder[](1);
         rule.placeHolders[0].pType = ParamTypes.BOOL;
         rule.placeHolders[0].typeSpecificIndex = uint128(
-            RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig)
+            RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, functionSig, functionSig)
         );
         rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
 

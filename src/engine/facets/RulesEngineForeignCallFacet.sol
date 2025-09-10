@@ -29,7 +29,8 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
     function createForeignCall(
         uint256 _policyId,
         ForeignCall calldata _foreignCall,
-        string calldata foreignCallName
+        string calldata foreignCallName,
+        string calldata foreignCallSignature
     ) external returns (uint256) {
         _policyAdminOnly(_policyId, msg.sender);
         _notCemented(_policyId);
@@ -42,7 +43,7 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
         _storeForeignCallData(_policyId, _foreignCall, foreignCallIndex);
 
         // Step 3: Store metadata
-        _storeForeignCallMetadata(_policyId, foreignCallIndex, foreignCallName);
+        _storeForeignCallMetadata(_policyId, foreignCallIndex, foreignCallName, foreignCallSignature);
 
         emit ForeignCallCreated(_policyId, foreignCallIndex);
         return foreignCallIndex;
@@ -118,7 +119,7 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
      * @param foreignCallId The identifier for the foreign call
      * @return the metadata for the foreign call
      */
-    function getForeignCallMetadata(uint256 policyId, uint256 foreignCallId) public view returns (string memory) {
+    function getForeignCallMetadata(uint256 policyId, uint256 foreignCallId) public view returns (ForeignCallMetadataStruct memory) {
         return lib._getForeignCallMetadataStorage().foreignCallMetadata[policyId][foreignCallId];
     }
 
@@ -184,9 +185,15 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
      * @param _foreignCallIndex The index of the foreign call.
      * @param _foreignCallName The name of the foreign call.
      */
-    function _storeForeignCallMetadata(uint256 _policyId, uint256 _foreignCallIndex, string calldata _foreignCallName) private {
+    function _storeForeignCallMetadata(
+        uint256 _policyId,
+        uint256 _foreignCallIndex,
+        string calldata _foreignCallName,
+        string memory _foreignCallSignature
+    ) private {
         require(keccak256(bytes(_foreignCallName)) != EMPTY_STRING_HASH, NAME_REQ);
-        lib._getForeignCallMetadataStorage().foreignCallMetadata[_policyId][_foreignCallIndex] = _foreignCallName;
+        lib._getForeignCallMetadataStorage().foreignCallMetadata[_policyId][_foreignCallIndex].name = _foreignCallName;
+        lib._getForeignCallMetadataStorage().foreignCallMetadata[_policyId][_foreignCallIndex].foreignCallSignature = _foreignCallSignature;
     }
 
     /**

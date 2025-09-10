@@ -94,7 +94,7 @@ Create a rule in the policy. This can be done multiple times to create multiple 
 returns The generated rule ID.
 
 ## Foreign Call
-### function createForeignCall(uint256 _policyId,ForeignCall calldata _foreignCall,string calldata foreignCallName) external returns (uint256)
+### function createForeignCall(uint256 _policyId,ForeignCall calldata _foreignCall,string calldata foreignCallName, string calldata foreignCallSignature) external returns (uint256)
 
 Create a foreign call record within the policy. 
 
