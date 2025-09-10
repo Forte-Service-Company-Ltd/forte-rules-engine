@@ -169,6 +169,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
 
         vm.startPrank(address(userContract));
 
+        // the following will revert because the callingFuncSig does not exist in the foreign call contract
+        vm.expectRevert("Failed Foreign Call");
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         assertEq(foreignCall.getDecodedAddr(), address(0x567890));
     }
@@ -1757,7 +1759,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         ForeignCall memory fc;
         fc.foreignCallAddress = address(foreignCall);
-        fc.signature = bytes4(keccak256(bytes("testWillRevert(uint256)")));
+        fc.signature = bytes4(keccak256(bytes("willRevert(uint256)")));
         fc.parameterTypes = new ParamTypes[](1);
         fc.parameterTypes[0] = ParamTypes.UINT;
         fc.returnType = ParamTypes.UINT;

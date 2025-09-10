@@ -305,9 +305,11 @@ contract ReentrancyTest is RulesEngineCommon {
         reentrancy.setTo(address(erc20));
         vm.startPrank(user1);
         // vm.expectRevert(ReentrancyFailed.selector); this does revert but the rules engine is not bubbling up the error partly by design
+        vm.expectRevert("Failed Foreign Call");
         erc20.transfer(address(USER_ADDRESS_2), 4);
         vm.stopPrank();
 
+       
         bytes[] memory dataHistory = reentrancy.getDataHistory();
         assertEq(dataHistory.length, 0);
     }

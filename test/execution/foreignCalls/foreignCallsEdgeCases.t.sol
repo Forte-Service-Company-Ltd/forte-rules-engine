@@ -280,6 +280,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             // This does NOT revert - it will execute but the foreign call will fail gracefully
             vm.startPrank(address(userContract));
             gasLeftBefore = gasleft();
+            vm.expectRevert("Failed Foreign Call");
             RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
         }
 
@@ -354,7 +355,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             vm.startPrank(address(userContract));
 
             // This reverts because the foreign call function doesn't exist - EvmError: Revert
-            vm.expectRevert();
+            vm.expectRevert("Failed Foreign Call");
             userContract.transfer(address(0x1234), 100);
 
             vm.stopPrank();

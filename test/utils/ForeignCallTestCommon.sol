@@ -289,7 +289,7 @@ contract ForeignCallTestContract {
         }
     }
 
-    function testWillRevert(uint256 input) public pure returns (bool) {
+    function willRevert(uint256 input) public pure returns (bool) {
         revert();
     }
 }
