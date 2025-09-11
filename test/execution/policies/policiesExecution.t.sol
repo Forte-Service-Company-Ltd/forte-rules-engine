@@ -488,7 +488,9 @@ abstract contract policiesExecution is RulesEngineCommon {
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
 
-        for (uint256 i = 0; i < 7; i++) {
+        uint256 count = 7;
+
+        for (uint256 i = 0; i < count; i++) {
             ruleIds[i] = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "test rule", "test description");
         }
 
@@ -509,8 +511,8 @@ abstract contract policiesExecution is RulesEngineCommon {
         (bytes4[] memory _callingFunctions, uint256[][] memory _ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
         assertEq(_callingFunctions.length, 1);
         assertEq(_callingFunctions[0], bytes4(keccak256(bytes("transfer(address,uint256)"))));
-        assertEq(_ruleIds[0].length, 7);
-        for (uint256 i = 0; i < 7; i++) {
+        assertEq(_ruleIds[0].length, count);
+        for (uint256 i = 0; i < count; i++) {
             assertEq(_ruleIds[0][i], ruleIds[i]);
         }
         vm.stopPrank();
