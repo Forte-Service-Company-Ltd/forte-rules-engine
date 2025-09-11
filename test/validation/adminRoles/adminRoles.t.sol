@@ -187,6 +187,56 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         assertFalse(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, callingContractAdmin));
     }
 
+    function testRulesEngine_Fuzz_ProposeAndConfirm_CallingContractAdmin_CheckPolicies(
+        bool subscribed1,
+        bool subscribed2,
+        bool subscribed3
+    ) public ifDeploymentTestsEnabled endWithStopPrank {
+        address newAdmnin = address(0x4e3ad);
+        newUserContract.setCallingContractAdmin(callingContractAdmin);
+        assertTrue(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, callingContractAdmin));
+        // create 3 closed policies
+        vm.startPrank(policyAdmin);
+        uint[] memory policyIds = new uint[](3);
+        for (uint i = 0; i < policyIds.length; i++)
+            policyIds[i] = RulesEnginePolicyFacet(address(red)).createPolicy(PolicyType.CLOSED_POLICY, "haha", "hehe");
+
+        // add admin1 as subscriber for all 3
+        for (uint i = 0; i < policyIds.length; i++)
+            RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyIds[i], callingContractAdmin);
+
+        // add these 3 policies to the calling contract
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(newUserContractAddress, policyIds);
+
+        // add admin2 as subscriber for a fuzzed amount of policies
+        if (subscribed1 || subscribed2 || subscribed3) vm.startPrank(policyAdmin);
+        if (subscribed1) RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyIds[0], newAdmnin);
+        if (subscribed2) RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyIds[1], newAdmnin);
+        if (subscribed3) RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyIds[2], newAdmnin);
+
+        // transfer role to admin2
+        vm.startPrank(callingContractAdmin);
+        RulesEngineAdminRolesFacet(address(red)).proposeNewCallingContractAdmin(newUserContractAddress, newAdmnin);
+
+        vm.startPrank(newAdmnin);
+        RulesEngineAdminRolesFacet(address(red)).confirmNewCallingContractAdmin(newUserContractAddress);
+
+        assertTrue(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, newAdmnin));
+        assertFalse(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, callingContractAdmin));
+
+        // check that the policies that the new admin is not subscribed to are removed from the calling contract
+        // check that the policies that the new admin is subscribed to remain in the calling contract
+        uint[] memory appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(newUserContractAddress);
+        if (_isIdInArray(appliedPolicies, policyIds[0]) != subscribed1) revert("Policy 1 applied status mismatch");
+        if (_isIdInArray(appliedPolicies, policyIds[1]) != subscribed2) revert("Policy 2 applied status mismatch");
+        if (_isIdInArray(appliedPolicies, policyIds[2]) != subscribed3) revert("Policy 3 applied status mismatch");
+    }
+
+    function _isIdInArray(uint[] memory ids, uint idToFind) internal pure returns (bool found) {
+        for (uint i = 0; i < ids.length; i++) if (ids[i] == idToFind) return true;
+    }
+
     function testRulesEngine_Unit_Confirm_CallingContractAdmin_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
         newUserContract.setCallingContractAdmin(callingContractAdmin);
         assertTrue(RulesEngineAdminRolesFacet(address(red)).isCallingContractAdmin(newUserContractAddress, callingContractAdmin));
