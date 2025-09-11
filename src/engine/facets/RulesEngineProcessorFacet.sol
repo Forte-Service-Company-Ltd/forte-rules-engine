@@ -1041,8 +1041,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 string memory textParam = abi.decode(effectArguments[i], (string));
                 emit RulesEngineEvent(_policyId, _message, textParam);
             } else if (placeholders[i].pType == ParamTypes.BYTES) {
-                bytes32 bytesParam = abi.decode(effectArguments[i], (bytes32));
-                emit RulesEngineEvent(_policyId, _message, bytesParam);
+                bytes memory bytesParam = abi.decode(effectArguments[i], (bytes));
+                emit RulesEngineEvent(_policyId, _message, keccak256(bytesParam));
             }
         }
     }
