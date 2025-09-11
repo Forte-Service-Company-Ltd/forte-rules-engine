@@ -302,16 +302,15 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
             callingFunctions = new bytes4[](policy.callingFunctions.length);
             ruleIds = new uint256[][](policy.callingFunctions.length);
         }
-        ruleIds = new uint256[][](policy.callingFunctions.length);
         // Loop through the callng functions and load the return arrays
         // Data validation will alway ensure policy.signatures.length will be less than MAX_LOOP
         for (uint256 i = 0; i < policy.callingFunctions.length; i++) {
             callingFunctions[i] = policy.callingFunctions[i];
             // Initialize the ruleId return array if necessary
+            // have to allocate the memory array here
+            ruleIds[i] = new uint256[](policy.callingFunctionsToRuleIds[policy.callingFunctions[i]].length);
             // Data validation will alway ensure policy.signatureToRuleIds[policy.callingFunctions[i]].length will be less than MAX_LOOP
             for (uint256 ruleIndex = 0; ruleIndex < policy.callingFunctionsToRuleIds[policy.callingFunctions[i]].length; ruleIndex++) {
-                // have to allocate the memory array here
-                ruleIds[i] = new uint256[](policy.callingFunctionsToRuleIds[policy.callingFunctions[i]].length);
                 ruleIds[i][ruleIndex] = policy.callingFunctionsToRuleIds[policy.callingFunctions[i]][ruleIndex];
             }
         }

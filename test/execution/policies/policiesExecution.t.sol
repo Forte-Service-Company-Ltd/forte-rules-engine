@@ -447,6 +447,78 @@ abstract contract policiesExecution is RulesEngineCommon {
         vm.stopPrank();
     }
 
+    function testRulesEngine_Unit_GetProperRuleIDsInGetPolicy() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.startPrank(policyAdmin);
+        uint256 policyId = _createBlankPolicy();
+
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes("transfer(address,uint256)"))),
+            pTypes,
+            "transfer(address,uint256)",
+            "address to, uint256 value"
+            ""
+        );
+
+        uint256[] memory ruleIds = new uint256[](7);
+
+        Rule memory rule;
+        rule.rawData.argumentTypes = new ParamTypes[](1);
+        rule.rawData.dataValues = new bytes[](1);
+        rule.rawData.instructionSetIndex = new uint256[](1);
+        rule.rawData.argumentTypes[0] = ParamTypes.STR;
+        rule.rawData.dataValues[0] = abi.encode("test");
+        rule.rawData.instructionSetIndex[0] = 3;
+
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.PLH);
+        rule.instructionSet[1] = 0;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = uint256(keccak256(abi.encode("test")));
+        rule.instructionSet[4] = uint(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].pType = ParamTypes.STR;
+        rule.placeHolders[0].typeSpecificIndex = 1;
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+
+        uint256 count = 7;
+
+        for (uint256 i = 0; i < count; i++) {
+            ruleIds[i] = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "test rule", "test description");
+        }
+
+        bytes4[] memory callingFunctions = new bytes4[](1);
+        callingFunctions[0] = bytes4(keccak256(bytes("transfer(address,uint256)")));
+        uint256[][] memory _newRuleIds = new uint256[][](1);
+        _newRuleIds[0] = ruleIds;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            callingFunctions,
+            _newRuleIds,
+            PolicyType.OPEN_POLICY,
+            "test policy",
+            "test description"
+        );
+
+        (bytes4[] memory _callingFunctions, uint256[][] memory _ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
+        assertEq(_callingFunctions.length, 1);
+        assertEq(_callingFunctions[0], bytes4(keccak256(bytes("transfer(address,uint256)"))));
+        assertEq(_ruleIds[0].length, count);
+        for (uint256 i = 0; i < count; i++) {
+            assertEq(_ruleIds[0][i], ruleIds[i]);
+        }
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+    }
+
     function _setupOFACPolicyAndContract() internal returns (uint256 policyId, ForeignCallTestContractOFAC denyListContract) {
         // Create OFAC Deny List Policy
         policyId = RulesEnginePolicyFacet(address(red)).createPolicy(
