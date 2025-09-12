@@ -2366,7 +2366,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.instructionSet[6] = 1;
 
         ParamTypes[] memory fcArgs = new ParamTypes[](1);
-        fcArgs[0] = ParamTypes.UINT;
+        fcArgs[0] = ParamTypes.STR;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.MAPPED_TRACKER_KEY;

@@ -141,6 +141,24 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         }
     }
 
+    /**
+     * @notice Processes mapped tracker values for foreign call parameter encoding
+     * @dev Retrieves and encodes mapped tracker values for use as foreign call parameters.
+     *      This function handles the lookup of stored values using derived keys and properly
+     *      encodes them based on the tracker's parameter type for foreign call execution.
+     * @param functionArguments The original function calldata for key derivation
+     * @param retVals Array of return values from previous operations
+     * @param policyId The policy ID containing the tracker
+     * @param trackerIndex The tracker ID within the policy
+     * @param encodedCall Current encoded call data being built
+     * @param lengthToAppend Current length of dynamic data prepared for appending
+     * @param dynamicData Accumulated dynamic data portion of the encoded call
+     * @param mappedTrackerKeyEI Metadata specifying how to derive the tracker lookup key
+     * @param parameterTypesLength Total number of parameters in the foreign call
+     * @return encodedCall Updated encoded call data with the tracker value added
+     * @return lengthToAppend Updated length of dynamic data after processing
+     * @return dynamicData Updated dynamic data with any new variable-length data
+     */
     function evaluateForeignCallForRuleMappedTrackerKey(
         bytes calldata functionArguments,
         bytes[] memory retVals,
@@ -152,29 +170,41 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         ForeignCallEncodedIndex memory mappedTrackerKeyEI,
         uint256 parameterTypesLength
     ) internal view returns (bytes memory, uint256, bytes memory) {
-        bytes memory mappedTrackerValue;
-        ParamTypes typ = lib._getTrackerStorage().trackers[policyId][trackerIndex].trackerKeyType;
+        Trackers storage tracker = lib._getTrackerStorage().trackers[policyId][trackerIndex];
 
-        (mappedTrackerValue, typ) = _foreignCallGetMappedTrackerValue(
+        // Get the stored value
+        (bytes memory trackerValue, ) = _foreignCallGetMappedTrackerValue(
             functionArguments,
             retVals,
             policyId,
             trackerIndex,
             mappedTrackerKeyEI,
-            typ
+            tracker.trackerKeyType
         );
 
-        (encodedCall, lengthToAppend, dynamicData) = concatenateCallOnMemory(
-            encodedCall,
-            lengthToAppend,
-            dynamicData,
-            mappedTrackerValue,
-            typ,
-            parameterTypesLength
-        );
-        return (encodedCall, lengthToAppend, dynamicData);
+        if (tracker.pType == ParamTypes.STR || tracker.pType == ParamTypes.BYTES) {
+            // For STRING/BYTES types, the stored value is already the original data
+            if (trackerValue.length == 0) {
+                trackerValue = abi.encode("");
+            }
+            return (bytes.concat(encodedCall, trackerValue), lengthToAppend, dynamicData);
+        }
+
+        // For non-string types, use the stored value as-is
+        return concatenateCallOnMemory(encodedCall, lengthToAppend, dynamicData, trackerValue, tracker.pType, parameterTypesLength);
     }
 
+    /**
+     * @notice Retrieves a mapped tracker value by deriving the key from various sources
+     * @param functionArguments The original function calldata for key extraction
+     * @param retVals Array of return values from previous operations
+     * @param policyId The policy ID containing the tracker
+     * @param trackerIndex The tracker ID within the policy
+     * @param mappedTrackerKeyEI Metadata specifying the key source and index
+     * @param typ The parameter type of the tracker key
+     * @return mappedTrackerValue The stored tracker value as bytes
+     * @return valueType The parameter type of the stored value
+     */
     function _foreignCallGetMappedTrackerValue(
         bytes calldata functionArguments,
         bytes[] memory retVals,
@@ -193,7 +223,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             }
             (mappedTrackerValue, valueType) = _getMappedTrackerValue(policyId, trackerIndex, mappedTrackerKey);
         } else {
-            if (mappedTrackerKeyEI.eType != EncodedIndexType.TRACKER && (typ == ParamTypes.STR || typ == ParamTypes.BYTES)) {
+            if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {
                 mappedTrackerKey = uint256(keccak256(retVals[mappedTrackerKeyEI.index]));
             } else {
                 mappedTrackerKey = uint256(bytes32(retVals[mappedTrackerKeyEI.index]));
@@ -320,6 +350,18 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         return (encodedCall, lengthToAppend, dynamicData);
     }
 
+    /**
+     * @notice Concatenates parameter values into foreign call encoded data
+     * @param encodedCall Current encoded call data being constructed
+     * @param lengthToAppend Current length of dynamic data section
+     * @param dynamicData Current dynamic data portion of the call
+     * @param value The parameter value to append as bytes
+     * @param argType The parameter type determining encoding method
+     * @param parameterTypesLength Total number of parameters in the foreign call
+     * @return encodedCall Updated encoded call data
+     * @return lengthToAppend Updated length of dynamic data section
+     * @return dynamicData Updated dynamic data portion
+     */
     function concatenateCallOnMemory(
         bytes memory encodedCall,
         uint256 lengthToAppend,
@@ -595,17 +637,13 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     idx += 2;
                 }
                 if (typ == ParamTypes.UINT || typ == ParamTypes.ADDR || typ == ParamTypes.BOOL) {
-                    v = abi.decode(value, (uint256));
+                    // Handle empty bytes case (missing mapped tracker key)
+                    if (value.length != 0) {
+                        v = abi.decode(value, (uint256));
+                    }
                 } else if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {
                     // Convert string to uint256 for direct comparison using == and != operations
-                    (bool isTrackerValue, , ) = _extractFlags(_placeHolders[pli]);
-                    // PLHM can be assumed to always be a tracker value as it is only used in mapped trackers
-                    // Therefore we interpret the results as a tracker value
-                    if (isTrackerValue || op == LogicalOp.PLHM) {
-                        v = abi.decode(value, (uint256));
-                    } else {
-                        v = uint256(keccak256(value));
-                    }
+                    v = uint256(keccak256(value));
                 } else if (typ == ParamTypes.STATIC_TYPE_ARRAY || typ == ParamTypes.DYNAMIC_TYPE_ARRAY) {
                     // length of array for direct comparison using == and != operations
                     v = abi.decode(value, (uint256));
@@ -763,20 +801,24 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         lib._getTrackerStorage().mappedTrackerValues[_policyId][_trackerId][encodedKey] = encodedValue;
     }
 
+    /**
+     * @notice Retrieves a value from a mapped tracker using the specified key
+     * @param _policyId The policy ID containing the tracker
+     * @param _trackerId The ID of the tracker within the policy
+     * @param _mappedTrackerKey The key used to lookup the specific value in the mapping
+     * @return The stored value as bytes (may be empty if key doesn't exist)
+     * @return The parameter type of the stored value
+     */
     function _getMappedTrackerValue(
         uint256 _policyId,
         uint256 _trackerId,
         uint256 _mappedTrackerKey
     ) internal view returns (bytes memory, ParamTypes) {
         assert(lib._getTrackerStorage().trackers[_policyId][_trackerId].mapped);
-        ParamTypes keyType = lib._getTrackerStorage().trackers[_policyId][_trackerId].pType;
+        ParamTypes valueType = lib._getTrackerStorage().trackers[_policyId][_trackerId].pType;
         bytes memory value = lib._getTrackerStorage().mappedTrackerValues[_policyId][_trackerId][abi.encode(_mappedTrackerKey)];
-        if (value.length == 0) {
-            return (abi.encode(0), keyType);
-        }
-        return (value, keyType);
+        return (value, valueType);
     }
-
     /**
      * @dev Internal function to update the value of a mapped tracker associated with a specific policy.
      * @param _policyId The ID of the policy to which the tracker belongs.
