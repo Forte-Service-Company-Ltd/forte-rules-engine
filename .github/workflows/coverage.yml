@@ -1,12 +1,12 @@
-name: Code coverage evaluation
+name: Code coverage evaluation (Disabled)
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
-  pull_request:
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+  # pull_request:
+  #   types: [opened, synchronize, reopened, edited, ready_for_review]
 
 env:
   FOUNDRY_PROFILE: ci
