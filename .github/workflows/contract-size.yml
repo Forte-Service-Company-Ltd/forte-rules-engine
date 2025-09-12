@@ -1,21 +1,20 @@
-name: Contract Size
+name: Contract Size (Disabled)
 
+# Workflow disabled - only manual trigger available
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
-  pull_request:
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+# Commented out automatic triggers:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     types: [opened, synchronize, reopened, edited, ready_for_review]
 
 env:
   FOUNDRY_PROFILE: ci
 
 jobs:
   check:
-    strategy:
-      fail-fast: true
-
     name: Contract Size
     runs-on: ubuntu-latest
     steps:

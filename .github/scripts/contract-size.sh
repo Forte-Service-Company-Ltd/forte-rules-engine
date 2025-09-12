@@ -32,7 +32,3 @@ if [ "$should_fail" = "true" ]; then
   printf "${RED} ERROR: Failed to pass all checks. See individual results for details.  \n"
   exit -1 # terminate and indicate error
 fi
-
-
-
-
