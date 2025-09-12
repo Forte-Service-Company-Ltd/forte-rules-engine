@@ -13,9 +13,6 @@ env:
 
 jobs:
   check:
-    strategy:
-      fail-fast: true
-
     name: Build and Test
     runs-on: ubuntu-latest
     steps:
