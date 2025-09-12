@@ -857,6 +857,15 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         return (retVal.value, retVal.pType);
     }
 
+    function _checkForForeignCallPermission(address contractAddress, bytes4 functionSig, uint policyId) internal view {
+        if (lib._getForeignCallStorage().isPermissionedForeignCall[contractAddress][functionSig]) {
+            address policyAdmin = lib._getPolicyAdminStorage().policyIdToPolicyAdmin[policyId];
+            if (!lib._getForeignCallStorage().permissionedForeignCallAdmins[contractAddress][functionSig][policyAdmin]) {
+                revert(NOT_PERMISSIONED_FOR_FOREIGN_CALL);
+            }
+        }
+    }
+
     /**
      * @notice Handles global variables in the rules engine
      * @dev Internal function that processes global variable types and returns their encoded values with corresponding parameter types

@@ -26,6 +26,7 @@ library RulesEngineStoragePositionLib {
     bytes32 constant TRACKER_METADATA_POSITION = bytes32(uint256(keccak256("tracker-metadata-position")) - 1);
     bytes32 constant RULES_METADATA_POSITION = bytes32(uint256(keccak256("rules-metadata-position")) - 1);
     bytes32 constant POLICY_METADATA_POSITION = bytes32(uint256(keccak256("policy-metadata-position")) - 1);
+    bytes32 constant POLICY_ADMIN_POSITION = bytes32(uint256(keccak256("policy-admin-position")) - 1);
 
     /**
      * @notice Retrieves the storage for the initialized flag.
@@ -178,6 +179,18 @@ library RulesEngineStoragePositionLib {
      */
     function _getPolicyAssociationStorage() internal pure returns (PolicyAssociationStorage storage _ds) {
         bytes32 position = POLICY_ASSOCIATION_POSITION;
+        assembly {
+            _ds.slot := position
+        }
+    }
+
+    /**
+     * @notice Retrieves the storage for policy admin.
+     * @dev Uses a fixed storage slot to avoid conflicts with other contracts.
+     * @return _ds The storage structure for the admin per policy.
+     */
+    function _getPolicyAdminStorage() internal pure returns (PolicyAdminStorage storage _ds) {
+        bytes32 position = POLICY_ADMIN_POSITION;
         assembly {
             _ds.slot := position
         }
