@@ -33,7 +33,7 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
     ) external returns (uint256) {
         _policyAdminOnly(_policyId, msg.sender);
         _notCemented(_policyId);
-        _isForeignCallPermissioned(_foreignCall.foreignCallAddress, _foreignCall.signature);
+        bool isPermissioned = _isForeignCallPermissioned(_foreignCall.foreignCallAddress, _foreignCall.signature);
 
         // Step 1: Generate the foreign call index
         uint256 foreignCallIndex = _incrementForeignCallIndex(_policyId);
@@ -43,6 +43,16 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
 
         // Step 3: Store metadata
         _storeForeignCallMetadata(_policyId, foreignCallIndex, foreignCallName);
+
+        // step 4: If permissioned, add the policy to the admin list and id list
+        if (isPermissioned) {
+            lib._getForeignCallStorage().pfcAdminToPolicies[msg.sender][_foreignCall.foreignCallAddress][_foreignCall.signature].push(
+                _policyId
+            );
+            lib
+            ._getForeignCallStorage()
+            .pfcAdminToFCIds[msg.sender][_foreignCall.foreignCallAddress][_foreignCall.signature][_policyId].push(foreignCallIndex);
+        }
 
         emit ForeignCallCreated(_policyId, foreignCallIndex);
         return foreignCallIndex;
@@ -78,7 +88,37 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
     function deleteForeignCall(uint256 policyId, uint256 foreignCallId) external {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
+        ForeignCall memory fc = lib._getForeignCallStorage().foreignCalls[policyId][foreignCallId];
+        uint[] storage fcIds = lib._getForeignCallStorage().pfcAdminToFCIds[msg.sender][fc.foreignCallAddress][fc.signature][policyId];
+        bool isPermissioned = lib._getForeignCallStorage().isPermissionedForeignCall[fc.foreignCallAddress][fc.signature];
         delete lib._getForeignCallStorage().foreignCalls[policyId][foreignCallId];
+        if (isPermissioned) {
+            // if we have more than 1 id using the same permissioned foreign call, then we need to remove it without removing the policy from the admin list
+            if (fcIds.length > 1) {
+                // remove the foreign call id from the admin list
+                for (uint256 i = 0; i < fcIds.length; i++) {
+                    if (fcIds[i] == foreignCallId) {
+                        fcIds[i] = fcIds[fcIds.length - 1]; // Move last element to current position
+                        fcIds.pop(); // Remove last element
+                        break;
+                    }
+                }
+            } else {
+                // On the other hand, if there's only one foreign call, then we can remove the entire mapping, and we can remove the policy from the admin list
+                lib._getForeignCallStorage().pfcAdminToFCIds[msg.sender][fc.foreignCallAddress][fc.signature][policyId].pop();
+                // remove the policy from the admin list
+                uint256[] storage policyList = lib._getForeignCallStorage().pfcAdminToPolicies[msg.sender][fc.foreignCallAddress][
+                    fc.signature
+                ];
+                for (uint256 i = 0; i < policyList.length; i++) {
+                    if (policyList[i] == policyId) {
+                        policyList[i] = policyList[policyList.length - 1]; // Move last element to current position
+                        policyList.pop(); // Remove last element
+                        break;
+                    }
+                }
+            }
+        }
         emit ForeignCallDeleted(policyId, foreignCallId);
     }
 
@@ -194,10 +234,14 @@ contract RulesEngineForeignCallFacet is FacetCommonImports {
      * @param _foriegnCallAddress The address of the foreign call contract.
      * @param _functionSignature The function signature of the foreign call.
      */
-    function _isForeignCallPermissioned(address _foriegnCallAddress, bytes4 _functionSignature) internal view {
+    function _isForeignCallPermissioned(
+        address _foriegnCallAddress,
+        bytes4 _functionSignature
+    ) internal view returns (bool isPermissioned) {
         // look up the foreign call in the permissioned foreign call storage to see if it is permissioned
+        isPermissioned = lib._getForeignCallStorage().isPermissionedForeignCall[_foriegnCallAddress][_functionSignature];
         if (
-            lib._getForeignCallStorage().isPermissionedForeignCall[_foriegnCallAddress][_functionSignature] &&
+            isPermissioned &&
             !lib._getForeignCallStorage().permissionedForeignCallAdmins[_foriegnCallAddress][_functionSignature][msg.sender]
         ) revert(NOT_PERMISSIONED_FOR_FOREIGN_CALL);
     }

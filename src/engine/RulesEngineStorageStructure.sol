@@ -145,7 +145,8 @@ struct ForeignCallStorage {
     mapping(address foreignCallAddress => mapping(bytes4 signature => bool)) isPermissionedForeignCall; // Store all permissioned foreign calls within the rules engine
     mapping(address foreignCallContractAddress => mapping(bytes4 => mapping(address permissionedAdmin => bool))) permissionedForeignCallAdmins; // This is used to store the addresses of all permissioned foreign call admins for look ups
     mapping(address foreignCallContractAddress => mapping(bytes4 selector => address[])) permissionedForeignCallAdminsList; // This is used to store the addresses of all permissioned foreign call admins for look ups
-    mapping(address admin => mapping(address foreignCallContractAddress => mapping(bytes4 selector => uint[] policyIds))) permissionedFCAdminToPoliciesUsingFC; // This is used to store the policy Ids that are using a permissioned foreign call for a given admin
+    mapping(address admin => mapping(address foreignCallContractAddress => mapping(bytes4 selector => uint[] policyIds))) pfcAdminToPolicies; // This is used to store the policy Ids that are using a permissioned foreign call for a given admin
+    mapping(address admin => mapping(address foreignCallContractAddress => mapping(bytes4 selector => mapping(uint policyIds => uint[] fcIds)))) pfcAdminToFCIds; // This is used to store the FC Ids per policy ID that are using a permissioned foreign call for a given admin
 }
 
 /**
