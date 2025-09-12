@@ -159,8 +159,16 @@ struct PermissionedForeignCallStorage {
 /**
  * Structure used to hold the metadata for foreign calls
  */
+struct ForeignCallMetadataMappingStruct {
+    mapping(uint256 policyId => mapping(uint256 foreignCallIndex => ForeignCallMetadataStruct)) foreignCallMetadata;
+}
+
+/**
+ * Structure used to hold the metadata for foreign calls
+ */
 struct ForeignCallMetadataStruct {
-    mapping(uint256 policyId => mapping(uint256 foreignCallIndex => string)) foreignCallMetadata;
+    string name;
+    string foreignCallSignature;
 }
 
 /**

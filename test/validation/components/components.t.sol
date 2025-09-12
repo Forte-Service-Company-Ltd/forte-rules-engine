@@ -614,7 +614,7 @@ abstract contract components is RulesEngineCommon {
 
         ForeignCall memory fc;
         vm.expectRevert("Not allowed for cemented policy");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)", "simpleCheck(uint256 value)");
     }
 
     function testRulesEngine_Unit_CreateForeignCall_Negative_Non_PolicyAdmin() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -634,7 +634,7 @@ abstract contract components is RulesEngineCommon {
         // prank a random, non-policy admin address
         vm.startPrank(address(0x1337));
         vm.expectRevert("Not Authorized To Policy");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)", "simpleCheck(uint256 value)");
     }
 
     function testRulesEngine_unit_CreateForeignCall_Event() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -653,7 +653,7 @@ abstract contract components is RulesEngineCommon {
         fc.foreignCallIndex = 0;
         vm.expectEmit(true, false, false, false);
         emit ForeignCallCreated(policyID, foreignCallId);
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)", "simpleCheck(uint256 value)");
     }
 
     // Update Foreign Calls
@@ -663,7 +663,12 @@ abstract contract components is RulesEngineCommon {
         ForeignCall memory fc;
         fc = _setUpForeignCallSimple(policyID);
 
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyID,
+            fc,
+            "simpleCheck(uint256)",
+            "simpleCheck(uint256 value)"
+        );
         fc.foreignCallAddress = address(userContractAddress);
         RulesEnginePolicyFacet(address(red)).cementPolicy(policyID);
         vm.expectRevert("Not allowed for cemented policy");
@@ -676,7 +681,12 @@ abstract contract components is RulesEngineCommon {
         ForeignCall memory fc;
         fc = _setUpForeignCallSimple(policyID);
 
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyID,
+            fc,
+            "simpleCheck(uint256)",
+            "simpleCheck(uint256 value)"
+        );
         fc.foreignCallAddress = address(userContractAddress);
 
         //Prank a random, non-policy admin address
@@ -744,7 +754,7 @@ abstract contract components is RulesEngineCommon {
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
         vm.expectRevert("Address not allowed to be a foreign call");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)", "simpleCheck(uint256 value)");
     }
 
     function testRulesEngine_Unit_PermissionedForeignCall_SetGeneratePolicyAdminRole_Negative()
@@ -770,7 +780,12 @@ abstract contract components is RulesEngineCommon {
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
         vm.expectRevert("Address not allowed to be a foreign call");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "generatePolicyAdminRole(uint256,address)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "generatePolicyAdminRole(uint256,address)",
+            "generatePolicyAdminRole(uint256,address value)"
+        );
         vm.stopPrank();
     }
 
@@ -1056,7 +1071,7 @@ abstract contract components is RulesEngineCommon {
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
         vm.expectRevert(abi.encodePacked(SIG_REQ));
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)", "simpleCheck(uint256 value)");
     }
 
     function testRulesEngine_Unit_Function_Signature_Name_Validation_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -1075,7 +1090,7 @@ abstract contract components is RulesEngineCommon {
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
         vm.expectRevert(abi.encodePacked(NAME_REQ));
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "", "simpleCheck(uint256 value)");
     }
 
     function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -1099,7 +1114,12 @@ abstract contract components is RulesEngineCommon {
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "simpleCheck(uint256,uint256)",
+            "simpleCheck(uint256,uint256 value)"
+        );
     }
 
     function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -1124,7 +1144,12 @@ abstract contract components is RulesEngineCommon {
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
         vm.expectRevert("Mapped tracker key indices length mismatch.");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "simpleCheck(uint256,uint256)",
+            "simpleCheck(uint256,uint256 value)"
+        );
     }
 
     function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Negative_ExtraMappedTrackerKey()
@@ -1155,7 +1180,12 @@ abstract contract components is RulesEngineCommon {
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256,uint256)")));
 
         vm.expectRevert("Mapped tracker key indices length mismatch.");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "simpleCheck(uint256,uint256)",
+            "simpleCheck(uint256,uint256 value)"
+        );
     }
 
     function testRulesEngine_Unit_ForeignCall_ValidateMappedTrackerKeyLengths_Negative_DoubleNestedMappedTrackerKey()
@@ -1185,7 +1215,12 @@ abstract contract components is RulesEngineCommon {
         fc.returnType = ParamTypes.UINT;
 
         vm.expectRevert("Mapped tracker key cannot be double nested");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256,uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "simpleCheck(uint256,uint256)",
+            "simpleCheck(uint256 value,uint256 value)"
+        );
     }
 
     function testRulesEngine_Unit_Tracker_Name_Validation_Negative() public ifDeploymentTestsEnabled endWithStopPrank {

@@ -108,6 +108,7 @@ contract NonCustodialMarketplaceTestERC721 is RulesEngineCommon {
             foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
                 policyIds[0],
                 fc,
+                checkingAddress ? "getNaughty(address)" : "onTheNaughtyIdList(uint256)",
                 checkingAddress ? "getNaughty(address)" : "onTheNaughtyIdList(uint256)"
             );
         }

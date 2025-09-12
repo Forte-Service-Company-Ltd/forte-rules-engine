@@ -438,7 +438,12 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         ForeignCall memory fc;
         fc = _setUpForeignCallSimple(policyID);
 
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyID,
+            fc,
+            "simpleCheck(uint256)",
+            "simpleCheck(uint256 addr)"
+        );
         fc.foreignCallAddress = address(userContractAddress);
         RulesEngineForeignCallFacet(address(red)).updateForeignCall(policyID, foreignCallId, fc);
     }
@@ -499,7 +504,12 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         uint256 policyID = _createBlankPolicy();
         ForeignCall memory fc;
         fc = _setUpForeignCallSimple(policyID);
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyID, fc, "simpleCheck(uint256)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyID,
+            fc,
+            "simpleCheck(uint256)",
+            "simpleCheck(uint256 addr)"
+        );
         fc.foreignCallAddress = address(userContractAddress);
         vm.expectEmit(true, false, false, false);
         emit ForeignCallUpdated(policyID, foreignCallId);
@@ -727,7 +737,12 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
 
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "simpleCheck(uint256)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "simpleCheck(uint256)",
+            "simpleCheck(uint256 addr)"
+        );
 
         // Propose new admin
         RulesEngineAdminRolesFacet(address(red)).proposeNewForeignCallAdmin(address(permissionedForeignCallContract), newAdmin, selector);
