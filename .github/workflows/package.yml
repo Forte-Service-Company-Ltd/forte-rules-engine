@@ -63,13 +63,13 @@ jobs:
           export newVersion="[version-image]: https://img.shields.io/badge/Version-${version}-brightgreen?style=for-the-badge&logo=appveyor"
           perl -i -pe's/^\[version-image\]:.*$/$ENV{newVersion}/g' README.md
           # Update the Solidity version constant with a flexible regex
-          perl -i -pe "s/string\s+public\s+constant\s+version\s*=\s*\"[^\"]*\"\s*;/string public constant version = \"v$version\";/" ./src/engine/facets/RulesEngineProcessorFacet.sol
+          perl -i -pe "s/string\s+public\s+constant\s+version\s*=\s*\"[^\"]*\"\s*;/string public constant version = \"v$version\";/" ./src/engine/facets/RulesEnginePolicyFacet.sol
           # Validate that the replacement was successful
-          if ! grep -q "string public constant version = \"v$version\";" ./src/engine/facets/RulesEngineProcessorFacet.sol; then
-            echo "Error: Failed to update version in RulesEngineProcessorFacet.sol"
+          if ! grep -q "string public constant version = \"v$version\";" ./src/engine/facets/RulesEnginePolicyFacet.sol; then
+            echo "Error: Failed to update version in RulesEnginePolicyFacet.sol"
             exit 1
           fi
-          git add ./src/engine/facets/RulesEngineProcessorFacet.sol README.md package.json package-lock.json
+          git add ./src/engine/facets/RulesEnginePolicyFacet.sol README.md package.json package-lock.json
           git commit -m "Updating versions for release"
           git tag v$version
       - name: Push changes to the repository
