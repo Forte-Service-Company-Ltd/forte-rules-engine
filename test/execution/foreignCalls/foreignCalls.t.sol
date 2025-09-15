@@ -208,12 +208,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSignature(
-                "transferFrom(address,uint256,bytes)",
-                to,
-                value,
-                abi.encode("TESTER")
-            );
+            bytes memory transferCalldata = abi.encodeWithSignature("transferFrom(address,uint256,bytes)", to, value, abi.encode("TESTER"));
 
             vm.startSnapshotGas("checkRule_ForeignCall_Bytes");
             RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
@@ -1131,6 +1126,128 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         assertTrue(pfcStorage.length == 0, "There should be no permissioned foreign call admins");
     }
 
+    function testRulesEngine_Unit_PermissionedForeignCall_updatePermissionList_RevertsAtRunTime()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        address permissionedFCAdmin = address(0x66666666);
+        // 1. We create a permissioned foreign call and assign its admin
+        vm.startPrank(permissionedFCAdmin);
+        bytes4 foreignCallSelector = PermissionedForeignCallTestContract.simpleCheck.selector;
+        permissionedForeignCallContract.setForeignCallAdmin(permissionedFCAdmin, foreignCallSelector);
+        assertTrue(
+            RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(
+                address(permissionedForeignCallContract),
+                permissionedFCAdmin,
+                foreignCallSelector
+            )
+        );
+        // 2. now we add some allowed admins to the permission list, including policyAdmin
+        address[] memory initialAdmins = new address[](3);
+        initialAdmins[0] = policyAdmin;
+        initialAdmins[1] = address(0x77777777);
+        initialAdmins[2] = address(0x88888888);
+        RulesEngineForeignCallFacet(address(red)).updatePermissionList(pfcContractAddress, foreignCallSelector, initialAdmins);
+
+        // 3. We can now start using the permissioned foreign call in a policy through the allowed policyAdmin account
+        vm.startPrank(policyAdmin);
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicyOpen();
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        _addCallingFunctionToPolicy(policyIds[0]);
+        // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
+        Rule memory rule;
+        // Build the foreign call placeholder
+        rule.placeHolders = new Placeholder[](1);
+        rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
+        rule.placeHolders[0].typeSpecificIndex = 1;
+        // Build the instruction set for the rule (including placeholders)
+        rule.instructionSet = _createInstructionSet(0); // should always pass
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+        // update the test policy
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        /// @notice that we are allowed to create the foreign call in the policy because we are on the permission list
+        ParamTypes[] memory fcArgs = new ParamTypes[](1);
+        fcArgs[0] = ParamTypes.UINT;
+        ForeignCall memory fc;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+        fc.parameterTypes = fcArgs;
+        fc.foreignCallAddress = address(permissionedForeignCallContract);
+        fc.signature = PermissionedForeignCallTestContract.simpleCheck.selector;
+        fc.returnType = ParamTypes.UINT;
+        fc.foreignCallIndex = 0;
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        // Add the rule to the policy and apply the policy to the userContract
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = ruleId;
+        _addRuleIdsToPolicyOpen(policyIds[0], ruleIds);
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract), policyIds);
+
+        // 4. Now we can test that the rule works as expected
+        vm.startPrank(address(0xb0b));
+        // test that rule ( amount > 0 -> revert -> transfer(address _to, uint256 amount) returns (bool)" ) processes correctly
+        bool response = userContract.transfer(address(0x7654321), transferValue);
+        // we assert that the foreign call went through
+        assertTrue(response);
+        // we assert that the amount of allowed admins for the permissioned foreign call is correct
+        address[] memory pfcStorage = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(
+            pfcContractAddress,
+            foreignCallSelector
+        );
+        assertTrue(pfcStorage.length == 3, "There should be three permissioned foreign call admins");
+
+        // 5. Now we update the permission list to remove policyAdmin from the list of allowed admins via updatePermissionList
+        vm.startPrank(permissionedFCAdmin);
+        address[] memory secondAdmins = new address[](2);
+        secondAdmins[0] = address(0x1337);
+        secondAdmins[1] = address(0x1338);
+        RulesEngineForeignCallFacet(address(red)).updatePermissionList(pfcContractAddress, foreignCallSelector, secondAdmins);
+        pfcStorage = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(pfcContractAddress, foreignCallSelector);
+        assertTrue(pfcStorage.length == 2, "There should be two permissioned foreign call admins");
+
+        // we test that it now reverts at runtime as policyAdmin is no longer on the permission list
+        vm.startPrank(address(0xb0b));
+        vm.expectRevert("Not Permissioned For Foreign Call");
+        userContract.transfer(address(0x7654321), transferValue);
+
+        // 6. we do the same now but via add/remove from permission list
+        // positive
+        vm.startPrank(permissionedFCAdmin);
+        RulesEngineForeignCallFacet(address(red)).addAdminToPermissionList(pfcContractAddress, policyAdmin, foreignCallSelector);
+        vm.startPrank(address(0xb0b));
+        userContract.transfer(address(0x7654321), transferValue);
+        // negative
+        vm.startPrank(permissionedFCAdmin);
+        RulesEngineForeignCallFacet(address(red)).removeFromPermissionList(pfcContractAddress, foreignCallSelector, policyAdmin);
+        vm.startPrank(address(0xb0b));
+        vm.expectRevert("Not Permissioned For Foreign Call");
+        userContract.transfer(address(0x7654321), transferValue);
+
+        // 7. finally we check that transferring the policyAdmin role does not allow the contracts using the policy to use the permissioned foreign call
+        vm.startPrank(policyAdmin);
+        RulesEngineAdminRolesFacet(address(red)).proposeNewPolicyAdmin(address(0xc0c0), policyIds[0]);
+        vm.startPrank(address(0xc0c0));
+        RulesEngineAdminRolesFacet(address(red)).confirmNewPolicyAdmin(policyIds[0]);
+        vm.startPrank(address(0xb0b)); // Coco is not in the allowed pfc list. Only address(0x1337) and address(0x1338) are allowed at this point
+        vm.expectRevert("Not Permissioned For Foreign Call");
+        userContract.transfer(address(0x7654321), transferValue);
+        // we can check that transferring the policyAdmin role to an allowed admin allows back the contracts to use the permissioned foreign call
+        vm.startPrank(address(0xc0c0));
+        RulesEngineAdminRolesFacet(address(red)).proposeNewPolicyAdmin(address(0x1337), policyIds[0]);
+        vm.startPrank(address(0x1337));
+        RulesEngineAdminRolesFacet(address(red)).confirmNewPolicyAdmin(policyIds[0]);
+        vm.startPrank(address(0xb0b));
+        userContract.transfer(address(0x7654321), transferValue);
+    }
+
     function testRulesEngine_Unit_ForeignCall_MappedTrackerAsParam_UintToUintMappedTracker_Positive()
         public
         ifDeploymentTestsEnabled
@@ -1456,7 +1573,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         // we check the nft balance of user1 before we make the transfer that triggers a mint
         uint balanceBefore = nftContract.balanceOf(user1);
         bool statusBefore = testContract2.getNaughty(user1);
-        
+
         assertFalse(statusBefore);
         vm.startPrank(user1);
         vm.startSnapshotGas("checkRule_Effect_Positive_ForeignCallMint");
