@@ -1043,7 +1043,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.signature = bytes4(keccak256(bytes("square(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "square(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "square(uint256)", "square(uint256)");
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 

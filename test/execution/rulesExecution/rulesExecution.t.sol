@@ -306,7 +306,12 @@ abstract contract rulesExecution is RulesEngineCommon {
         fc.signature = bytes4(keccak256(bytes("getNaughty(address)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 1;
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "getNaughty(address)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "getNaughty(address)",
+            "getNaughty(address)"
+        );
 
         rule.instructionSet = new uint256[](7);
         rule.instructionSet[0] = uint(LogicalOp.PLH);
