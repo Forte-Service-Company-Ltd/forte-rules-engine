@@ -60,6 +60,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         // Load the Foreign Call data from storage
         ForeignCall memory foreignCall = lib._getForeignCallStorage().foreignCalls[policyId][foreignCallIndex];
         if (foreignCall.set) {
+            _checkForForeignCallPermission(foreignCall.foreignCallAddress, foreignCall.signature, policyId);
             retVal = evaluateForeignCallForRule(foreignCall, callingFunctionArgs, retVals, metadata, policyId);
         } else {
             revert(FOREIGN_CALL_NOT_SET);

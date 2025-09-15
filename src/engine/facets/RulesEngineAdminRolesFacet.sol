@@ -72,6 +72,7 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
         _revokeRole(_generatePolicyAdminRoleId(policyId, PROPOSED_POLICY_ADMIN), msg.sender);
         _revokeRole(_generatePolicyAdminRoleId(policyId, POLICY_ADMIN), oldPolicyAdmin);
         _grantRole(_generatePolicyAdminRoleId(policyId, POLICY_ADMIN), msg.sender);
+        lib._getPolicyAdminStorage().policyIdToPolicyAdmin[policyId] = msg.sender;
         emit PolicyAdminRoleConfirmed(msg.sender, policyId);
     }
 

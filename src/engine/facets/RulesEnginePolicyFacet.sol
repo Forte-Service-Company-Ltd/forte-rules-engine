@@ -233,7 +233,8 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
         data.policyStorageSets[policyId].set = true;
         data.policyStorageSets[policyId].policy.policyType = policyType;
         //This function is called as an external call intentionally. This allows for proper gating on the generatePolicyAdminRole fn to only be callable by the RulesEngine address.
-        RulesEngineAdminRolesFacet(address(this)).generatePolicyAdminRole(policyId, address(msg.sender));
+        RulesEngineAdminRolesFacet(address(this)).generatePolicyAdminRole(policyId, msg.sender);
+        lib._getPolicyAdminStorage().policyIdToPolicyAdmin[policyId] = msg.sender;
         _storePolicyMetadata(policyId, policyName, policyDescription);
         emit PolicyCreated(policyId);
         return policyId;
