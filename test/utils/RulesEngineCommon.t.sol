@@ -815,7 +815,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternallyNoArg(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternallyNoArg(uint256)","testSigWithArraySetInternallyNoArg(uint256)");
 
         ForeignCallTestContract foreignCall2 = new ForeignCallTestContract();
         ForeignCall memory fc2;
@@ -827,7 +827,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc2.encodedIndices[0].index = 1;
         fc2.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
         fc2.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc2, "testSigWithArrayPassthrough(string[])");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc2, "testSigWithArrayPassthrough(string[])", "testSigWithArrayPassthrough(string[])");
 
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);

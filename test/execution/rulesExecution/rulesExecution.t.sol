@@ -882,7 +882,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         fc.encodedIndices[0].index = 2;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArrayPassthrough(string[])");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArrayPassthrough(string[])", "testSigWithArrayPassthrough(string[])");
 
         // Add a negative/positive effects
         rule.negEffects = new Effect[](1);
@@ -986,7 +986,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         fc.encodedIndices[0].index = 2;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternally(string[])");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternally(string[])", "testSigWithArraySetInternally(string[])");
 
         // Add a negative/positive effects
         rule.negEffects = new Effect[](1);
