@@ -447,7 +447,6 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             _validateParamType(placeholders[i].pType);
         }
     }
-
     /**
      * @notice Validates an instruction set.
      * @param instructionSet The instructionSet to validate.
@@ -460,6 +459,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         uint instructionHold; // The current instruction used as it iterates through data elements
         uint dataCounter; // The current data element within the opCode
         // we loop through the instructionSet to validate it
+        if (instructionSet.length == 0) return;
         for (uint256 i = 0; i < instructionSet.length; i++) {
             // we extract the specific item from the validation set which is in memory, and we place it in the stack to save some gas
             uint instruction = instructionSet[i];
