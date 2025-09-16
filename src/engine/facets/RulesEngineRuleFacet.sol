@@ -124,20 +124,20 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             ];
             uint256[] memory newRuleIds = new uint256[](ruleIds.length);
             uint256 k = 0;
-            bool found = false;
+            uint256 found = 0;
             for (uint256 j = 0; j < ruleIds.length; j++) {
                 if (ruleIds[j] == ruleId) {
-                    found = true;
+                    found++;
                     continue;
                 }
                 newRuleIds[k] = ruleIds[j];
                 k++;
             }
             data.policy.callingFunctionsToRuleIds[callingFunctions[i]] = newRuleIds;
-            if (found) {
+            while (found > 0) {
                 data.policy.callingFunctionsToRuleIds[callingFunctions[i]].pop();
+                found--;
             }
-
         }
         _removeRuleFromTrackerIdMapping(policyId, ruleId);
         delete lib._getRuleStorage().ruleStorageSets[policyId][ruleId];
