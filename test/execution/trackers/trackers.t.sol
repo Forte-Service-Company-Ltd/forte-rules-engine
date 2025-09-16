@@ -2720,6 +2720,26 @@ abstract contract trackers is RulesEngineCommon {
         bytes memory emptyTrackerBytes = abi.decode(tracker.trackerValue, (bytes));
         uint256[] memory emptyResultArray = abi.decode(emptyTrackerBytes, (uint256[]));
         assertEq(emptyResultArray.length, 0);
+
+        // Test manual tracker update to verify array length is stored correctly
+        vm.stopPrank();
+        vm.startPrank(policyAdmin);
+
+        uint256[] memory manualUpdateArray = new uint256[](4);
+        manualUpdateArray[0] = 1000;
+        manualUpdateArray[1] = 2000;
+        manualUpdateArray[2] = 3000;
+        manualUpdateArray[3] = 4000;
+
+        Trackers memory manualTracker;
+        manualTracker.trackerValue = abi.encode(manualUpdateArray.length); // For arrays, we store the length
+        RulesEngineComponentFacet(address(red)).updateTracker(policyId, 1, manualTracker);
+
+        tracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, 1);
+        uint256 storedLength = abi.decode(tracker.trackerValue, (uint256));
+        assertEq(storedLength, 4, "Manual update should store array length");
+
+        vm.stopPrank();
     }
 
     function testRulesEngine_Unit_StaticArrayTracker_EmptyArray() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -3234,6 +3254,25 @@ abstract contract trackers is RulesEngineCommon {
         assertEq(emptyStringResultArray.length, 2);
         assertEq(emptyStringResultArray[0], "");
         assertEq(emptyStringResultArray[1], "");
+
+        // Test manual tracker update to verify array length is stored correctly
+        vm.stopPrank();
+        vm.startPrank(policyAdmin);
+
+        string[] memory manualUpdateArray = new string[](3);
+        manualUpdateArray[0] = "first";
+        manualUpdateArray[1] = "second";
+        manualUpdateArray[2] = "third";
+
+        Trackers memory manualTracker;
+        manualTracker.trackerValue = abi.encode(manualUpdateArray.length); // For arrays, we store the length
+        RulesEngineComponentFacet(address(red)).updateTracker(policyId, 1, manualTracker);
+
+        tracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, 1);
+        uint256 storedLength = abi.decode(tracker.trackerValue, (uint256));
+        assertEq(storedLength, 3, "Manual update should store array length");
+
+        vm.stopPrank();
     }
 
     function testRulesEngine_Unit_DynamicArrayTracker_EmptyStringArray() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -3735,5 +3774,392 @@ abstract contract trackers is RulesEngineCommon {
 
         // Verify that the stored hash matches the expected hash
         assertEq(storedHash, expectedHash, "Stored hash should match expected hash of msg.data");
+    }
+
+    function testRulesEngine_Unit_MappedTrackerArray_StaticType() public ifDeploymentTestsEnabled resetsGlobalVariables {
+        uint256 policyId = _createBlankPolicy();
+
+        // Create tracker struct for address→static array mapping
+        Trackers memory tracker;
+        tracker.mapped = true;
+        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY; // tracker stores static array values
+        tracker.trackerKeyType = ParamTypes.ADDR; // keys are addresses
+
+        // Create tracker key arrays (address keys)
+        bytes[] memory trackerKeys = new bytes[](2);
+        trackerKeys[0] = abi.encode(address(0x7654321)); // key 1
+        trackerKeys[1] = abi.encode(address(0x1234567)); // key 2
+
+        // Create tracker value arrays (static array values - storing array lengths)
+        bytes[] memory trackerValues = new bytes[](2);
+        trackerValues[0] = abi.encode(3); // value for 0x7654321 (array length 3)
+        trackerValues[1] = abi.encode(5); // value for 0x1234567 (array length 5)
+
+        // Create tracker name
+        string memory trackerName = "staticArrayTracker";
+
+        // Create mapped tracker directly with proper array type
+        vm.startPrank(policyAdmin);
+        uint256 trackerIndex = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyId,
+            tracker,
+            trackerName,
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.UINT_ARRAY
+        );
+        vm.stopPrank();
+
+        // Validate tracker
+        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
+        assertTrue(returnedTracker.mapped);
+
+        // Set up a simple rule and policy for testing
+        vm.startPrank(policyAdmin);
+
+        uint256 ruleId;
+        {
+            // Create calling function
+            ParamTypes[] memory pTypes = new ParamTypes[](2);
+            pTypes[0] = ParamTypes.ADDR;
+            pTypes[1] = ParamTypes.UINT;
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyId,
+                bytes4(keccak256(bytes(callingFunction))),
+                pTypes,
+                callingFunction,
+                ""
+            );
+
+            // Create a rule that updates the mapped tracker using TRUM and always passes
+            Rule memory rule;
+            // Condition: always true (1 == 1)
+            rule.instructionSet = new uint256[](7);
+            rule.instructionSet[0] = uint256(LogicalOp.NUM);
+            rule.instructionSet[1] = 1;
+            rule.instructionSet[2] = uint256(LogicalOp.NUM);
+            rule.instructionSet[3] = 1;
+            rule.instructionSet[4] = uint256(LogicalOp.EQ);
+            rule.instructionSet[5] = 0;
+            rule.instructionSet[6] = 1;
+
+            // Create positive effect placeholders for the TRUM operation
+            rule.positiveEffectPlaceHolders = new Placeholder[](2);
+            // First placeholder: the array length value to store (function argument 1: uint256)
+            rule.positiveEffectPlaceHolders[0].pType = ParamTypes.UINT;
+            rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1; // 2nd argument (index 1) - the uint256 value
+            rule.positiveEffectPlaceHolders[0].flags = 0; // No special flags
+            // Second placeholder: the address key for the mapping (function argument 0: address)
+            rule.positiveEffectPlaceHolders[1].pType = ParamTypes.ADDR;
+            rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 0; // 1st argument (index 0) - the address key
+            rule.positiveEffectPlaceHolders[1].flags = 0; // No special flags
+
+            // Create positive effect that updates the mapped tracker using TRUM
+            rule.posEffects = new Effect[](1);
+            rule.posEffects[0].valid = true;
+            rule.posEffects[0].effectType = EffectTypes.EXPRESSION;
+
+            // TRUM instruction: PLH(value) PLH(key) TRUM trackerIndex valueIndex keyIndex TrackerType
+            rule.posEffects[0].instructionSet = new uint256[](9);
+            rule.posEffects[0].instructionSet[0] = uint256(LogicalOp.PLH); // Get array length value from placeholder
+            rule.posEffects[0].instructionSet[1] = 0; // Placeholder index 0 (array length value)
+            rule.posEffects[0].instructionSet[2] = uint256(LogicalOp.PLH); // Get address key from placeholder
+            rule.posEffects[0].instructionSet[3] = 1; // Placeholder index 1 (address key)
+            rule.posEffects[0].instructionSet[4] = uint256(LogicalOp.TRUM); // TRUM opcode
+            rule.posEffects[0].instructionSet[5] = trackerIndex; // Tracker index
+            rule.posEffects[0].instructionSet[6] = 0; // Value memory index
+            rule.posEffects[0].instructionSet[7] = 1; // Key memory index
+            rule.posEffects[0].instructionSet[8] = uint256(TrackerTypes.MEMORY); // Use memory values
+
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "testRule", "");
+        }
+
+        {
+            // Update policy with rule
+            bytes4[] memory callingFunctions = new bytes4[](1);
+            callingFunctions[0] = bytes4(keccak256(bytes(callingFunction)));
+            uint256[][] memory ruleIds = new uint256[][](1);
+            ruleIds[0] = new uint256[](1);
+            ruleIds[0][0] = ruleId;
+
+            RulesEnginePolicyFacet(address(red)).updatePolicy(
+                policyId,
+                callingFunctions,
+                ruleIds,
+                PolicyType.OPEN_POLICY,
+                policyName,
+                policyDescription
+            );
+        }
+
+        vm.stopPrank();
+
+        // Apply policy to user contract
+        {
+            vm.startPrank(callingContractAdmin);
+            uint256[] memory policyIds = new uint256[](1);
+            policyIds[0] = policyId;
+            RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+            vm.stopPrank();
+        }
+
+        // Verify mapping: 0x7654321 → 3 (array length)
+        {
+            bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+                policyId,
+                trackerIndex,
+                abi.encode(address(0x7654321))
+            );
+            assertEq(value, abi.encode(3));
+        }
+
+        // address 0x7654321 maps to array length 3, condition should pass
+        {
+            vm.startPrank(userContractAddress);
+            bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 3);
+            vm.startSnapshotGas("MappedTrackerArray_StaticType_Positive");
+            RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+            vm.stopSnapshotGas();
+            vm.stopPrank();
+        }
+
+        // Test rule evaluation tracker update: TRUM should update tracker during rule execution
+        {
+            // First verify current tracker value
+            bytes memory currentValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+                policyId,
+                trackerIndex,
+                abi.encode(address(0x1234567))
+            );
+            assertEq(currentValue, abi.encode(5), "Initial tracker value should be 5");
+
+            // Execute rule that will update tracker via TRUM effect
+            vm.startPrank(userContractAddress);
+            // Call with address 0x1234567 and new array length 10 - TRUM should update tracker
+            bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x1234567), 10);
+            RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+            vm.stopPrank();
+
+            // Verify tracker was updated by TRUM during rule evaluation
+            bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+                policyId,
+                trackerIndex,
+                abi.encode(address(0x1234567))
+            );
+            assertEq(updatedValue, abi.encode(10), "TRUM should have updated tracker value to 10");
+        }
+
+        // Test manual tracker update to verify array tracker can be updated
+        {
+            vm.startPrank(policyAdmin);
+            Trackers memory manualTracker;
+            manualTracker.mapped = true;
+            manualTracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+            manualTracker.trackerKeyType = ParamTypes.ADDR;
+
+            bytes memory trackerKey = abi.encode(address(0x7654321));
+            bytes memory trackerValue = abi.encode(7); // Update to array length 7
+            RulesEngineComponentFacet(address(red)).updateTracker(policyId, trackerIndex, manualTracker, trackerKey, trackerValue);
+            vm.stopPrank();
+        }
+
+        {
+            bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+                policyId,
+                trackerIndex,
+                abi.encode(address(0x7654321))
+            );
+            assertEq(value, abi.encode(7), "Manual update should store new array length");
+        }
+    }
+
+    function testRulesEngine_Unit_MappedTrackerArray_DynamicType() public ifDeploymentTestsEnabled resetsGlobalVariables {
+        uint256 policyId = _createBlankPolicy();
+
+        // Create tracker struct for uint→dynamic array mapping
+        Trackers memory tracker;
+        tracker.mapped = true;
+        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY; // tracker stores dynamic array values
+        tracker.trackerKeyType = ParamTypes.UINT; // keys are uints
+
+        // Create tracker key arrays (uint keys)
+        bytes[] memory trackerKeys = new bytes[](2);
+        trackerKeys[0] = abi.encode(1); // key 1
+        trackerKeys[1] = abi.encode(2); // key 2
+
+        // Create tracker value arrays (dynamic array values - storing array lengths)
+        bytes[] memory trackerValues = new bytes[](2);
+        trackerValues[0] = abi.encode(2); // value for key 1 (array length 2)
+        trackerValues[1] = abi.encode(4); // value for key 2 (array length 4)
+
+        // Create tracker name
+        string memory trackerName = "dynamicArrayTracker";
+
+        // Create mapped tracker directly with proper array type
+        vm.startPrank(policyAdmin);
+        uint256 trackerIndex = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyId,
+            tracker,
+            trackerName,
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.UINT_ARRAY
+        );
+        vm.stopPrank();
+
+        // Validate tracker
+        Trackers memory returnedTracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, trackerIndex);
+        assertTrue(returnedTracker.mapped);
+
+        // Set up a simple rule and policy for testing
+        vm.startPrank(policyAdmin);
+
+        uint256 ruleId;
+        {
+            // Create calling function
+            ParamTypes[] memory pTypes = new ParamTypes[](3);
+            pTypes[0] = ParamTypes.ADDR;
+            pTypes[1] = ParamTypes.UINT;
+            pTypes[2] = ParamTypes.UINT;
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyId,
+                bytes4(keccak256(bytes(callingFunction))),
+                pTypes,
+                callingFunction,
+                ""
+            );
+
+            // Create a rule that updates the mapped tracker using TRUM and always passes
+            Rule memory rule;
+            // Condition: always true (1 == 1)
+            rule.instructionSet = new uint256[](7);
+            rule.instructionSet[0] = uint256(LogicalOp.NUM);
+            rule.instructionSet[1] = 1;
+            rule.instructionSet[2] = uint256(LogicalOp.NUM);
+            rule.instructionSet[3] = 1;
+            rule.instructionSet[4] = uint256(LogicalOp.EQ);
+            rule.instructionSet[5] = 0;
+            rule.instructionSet[6] = 1;
+
+            // Create positive effect placeholders for the TRUM operation
+            rule.positiveEffectPlaceHolders = new Placeholder[](2);
+            // First placeholder: the array length value to store (function argument 1: uint256)
+            rule.positiveEffectPlaceHolders[0].pType = ParamTypes.UINT;
+            rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1; // 2nd argument (index 1) - the uint256 value
+            rule.positiveEffectPlaceHolders[0].flags = 0; // No special flags
+            // Second placeholder: the uint key for the mapping (function argument 2: uint256)
+            rule.positiveEffectPlaceHolders[1].pType = ParamTypes.UINT;
+            rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 2; // 3rd argument (index 2) - the uint256 key
+            rule.positiveEffectPlaceHolders[1].flags = 0; // No special flags
+
+            // Create positive effect that updates the mapped tracker using TRUM
+            rule.posEffects = new Effect[](1);
+            rule.posEffects[0].valid = true;
+            rule.posEffects[0].effectType = EffectTypes.EXPRESSION;
+
+            // TRUM instruction: PLH(value) PLH(key) TRUM trackerIndex valueIndex keyIndex TrackerType
+            rule.posEffects[0].instructionSet = new uint256[](9);
+            rule.posEffects[0].instructionSet[0] = uint256(LogicalOp.PLH); // Get array length value from placeholder
+            rule.posEffects[0].instructionSet[1] = 0; // Placeholder index 0 (array length value)
+            rule.posEffects[0].instructionSet[2] = uint256(LogicalOp.PLH); // Get uint key from placeholder
+            rule.posEffects[0].instructionSet[3] = 1; // Placeholder index 1 (uint key)
+            rule.posEffects[0].instructionSet[4] = uint256(LogicalOp.TRUM); // TRUM opcode
+            rule.posEffects[0].instructionSet[5] = trackerIndex; // Tracker index
+            rule.posEffects[0].instructionSet[6] = 0; // Value memory index
+            rule.posEffects[0].instructionSet[7] = 1; // Key memory index
+            rule.posEffects[0].instructionSet[8] = uint256(TrackerTypes.MEMORY); // Use memory values
+
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "testRule", "");
+        }
+
+        {
+            // Update policy with rule
+            bytes4[] memory callingFunctions = new bytes4[](1);
+            callingFunctions[0] = bytes4(keccak256(bytes(callingFunction)));
+            uint256[][] memory ruleIds = new uint256[][](1);
+            ruleIds[0] = new uint256[](1);
+            ruleIds[0][0] = ruleId;
+
+            RulesEnginePolicyFacet(address(red)).updatePolicy(
+                policyId,
+                callingFunctions,
+                ruleIds,
+                PolicyType.OPEN_POLICY,
+                policyName,
+                policyDescription
+            );
+        }
+
+        vm.stopPrank();
+
+        // Apply policy to user contract
+        {
+            vm.startPrank(callingContractAdmin);
+            uint256[] memory policyIds = new uint256[](1);
+            policyIds[0] = policyId;
+            RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+            vm.stopPrank();
+        }
+
+        // 1 → 2 (array length)
+        {
+            bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, abi.encode(1));
+            assertEq(value, abi.encode(2));
+        }
+
+        // key 1 maps to array length 2, condition should pass
+        {
+            vm.startPrank(userContractAddress);
+            bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 2, 1);
+            vm.startSnapshotGas("MappedTrackerArray_DynamicType_Positive");
+            RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+            vm.stopSnapshotGas();
+            vm.stopPrank();
+        }
+
+        // Test rule evaluation tracker update: TRUM should update tracker during rule execution
+        {
+            // First verify current tracker value for key 2
+            bytes memory currentValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+                policyId,
+                trackerIndex,
+                abi.encode(2)
+            );
+            assertEq(currentValue, abi.encode(4), "Initial tracker value for key 2 should be 4");
+
+            // Execute rule that will update tracker via TRUM effect
+            vm.startPrank(userContractAddress);
+            // Call with new array length 8 and key 2 - TRUM should update tracker
+            bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 8, 2);
+            RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+            vm.stopPrank();
+
+            // Verify tracker was updated by TRUM during rule evaluation
+            bytes memory updatedValue = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(
+                policyId,
+                trackerIndex,
+                abi.encode(2)
+            );
+            assertEq(updatedValue, abi.encode(8), "TRUM should have updated tracker value to 8");
+        }
+
+        // Test manual tracker update to verify array tracker can be updated
+        {
+            vm.startPrank(policyAdmin);
+            Trackers memory manualTracker;
+            manualTracker.mapped = true;
+            manualTracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+            manualTracker.trackerKeyType = ParamTypes.UINT;
+
+            bytes memory trackerKey = abi.encode(1);
+            bytes memory trackerValue = abi.encode(6); // Update to array length 6
+            RulesEngineComponentFacet(address(red)).updateTracker(policyId, trackerIndex, manualTracker, trackerKey, trackerValue);
+            vm.stopPrank();
+        }
+
+        {
+            bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, abi.encode(1));
+            assertEq(value, abi.encode(6), "Manual update should store new array length");
+        }
     }
 }
