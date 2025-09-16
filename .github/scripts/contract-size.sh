@@ -6,7 +6,7 @@ NC='\033[0m' # No Color
 # Helper script for running the contract-size workflow
 
 # Run the command and capture output
-output=$(forge build --sizes)
+output=$(forge build --sizes src/)
 should_fail="false"
 # Process the output: remove commas, truncate to 69 chars, and loop through lines
 while IFS= read -r line; do
