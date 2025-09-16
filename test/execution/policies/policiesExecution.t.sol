@@ -43,19 +43,22 @@ abstract contract policiesExecution is RulesEngineCommon {
         vm.stopPrank();
 
         uint256[] memory appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[0]);
-        assertEq(appliedPolicies.length, 2);
-        assertEq(appliedPolicies[0], policyIds[1]);
-        assertEq(appliedPolicies[1], policyIds[2]);
+        assertEq(appliedPolicies.length, 3);
+        assertEq(appliedPolicies[0], policyIds[0]);
+        assertEq(appliedPolicies[1], policyIds[1]);
+        assertEq(appliedPolicies[2], policyIds[2]);
 
         appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[1]);
-        assertEq(appliedPolicies.length, 2);
-        assertEq(appliedPolicies[0], policyIds[1]);
-        assertEq(appliedPolicies[1], policyIds[2]);
+        assertEq(appliedPolicies.length, 3);
+        assertEq(appliedPolicies[0], policyIds[0]);
+        assertEq(appliedPolicies[1], policyIds[1]);
+        assertEq(appliedPolicies[2], policyIds[2]);
 
         appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[2]);
-        assertEq(appliedPolicies.length, 2);
-        assertEq(appliedPolicies[0], policyIds[1]);
-        assertEq(appliedPolicies[1], policyIds[2]);
+        assertEq(appliedPolicies.length, 3);
+        assertEq(appliedPolicies[0], policyIds[0]);
+        assertEq(appliedPolicies[1], policyIds[1]);
+        assertEq(appliedPolicies[2], policyIds[2]);
     }
 
     function testRulesArrayStillFullAfterCallingFunctionDeletion() public ifDeploymentTestsEnabled resetsGlobalVariables {
@@ -758,7 +761,7 @@ abstract contract policiesExecution is RulesEngineCommon {
 
     function testRulesEngine_Unit_SubscriberLosesSubscription() public ifDeploymentTestsEnabled endWithStopPrank {
         // 1. Set up a simple policy with one rule
-        (uint256 policyId, uint256 ruleId) = setUpRuleSimple();
+        (uint256 policyId, ) = setUpRuleSimple();
         uint[] memory policyIds = new uint[](1);
         policyIds[0] = policyId;
         vm.startPrank(policyAdmin);
@@ -768,21 +771,18 @@ abstract contract policiesExecution is RulesEngineCommon {
         // 2. We apply the policy from another admin to a contract and we test that it works
         address anotherAdmin = address(0x007);
         vm.startPrank(anotherAdmin);
-        RulesEngineComponentFacet(address(red)).isClosedPolicySubscriber(policyIds[0], anotherAdmin);
-        RulesEnginePolicyFacet(address(red)).createPolicy(PolicyType.CLOSED_POLICY, policyName, policyDescription);
         ExampleUserContract userContract2 = new ExampleUserContract();
         userContract2.setRulesEngineAddress(address(red));
         userContract2.setCallingContractAdmin(anotherAdmin);
-
         RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract2), policyIds);
-        userContract2.transfer(address(0x123), transferValue);
+        userContract2.transfer(address(0x123), transferValue); // should go through
 
         // 3. We now close the policy and test that it no longer works
         vm.startPrank(policyAdmin);
         RulesEnginePolicyFacet(address(red)).closePolicy(policyIds[0]);
-        // vm.startPrank(anotherAdmin);
-        // vm.expectRevert("Not a policy subscriber");
-        // userContract2.transfer(address(0x123), transferValue);
+        vm.startPrank(anotherAdmin);
+        vm.expectRevert("Not a policy subscriber");
+        userContract2.transfer(address(0x123), transferValue);
 
         // 4. We now add such admin to the subscriber list and test that it works again
         vm.startPrank(policyAdmin);
