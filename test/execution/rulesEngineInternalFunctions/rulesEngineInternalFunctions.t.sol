@@ -1769,7 +1769,6 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         bytes memory vals = abi.encode(1);
         bytes[] memory retVals = new bytes[](0);
 
-        ForeignCallReturnValue memory result;
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](1);
         typeSpecificIndices[0].index = 0;

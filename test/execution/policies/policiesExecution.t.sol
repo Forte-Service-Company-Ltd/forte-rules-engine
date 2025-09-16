@@ -43,19 +43,22 @@ abstract contract policiesExecution is RulesEngineCommon {
         vm.stopPrank();
 
         uint256[] memory appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[0]);
-        assertEq(appliedPolicies.length, 2);
-        assertEq(appliedPolicies[0], policyIds[1]);
-        assertEq(appliedPolicies[1], policyIds[2]);
+        assertEq(appliedPolicies.length, 3);
+        assertEq(appliedPolicies[0], policyIds[0]);
+        assertEq(appliedPolicies[1], policyIds[1]);
+        assertEq(appliedPolicies[2], policyIds[2]);
 
         appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[1]);
-        assertEq(appliedPolicies.length, 2);
-        assertEq(appliedPolicies[0], policyIds[1]);
-        assertEq(appliedPolicies[1], policyIds[2]);
+        assertEq(appliedPolicies.length, 3);
+        assertEq(appliedPolicies[0], policyIds[0]);
+        assertEq(appliedPolicies[1], policyIds[1]);
+        assertEq(appliedPolicies[2], policyIds[2]);
 
         appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[2]);
-        assertEq(appliedPolicies.length, 2);
-        assertEq(appliedPolicies[0], policyIds[1]);
-        assertEq(appliedPolicies[1], policyIds[2]);
+        assertEq(appliedPolicies.length, 3);
+        assertEq(appliedPolicies[0], policyIds[0]);
+        assertEq(appliedPolicies[1], policyIds[1]);
+        assertEq(appliedPolicies[2], policyIds[2]);
     }
 
     function testRulesArrayStillFullAfterCallingFunctionDeletion() public ifDeploymentTestsEnabled resetsGlobalVariables {
@@ -879,5 +882,60 @@ abstract contract policiesExecution is RulesEngineCommon {
         assertTrue(denyListContract.getNaughty(deniedAddress1), "Denied address 1 should be on deny list");
         assertTrue(denyListContract.getNaughty(deniedAddress2), "Denied address 2 should be on deny list");
         assertFalse(denyListContract.getNaughty(allowedAddress), "Allowed address should not be on deny list");
+    }
+
+    function testRulesEngine_Unit_SubscriberLosesSubscription() public ifDeploymentTestsEnabled endWithStopPrank {
+        // 1. Set up a simple policy with one rule
+        (uint256 policyId, ) = setUpRuleSimple();
+        uint[] memory policyIds = new uint[](1);
+        policyIds[0] = policyId;
+        vm.startPrank(policyAdmin);
+        // we open the policy
+        RulesEnginePolicyFacet(address(red)).openPolicy(policyIds[0]);
+
+        // 2. We apply the policy from another admin to a contract and we test that it works
+        address anotherAdmin = address(0x007);
+        vm.startPrank(anotherAdmin);
+        ExampleUserContract userContract2 = new ExampleUserContract();
+        userContract2.setRulesEngineAddress(address(red));
+        userContract2.setCallingContractAdmin(anotherAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract2), policyIds);
+        userContract2.transfer(address(0x123), transferValue); // should go through
+
+        // 3. We now close the policy and test that it no longer works
+        vm.startPrank(policyAdmin);
+        RulesEnginePolicyFacet(address(red)).closePolicy(policyIds[0]);
+        vm.startPrank(anotherAdmin);
+        vm.expectRevert("Not a policy subscriber");
+        userContract2.transfer(address(0x123), transferValue);
+
+        // 4. We now add such admin to the subscriber list and test that it works again
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyId, anotherAdmin);
+        vm.startPrank(anotherAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract2), policyIds);
+        userContract2.transfer(address(0x123), transferValue);
+
+        // 5. we remove the admin from the subscriber list and test that it no longer works, yet again
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).removeClosedPolicySubscriber(policyId, anotherAdmin);
+        vm.expectRevert("Not a policy subscriber");
+        userContract2.transfer(address(0x123), transferValue);
+
+        // 6. now we test that transferring the role is not a loophole
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyId, anotherAdmin);
+        userContract2.transfer(address(0x123), transferValue); // we check that this works before transferring the role
+        vm.startPrank(anotherAdmin);
+        RulesEngineAdminRolesFacet(address(red)).proposeNewCallingContractAdmin(address(userContract2), address(0xc0c0));
+        vm.startPrank(address(0xc0c0));
+        RulesEngineAdminRolesFacet(address(red)).confirmNewCallingContractAdmin(address(userContract2));
+        vm.startPrank(address(0xb0b)); // bob is just a random user we add to test that the msg sender has nothing to do here
+        vm.expectRevert("Not a policy subscriber"); // Coco is not in a subscriber yet, so this should fail
+        userContract2.transfer(address(0x7654321), transferValue);
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyId, address(0xc0c0));
+        vm.startPrank(address(0xb0b)); // bob is just a random user we add to test that the msg sender has nothing to do here
+        userContract2.transfer(address(0x7654321), transferValue); // this should work now since Coco has been added to the subscriber list
     }
 }
