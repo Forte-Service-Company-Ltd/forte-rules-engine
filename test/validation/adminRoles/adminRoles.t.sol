@@ -712,6 +712,12 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         assertTrue(
             RulesEngineAdminRolesFacet(address(red)).isForeignCallAdmin(address(permissionedForeignCallContract), oldAdmin, selector)
         );
+        address[] memory admins = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(
+            address(permissionedForeignCallContract),
+            selector
+        );
+        assertEq(admins.length, 1, "Permission list should initially have the oldAdmin only");
+        assertEq(admins[0], oldAdmin, "Permission list should initially have the oldAdmin address only");
 
         // oldAdmin can add permissions
         RulesEngineForeignCallFacet(address(red)).addAdminToPermissionList(
@@ -719,6 +725,10 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
             address(0x3333),
             selector
         );
+        admins = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(address(permissionedForeignCallContract), selector);
+        assertEq(admins.length, 2, "admin list length mismatch");
+        assertEq(admins[0], oldAdmin, "Permission list should have the oldAdmin address at position zero");
+        assertEq(admins[1], address(0x3333), "Permission list should contain the newly added address");
 
         vm.stopPrank();
 
@@ -755,6 +765,12 @@ abstract contract adminRoles is RulesEngineCommon, RulesEngineAdminRolesFacet {
         // test oldAdmin lost permissions
         vm.stopPrank();
         vm.startPrank(oldAdmin);
+
+        // test that the admin list has been updated accordingly
+        admins = RulesEngineForeignCallFacet(address(red)).getForeignCallPermissionList(address(permissionedForeignCallContract), selector);
+        assertEq(admins.length, 2, "admin list length mismatch");
+        assertEq(admins[0], newAdmin, "Permission list should now have the newAdmin address");
+        assertEq(admins[1], address(0x3333), "Permission list should still contain the added address");
 
         // oldAdmin can no longer update foreign calls due to storage mapping change
         fc.returnType = ParamTypes.BOOL;
