@@ -443,7 +443,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         if (policyStorageSet.policy.policyType == PolicyType.CLOSED_POLICY) {
             CallingContractAdminStorage storage callingContractAdminData = lib._getCallingContractAdminStorage();
             address callingContractAdmin = callingContractAdminData.callingContractToAdmin[msg.sender];
-            if (!policyStorageSet.policy.closedPolicySubscribers[callingContractAdmin]) revert(NOT_POLICY_SUSBSCRIBER);
+            if (!policyStorageSet.policy.closedPolicySubscribers[callingContractAdmin]) revert(NOT_POLICY_SUBSCRIBER);
         }
 
         mapping(uint256 ruleId => RuleStorageSet) storage ruleData = lib._getRuleStorage().ruleStorageSets[_policyId];
