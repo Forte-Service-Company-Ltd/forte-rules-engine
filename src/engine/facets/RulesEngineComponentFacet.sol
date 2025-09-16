@@ -351,22 +351,24 @@ contract RulesEngineComponentFacet is FacetCommonImports {
      * @param _policyId The policy ID the tracker is associated with.
      * @param _trackerIndex The index of the tracker to update.
      * @param _tracker The updated tracker data.
-     * @param _trackerKey The keys for the tracker mapping.
-     * @param _trackerValue The values for the tracker mapping.
+     * @param _trackerKeys The keys for the tracker mapping.
+     * @param _trackerValues The values for the tracker mapping.
      */
     function updateTracker(
         uint256 _policyId,
         uint256 _trackerIndex,
         Trackers calldata _tracker,
-        bytes calldata _trackerKey,
-        bytes calldata _trackerValue
+        bytes[] calldata _trackerKeys,
+        bytes[] calldata _trackerValues
     ) external {
         _policyAdminOnly(_policyId, msg.sender);
         _notCemented(_policyId);
         // Load the Tracker data from storage
-        TrackerStorage storage data = lib._getTrackerStorage();
         if (!StorageLib._isTrackerSet(_policyId, _trackerIndex)) revert(TRACKER_NOT_SET);
-        _storeTrackerMapping(data, _policyId, _trackerIndex, _tracker, _trackerKey, _trackerValue);
+        for (uint256 i = 0; i < _trackerKeys.length; i++) {
+            // Step 2: Store tracker data
+            _storeTrackerData(_policyId, _trackerIndex, _tracker, _trackerKeys[i], _trackerValues[i]);
+        }
         emit TrackerUpdated(_policyId, _trackerIndex);
     }
 
