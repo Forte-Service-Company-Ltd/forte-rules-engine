@@ -1182,7 +1182,7 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         fc.signature = PermissionedForeignCallTestContract.simpleCheck.selector;
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
         // Add the rule to the policy and apply the policy to the userContract
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
