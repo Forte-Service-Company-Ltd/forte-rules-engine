@@ -21,8 +21,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     uint8 constant GLOBAL_BLOCK_NUMBER = 4;
     uint8 constant GLOBAL_TX_ORIGIN = 5;
 
-    string public constant version = "v0.4.0";
-
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
     // Rule Evaluation Functions
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -63,6 +61,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         ForeignCall memory foreignCall = lib._getForeignCallStorage().foreignCalls[policyId][foreignCallIndex];
         if (foreignCall.set) {
             retVal = evaluateForeignCallForRule(foreignCall, callingFunctionArgs, retVals, metadata, policyId);
+        } else {
+            revert(FOREIGN_CALL_NOT_SET);
         }
     }
 
@@ -1045,8 +1045,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 string memory textParam = abi.decode(effectArguments[i], (string));
                 emit RulesEngineEvent(_policyId, _message, textParam);
             } else if (placeholders[i].pType == ParamTypes.BYTES) {
-                bytes32 bytesParam = abi.decode(effectArguments[i], (bytes32));
-                emit RulesEngineEvent(_policyId, _message, bytesParam);
+                bytes memory bytesParam = abi.decode(effectArguments[i], (bytes));
+                emit RulesEngineEvent(_policyId, _message, keccak256(bytesParam));
             }
         }
     }

@@ -556,7 +556,12 @@ abstract contract policiesExecution is RulesEngineCommon {
         transferFc.returnType = ParamTypes.UINT;
         transferFc.foreignCallIndex = 1;
 
-        transferFcId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, transferFc, "getNaughty(address)");
+        transferFcId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            transferFc,
+            "getNaughty(address)",
+            "getNaughty(address)"
+        );
 
         // foreign call for transferFrom function - checks if 'to' address (parameter 1) is denied
         ParamTypes[] memory transferFromFcArgs = new ParamTypes[](1);
@@ -572,7 +577,12 @@ abstract contract policiesExecution is RulesEngineCommon {
         transferFromFc.returnType = ParamTypes.UINT;
         transferFromFc.foreignCallIndex = 2;
 
-        transferFromFcId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, transferFromFc, "getNaughty(address)");
+        transferFromFcId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            transferFromFc,
+            "getNaughty(address)",
+            "getNaughty(address)"
+        );
     }
 
     function _createOFACRules(

@@ -2534,7 +2534,7 @@ abstract contract trackers is RulesEngineCommon {
         foreignCall.encodedIndices[1].eType = EncodedIndexType.TRACKER;
         foreignCall.encodedIndices[1].index = 2;
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], foreignCall, "testSig");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], foreignCall, "testSig", "testSig(uint256,uint256)");
 
         ForeignCall memory foreignCall2;
         foreignCall2.signature = bytes4(keccak256(bytes("testSig(uint256,uint256)")));
@@ -2549,7 +2549,7 @@ abstract contract trackers is RulesEngineCommon {
         foreignCall2.encodedIndices[1].eType = EncodedIndexType.TRACKER;
         foreignCall2.encodedIndices[1].index = 2;
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], foreignCall2, "testSig2");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], foreignCall2, "testSig2", "testSig2(uint256,uint256)");
 
         Rule memory rule;
         // PLH 2, NUM 1234, EQ 0, 1, PLH 3, NUM 1234, EQ 4, 5, AND 3, 6

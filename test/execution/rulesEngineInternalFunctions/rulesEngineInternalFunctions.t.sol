@@ -7,7 +7,6 @@ import {RulesEngineProcessorLib as ProcessorLib} from "src/engine/facets/RulesEn
 import {RulesEngineProcessorFacet as ProcessorFacet} from "src/engine/facets/RulesEngineProcessorFacet.sol";
 import "test/utils/TestProcessorFacet.sol";
 
-
 abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
     ExampleUserContract userContractInternal;
     ExampleUserContractExtraParams userContractInternal2;
@@ -1044,7 +1043,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.signature = bytes4(keccak256(bytes("square(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "square(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "square(uint256)", "square(uint256)");
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -1842,6 +1841,6 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         cmds[2] = "console.log(require('./package.json').version)";
         bytes memory out = vm.ffi(cmds);
         string memory version = string(abi.encodePacked("v", out));
-        assertEq(RulesEngineProcessorFacet(address(red)).version(), version);
+        assertEq(RulesEnginePolicyFacet(address(red)).version(), version);
     }
 }

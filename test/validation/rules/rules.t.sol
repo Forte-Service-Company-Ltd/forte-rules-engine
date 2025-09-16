@@ -658,7 +658,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setMsgData(bytes)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setMsgData(bytes)",
+                    "setMsgData(bytes memory data)"
+                );
             }
 
             // Effect for the foreign call
@@ -748,12 +753,7 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSignature(
-                "transferFrom(address,uint256,bytes)",
-                to,
-                value,
-                abi.encode("TESTER")
-            );
+            bytes memory transferCalldata = abi.encodeWithSignature("transferFrom(address,uint256,bytes)", to, value, abi.encode("TESTER"));
 
             RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
 
@@ -789,7 +789,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setMsgData(bytes)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setMsgData(bytes)",
+                    "setMsgData(bytes memory data)"
+                );
             }
 
             // Effect for the foreign call
@@ -877,12 +882,7 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSignature(
-                "transferFrom(address,uint256,bytes)",
-                to,
-                value,
-                abi.encode("TESTER")
-            );
+            bytes memory transferCalldata = abi.encodeWithSignature("transferFrom(address,uint256,bytes)", to, value, abi.encode("TESTER"));
 
             RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
 
@@ -891,6 +891,102 @@ abstract contract rules is RulesEngineCommon {
             bytes4 checkPoliciesSelector = RulesEngineProcessorFacet(address(red)).checkPolicies.selector;
             bytes memory expectedMsgData = abi.encodeWithSelector(checkPoliciesSelector, transferCalldata);
             assertEq(actualMsgData, expectedMsgData, "Foreign call should set msgData to the ABI-encoded checkPolicies(bytes) calldata");
+            vm.stopPrank();
+        }
+    }
+
+    function testRulesEngine_Unit_ForeignCall_DynamicBytesEvent() public ifDeploymentTestsEnabled resetsGlobalVariables {
+        uint256 policyId;
+        uint256 ruleId;
+
+        {
+            vm.startPrank(policyAdmin);
+            policyId = _createBlankPolicy();
+
+            // Create a dynamic event effect
+            Effect memory eventEffect;
+            eventEffect.valid = true;
+            eventEffect.dynamicParam = true; // make it use _fireDynamicEvent
+            eventEffect.effectType = EffectTypes.EVENT;
+            eventEffect.pType = ParamTypes.VOID;
+            eventEffect.param = "";
+            eventEffect.text = 0x52756c657320456e67696e65204576656e740000000000000000000000000000; // "Rules Engine Event"
+            eventEffect.errorMessage = "";
+            eventEffect.instructionSet = new uint256[](0);
+
+            Rule memory rule;
+            rule.instructionSet = new uint256[](2);
+            rule.instructionSet[0] = uint(LogicalOp.NUM);
+            rule.instructionSet[1] = 1; // Always true
+
+            rule.placeHolders = new Placeholder[](1);
+            rule.placeHolders[0].pType = ParamTypes.BYTES;
+            rule.placeHolders[0].typeSpecificIndex = 2; // Third parameter (bytes)
+            rule.placeHolders[0].flags = 0;
+
+            rule.positiveEffectPlaceHolders = new Placeholder[](1);
+            rule.positiveEffectPlaceHolders[0].pType = ParamTypes.BYTES;
+            rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 2; // Third parameter (bytes)
+            rule.positiveEffectPlaceHolders[0].flags = 0;
+
+            rule.negativeEffectPlaceHolders = new Placeholder[](0);
+            rule.negEffects = new Effect[](0);
+            rule.posEffects = new Effect[](1);
+            rule.posEffects[0] = eventEffect;
+
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
+
+            {
+                bytes4 transferSelector = bytes4(keccak256(bytes("transferFrom(address,uint256,bytes)")));
+                ParamTypes[] memory pTypes = new ParamTypes[](3);
+                pTypes[0] = ParamTypes.ADDR;
+                pTypes[1] = ParamTypes.UINT;
+                pTypes[2] = ParamTypes.BYTES;
+                RulesEngineComponentFacet(address(red)).createCallingFunction(
+                    policyId,
+                    transferSelector,
+                    pTypes,
+                    "transferFrom(address,uint256,bytes)",
+                    ""
+                );
+
+                bytes4[] memory selectors = new bytes4[](1);
+                selectors[0] = transferSelector;
+                uint256[][] memory ruleIdsArr = new uint256[][](1);
+                ruleIdsArr[0] = new uint256[](1);
+                ruleIdsArr[0][0] = ruleId;
+                RulesEnginePolicyFacet(address(red)).updatePolicy(
+                    policyId,
+                    selectors,
+                    ruleIdsArr,
+                    PolicyType.CLOSED_POLICY,
+                    policyName,
+                    policyDescription
+                );
+            }
+
+            {
+                uint256[] memory policyIds = new uint256[](1);
+                policyIds[0] = policyId;
+                vm.stopPrank();
+                vm.startPrank(callingContractAdmin);
+                RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+                vm.stopPrank();
+            }
+        }
+
+        {
+            vm.startPrank(userContractAddress);
+            address to = address(0xBEEF);
+            uint256 value = 42;
+            bytes memory testBytes = abi.encode("TESTER");
+            bytes memory transferCalldata = abi.encodeWithSignature("transferFrom(address,uint256,bytes)", to, value, testBytes);
+
+            // Expect the RulesEngineEvent with keccak256(testBytes) as the bytes32 param
+            vm.expectEmit(true, true, true, false);
+            emit RulesEngineEvent(policyId, bytes32("Rules Engine Event"), keccak256(testBytes));
+
+            RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
             vm.stopPrank();
         }
     }
@@ -920,7 +1016,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setUserAddress(address)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setUserAddress(address)",
+                    "setUserAddress(address user)"
+                );
             }
 
             Rule memory rule;
@@ -991,12 +1092,7 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSignature(
-                "transferFrom(address,uint256,bytes)",
-                to,
-                value,
-                abi.encode("TESTER")
-            );
+            bytes memory transferCalldata = abi.encodeWithSignature("transferFrom(address,uint256,bytes)", to, value, abi.encode("TESTER"));
 
             RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
 
@@ -1031,7 +1127,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setNumber(uint256)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setNumber(uint256)",
+                    "setNumber(uint256 value)"
+                );
             }
 
             Rule memory rule;
@@ -1106,12 +1207,7 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSignature(
-                "transferFrom(address,uint256,bytes)",
-                to,
-                value,
-                abi.encode("TESTER")
-            );
+            bytes memory transferCalldata = abi.encodeWithSignature("transferFrom(address,uint256,bytes)", to, value, abi.encode("TESTER"));
 
             RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
 
@@ -1147,7 +1243,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setNumber(uint256)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setNumber(uint256)",
+                    "setNumber(uint256 value)"
+                );
             }
 
             Rule memory rule;
@@ -1222,12 +1323,7 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSignature(
-                "transferFrom(address,uint256,bytes)",
-                to,
-                value,
-                abi.encode("TESTER")
-            );
+            bytes memory transferCalldata = abi.encodeWithSignature("transferFrom(address,uint256,bytes)", to, value, abi.encode("TESTER"));
 
             RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
 
@@ -1263,7 +1359,12 @@ abstract contract rules is RulesEngineCommon {
                 fc.returnType = ParamTypes.BOOL;
                 fc.parameterTypes = fcParamTypes;
                 fc.encodedIndices = encodedIndices;
-                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "setUserAddress(address)");
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "setUserAddress(address)",
+                    "setUserAddress(address user)"
+                );
             }
 
             Rule memory rule;
@@ -1337,12 +1438,7 @@ abstract contract rules is RulesEngineCommon {
             vm.startPrank(userContractAddress, txOriginAddress);
             address to = address(0xBEEF);
             uint256 value = 42;
-            bytes memory transferCalldata = abi.encodeWithSignature(
-                "transferFrom(address,uint256,bytes)",
-                to,
-                value,
-                abi.encode("TESTER")
-            );
+            bytes memory transferCalldata = abi.encodeWithSignature("transferFrom(address,uint256,bytes)", to, value, abi.encode("TESTER"));
 
             RulesEngineProcessorFacet(address(red)).checkPolicies(transferCalldata);
 

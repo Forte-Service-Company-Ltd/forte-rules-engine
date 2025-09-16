@@ -496,7 +496,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
 
         vm.stopPrank();
         vm.startPrank(callingContractAdmin);
@@ -568,7 +568,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
 
         vm.stopPrank();
         vm.startPrank(callingContractAdmin);
@@ -691,7 +691,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -746,7 +746,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
 
         ForeignCall memory fc2;
         fc2.encodedIndices = new ForeignCallEncodedIndex[](1);
@@ -757,7 +757,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc2.signature = bytes4(keccak256(bytes("square(uint256)")));
         fc2.returnType = ParamTypes.UINT;
         fc2.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc2, "square(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc2, "square(uint256)", "square(uint256)");
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -821,7 +821,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.signature = bytes4(keccak256(bytes("square(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "square(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "square(uint256)", "square(uint256)");
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
@@ -858,7 +858,12 @@ contract RulesEngineCommon is DiamondMine, Test {
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
 
-        uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, fcSignature);
+        uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            fcSignature,
+            "transfer(address to, uint256 value)"
+        );
 
         rule.instructionSet = _createInstructionSet();
         // placeholder for foreign call we just created
@@ -932,7 +937,12 @@ contract RulesEngineCommon is DiamondMine, Test {
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
 
-        uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, fcSignature);
+        uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            fcSignature,
+            "transfer(address to, uint256 value)"
+        );
 
         rule.placeHolders = new Placeholder[](1);
         rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
@@ -994,7 +1004,12 @@ contract RulesEngineCommon is DiamondMine, Test {
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
-        uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, fcSignature);
+        uint foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            fcSignature,
+            "transfer(address to, uint256 value)"
+        );
 
         Rule memory rule;
         rule.instructionSet = _createInstructionSet();
@@ -1172,7 +1187,12 @@ contract RulesEngineCommon is DiamondMine, Test {
             fc.foreignCallAddress = address(nftContract);
             fc.signature = bytes4(keccak256(("safeMint(address)")));
             fc.returnType = ParamTypes.VOID;
-            fc.foreignCallIndex = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "safeMint(address)");
+            fc.foreignCallIndex = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                policyIds[0],
+                fc,
+                "safeMint(address)",
+                "safeMint(address to)"
+            );
             mintCallId = fc.foreignCallIndex;
         }
         uint256 banCallId;
@@ -1187,12 +1207,13 @@ contract RulesEngineCommon is DiamondMine, Test {
             fc.foreignCallAddress = address(testContract2);
             fc.signature = bytes4(keccak256(("addToNaughtyList(address)")));
             fc.returnType = ParamTypes.VOID;
-            fc.foreignCallIndex = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            fc.foreignCallIndex = 2;
+            banCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
                 policyIds[0],
                 fc,
-                "addToNaughtyList(address)"
+                "addToNaughtyList(address)",
+                "addToNaughtyList(address addr)"
             );
-            banCallId = fc.foreignCallIndex;
         }
 
         // Rule: amount > 1e18 -> mint -> transferFrom(address _from, address _to, uint256 amount) returns (bool)"
@@ -2431,7 +2452,7 @@ contract RulesEngineCommon is DiamondMine, Test {
     ) public {
         rule = _setUpEffect(rule, _effectType, isPositive);
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId[0], fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
 
         // update rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId[0], rule, ruleName, ruleDescription);
@@ -3196,7 +3217,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)", "simpleCheck(uint256 user)");
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicyOpen(policyIds[0], ruleIds);
@@ -3230,7 +3251,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.foreignCallAddress = address(testContract);
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
 
         // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
         Rule memory rule;
@@ -3287,7 +3308,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
         fc.returnType = ParamTypes.UINT;
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
         _addRuleIdsToPolicyOpen(policyIds[0], ruleIds);
@@ -3307,7 +3328,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(_policyId, fc, "simpleCheck(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(_policyId, fc, "simpleCheck(uint256)", "simpleCheck(uint256)");
         return fc;
     }
 
@@ -3324,7 +3345,12 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.returnType = ParamTypes.UINT;
         fc.foreignCallIndex = 0;
-        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(_policyId, fc, "simpleCheck(uint256)");
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            _policyId,
+            fc,
+            "simpleCheck(uint256)",
+            "simpleCheck(uint256)"
+        );
         return (fc, foreignCallId);
     }
 

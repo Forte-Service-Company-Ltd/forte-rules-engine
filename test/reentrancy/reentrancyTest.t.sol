@@ -95,12 +95,7 @@ contract ReentrancyTest is RulesEngineCommon {
         Trackers memory tracker;
         tracker.trackerValue = abi.encode(0);
         tracker.pType = ParamTypes.UINT;
-        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
-            policyIds[0],
-            tracker,
-            "trName",
-            TrackerArrayTypes.VOID
-        );
+        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
 
         rule.posEffects = new Effect[](1);
         rule.posEffects[0].instructionSet = _createTrackerUpdateInstructionSet();
@@ -158,7 +153,7 @@ contract ReentrancyTest is RulesEngineCommon {
         fc.signature = bytes4(keccak256(bytes("transfer(address,uint256)")));
         fc.returnType = ParamTypes.BOOL;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "fcName");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "fcName", "transfer(address,uint256)");
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
@@ -247,8 +242,8 @@ contract ReentrancyTest is RulesEngineCommon {
         fc.signature = bytes4(keccak256(bytes("transfer(address,uint256)")));
         fc.returnType = ParamTypes.BOOL;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "fcName");
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[1], fc, "fcName");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "fcName", "transfer(address,uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[1], fc, "fcName", "transfer(address,uint256)");
 
         ruleIds.push(new uint256[](1));
         ruleIds[0][0] = ruleId;
