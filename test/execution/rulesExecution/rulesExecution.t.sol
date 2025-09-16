@@ -816,6 +816,214 @@ abstract contract rulesExecution is RulesEngineCommon {
         assertTrue(response);
     }
 
+    function testRulesEngine_Unit_CallData_Array_To_ForeignCall_And_Back()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        // encode additional datas with the calling contract call into rules engine
+        //deploy ExampleUserContractEncoding
+        encodingContract = new ExampleUserContractEncoding();
+        encodingContract.setRulesEngineAddress(address(red));
+        encodingContract.setCallingContractAdmin(callingContractAdmin);
+        address encodingContractAddress = address(encodingContract);
+
+        // create new uint array for transfer data
+        bytes[] memory array = new bytes[](5);
+        array[0] = bytes("super");
+        array[1] = bytes("superduper");
+        array[2] = bytes("superduperduper");
+        array[3] = bytes("superduperduperduper");
+        array[4] = bytes("superduperduperduperduper");
+
+        encodingContract.writeNewDynamicArrayData(array);
+        // create rule that will handle additional params
+        Rule memory rule;
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        // Set up some effects.
+        _setupEffectProcessor();
+
+        /// Build the calling Function to include additional pTypes to match the data being passed in
+        ParamTypes[] memory pTypes = new ParamTypes[](4);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        pTypes[2] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        pTypes[3] = ParamTypes.ADDR;
+
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.PLH);
+        rule.instructionSet[1] = 2;
+        rule.instructionSet[2] = uint(LogicalOp.PLH);
+        rule.instructionSet[3] = uint256(3); // uint length of array to test that rule retreives uint array length correctly
+        rule.instructionSet[4] = uint(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        rule.placeHolders = new Placeholder[](4);
+        rule.placeHolders[0].pType = ParamTypes.ADDR;
+        rule.placeHolders[0].typeSpecificIndex = 0; // to address
+        rule.placeHolders[1].pType = ParamTypes.UINT;
+        rule.placeHolders[1].typeSpecificIndex = 1; // amount
+        rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[2].typeSpecificIndex = 2; // additional bytes32 param
+        rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
+        rule.placeHolders[3].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[3].typeSpecificIndex = 1; 
+
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+        //ForeignCall Builder not used here to test the data structures
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes("testSigWithArrayPassthrough(string[])")));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 2;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArrayPassthrough(string[])");
+
+        // Add a negative/positive effects
+        rule.negEffects = new Effect[](1);
+        rule.posEffects = new Effect[](1);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        // Save the calling Function
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyIds[0],
+            bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
+            pTypes,
+            callingFunctionArrayDynamic,
+            ""
+        );
+
+        _addRuleIdsToPolicy(policyIds[0], ruleIds);
+        // Save the Policy
+        callingFunctions.push(bytes4(keccak256(bytes(callingFunctionArrayDynamic))));
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = ruleId;
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyIds[0],
+            callingFunctions,
+            ruleIds,
+            PolicyType.CLOSED_POLICY,
+            policyName,
+            policyDescription
+        );
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(encodingContractAddress, policyIds);
+        // test rule processing
+        vm.startSnapshotGas("Additional_Encoding_DynamicArray_Value");
+        bool response = encodingContract.transferDynamicArray(address(0x1234567), 99);
+        vm.stopSnapshotGas();
+        assertTrue(response);
+    }
+
+    function testRulesEngine_Unit_CallData_Array_To_ForeignCall_And_Back_WithInternalSet()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        // encode additional datas with the calling contract call into rules engine
+        //deploy ExampleUserContractEncoding
+        encodingContract = new ExampleUserContractEncoding();
+        encodingContract.setRulesEngineAddress(address(red));
+        encodingContract.setCallingContractAdmin(callingContractAdmin);
+        address encodingContractAddress = address(encodingContract);
+
+        // create new uint array for transfer data
+        bytes[] memory array = new bytes[](5);
+        array[0] = bytes("super");
+        array[1] = bytes("superduper");
+        array[2] = bytes("superduperduper");
+        array[3] = bytes("superduperduperduper");
+        array[4] = bytes("superduperduperduperduper");
+
+        encodingContract.writeNewDynamicArrayData(array);
+        // create rule that will handle additional params
+        Rule memory rule;
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        // Set up some effects.
+        _setupEffectProcessor();
+
+        /// Build the calling Function to include additional pTypes to match the data being passed in
+        ParamTypes[] memory pTypes = new ParamTypes[](4);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        pTypes[2] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        pTypes[3] = ParamTypes.ADDR;
+
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.PLH);
+        rule.instructionSet[1] = 2;
+        rule.instructionSet[2] = uint(LogicalOp.PLH);
+        rule.instructionSet[3] = uint256(3); // uint length of array to test that rule retreives uint array length correctly
+        rule.instructionSet[4] = uint(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        rule.placeHolders = new Placeholder[](4);
+        rule.placeHolders[0].pType = ParamTypes.ADDR;
+        rule.placeHolders[0].typeSpecificIndex = 0; // to address
+        rule.placeHolders[1].pType = ParamTypes.UINT;
+        rule.placeHolders[1].typeSpecificIndex = 1; // amount
+        rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[2].typeSpecificIndex = 2; // additional bytes32 param
+        rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
+        rule.placeHolders[3].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[3].typeSpecificIndex = 1; 
+
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+        //ForeignCall Builder not used here to test the data structures
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes("testSigWithArraySetInternally(string[])")));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 2;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternally(string[])");
+
+        // Add a negative/positive effects
+        rule.negEffects = new Effect[](1);
+        rule.posEffects = new Effect[](1);
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        // Save the calling Function
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyIds[0],
+            bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
+            pTypes,
+            callingFunctionArrayDynamic,
+            ""
+        );
+
+        _addRuleIdsToPolicy(policyIds[0], ruleIds);
+        // Save the Policy
+        callingFunctions.push(bytes4(keccak256(bytes(callingFunctionArrayDynamic))));
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = ruleId;
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyIds[0],
+            callingFunctions,
+            ruleIds,
+            PolicyType.CLOSED_POLICY,
+            policyName,
+            policyDescription
+        );
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(encodingContractAddress, policyIds);
+        // test rule processing
+        vm.startSnapshotGas("Additional_Encoding_DynamicArray_Value");
+        bool response = encodingContract.transferDynamicArray(address(0x1234567), 99);
+        vm.stopSnapshotGas();
+        assertTrue(response);
+    }
+
     function testRulesEngine_Unit_TestContractEncoding_AdditionalParamsEncoded_DynamicArrayRuleValue()
         public
         ifDeploymentTestsEnabled

@@ -112,6 +112,30 @@ contract ForeignCallTestContract {
         return true;
     }
 
+    function testSigWithArrayPassthrough(string[] memory encodedArray) public returns (string[] memory) {        
+        return encodedArray;
+    }
+
+    function testSigWithArraySetInternally(string[] memory encodedArray) public returns (string[] memory) {
+        string[] memory array = new string[](5);
+        array[0] = ("super");
+        array[1] = ("superduper");
+        array[2] = ("superduperduper");
+        array[3] = ("superduperduperduper");
+        array[4] = ("superduperduperduperduper");
+        return array;
+    }
+
+    function testSigWithArraySetInternallyNoArg(uint256 x) public returns (string[] memory) {
+        string[] memory array = new string[](5);
+        array[0] = ("super");
+        array[1] = ("superduper");
+        array[2] = ("superduperduper");
+        array[3] = ("superduperduperduper");
+        array[4] = ("superduperduperduperduper");
+        return array;
+    }
+
     function testSigWithArray(string[] memory encodedArray, string[] memory encodedArrayTwo) public returns (bool) {
         for (uint256 i = 0; i < encodedArray.length; i++) {
             internalArrayStr.push(encodedArray[i]);

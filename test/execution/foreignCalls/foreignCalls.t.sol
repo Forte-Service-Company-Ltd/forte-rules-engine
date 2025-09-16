@@ -66,6 +66,15 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         vm.stopSnapshotGas();
     }
 
+    function testRulesEngine_Unit_createRule_ForeignCall_ForeignCallReferencedDynamicArrays_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
+        setupRuleWithForeignCallWithArrayToAnotherForeignCall(EffectTypes.REVERT, false);
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 2); // rule's lower limit is 2
+        vm.startSnapshotGas("checkRule_ForeignCall_ForeignCallDynamicArrayReferenced");
+        vm.startPrank(address(userContract));
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+        vm.stopSnapshotGas();
+    }
+
     function testRulesEngine_Unit_createRule_ForeignCall_ForeignCallReferenced_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
         setupRuleWithForeignCallWithSquaredFCValues(EffectTypes.REVERT, false);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 0);

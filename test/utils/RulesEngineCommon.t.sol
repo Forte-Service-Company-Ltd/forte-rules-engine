@@ -771,6 +771,77 @@ contract RulesEngineCommon is DiamondMine, Test {
         return policyIds[0];
     }
 
+    // Same as setupRuleWithForeignCall except that it contains a foreign call that returns an array that is referenced by another foreign call 
+    function setupRuleWithForeignCallWithArrayToAnotherForeignCall(
+        EffectTypes _effectType,
+        bool isPositive
+    ) public ifDeploymentTestsEnabled endWithStopPrank resetsGlobalVariables returns (uint256 policyId) {
+        uint256[] memory policyIds = new uint256[](1);
+
+        policyIds[0] = _createBlankPolicy();
+
+        _addCallingFunctionToPolicy(policyIds[0]);
+
+        // Rule: FC:simpleCheck(amount) > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
+        Rule memory rule;
+        // Build the foreign call placeholder
+        rule.placeHolders = new Placeholder[](2);
+        rule.placeHolders[0].flags = FLAG_FOREIGN_CALL;
+        rule.placeHolders[0].typeSpecificIndex = 1;
+        rule.placeHolders[1].flags = FLAG_FOREIGN_CALL;
+        rule.placeHolders[1].typeSpecificIndex = 2;
+
+        uint256[] memory instructionSet = new uint256[](7);
+        instructionSet[0] = uint(LogicalOp.PLH);
+        instructionSet[1] = 1;
+        instructionSet[2] = uint(LogicalOp.PLH);
+        instructionSet[3] = 0;
+        instructionSet[4] = uint(LogicalOp.EQ);
+        instructionSet[5] = 0;
+        instructionSet[6] = 1;
+        // Build the instruction set for the rule (including placeholders)
+        rule.instructionSet = instructionSet;
+        
+        rule = _setUpEffect(rule, _effectType, isPositive);
+
+        ForeignCallTestContract foreignCall = new ForeignCallTestContract();
+        //ForeignCall Builder not used here to test the data structures
+        ForeignCall memory fc;
+        fc.foreignCallAddress = address(foreignCall);
+        fc.signature = bytes4(keccak256(bytes("testSigWithArraySetInternallyNoArg(uint256)")));
+        fc.parameterTypes = new ParamTypes[](1);
+        fc.parameterTypes[0] = ParamTypes.UINT;
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 1;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+        fc.foreignCallIndex = 0;
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternallyNoArg(uint256)");
+
+        ForeignCallTestContract foreignCall2 = new ForeignCallTestContract();
+        ForeignCall memory fc2;
+        fc2.foreignCallAddress = address(foreignCall2);
+        fc2.signature = bytes4(keccak256(bytes("testSigWithArrayPassthrough(string[])")));
+        fc2.parameterTypes = new ParamTypes[](1);
+        fc2.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc2.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc2.encodedIndices[0].index = 1;
+        fc2.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
+        fc2.foreignCallIndex = 0;
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc2, "testSigWithArrayPassthrough(string[])");
+
+        // Save the rule
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        ruleIds.push(new uint256[](1));
+        ruleIds[0][0] = ruleId;
+        _addRuleIdsToPolicy(policyIds[0], ruleIds);
+        vm.stopPrank();
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+
+        return policyIds[0];
+    }
+
     // Same as setupRuleWithForeignCall except that it contais a tracker value that is then squared by the foreign call and then checked to see if it's greater than the tracker value
     function setupRuleWithForeignCallSquaringReferencedTrackerVals(
         uint256 _amount,
