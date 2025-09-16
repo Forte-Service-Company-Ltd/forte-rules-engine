@@ -439,6 +439,10 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     function _checkPolicy(uint256 _policyId, bytes calldata _arguments) internal returns (bool retVal) {
         // Load the policy data from storage
         PolicyStorageSet storage policyStorageSet = lib._getPolicyStorage().policyStorageSets[_policyId];
+        address policyAdmin = lib._getPolicyAdminStorage().policyIdToPolicyAdmin[_policyId];
+        if (policyStorageSet.policy.policyType == PolicyType.CLOSED_POLICY && !policyStorageSet.policy.closedPolicySubscribers[policyAdmin])
+            revert(NOT_POLICY_SUSBSCRIBER);
+
         mapping(uint256 ruleId => RuleStorageSet) storage ruleData = lib._getRuleStorage().ruleStorageSets[_policyId];
 
         // Retrieve placeHolder[] for specific rule to be evaluated and translate function signature argument array
