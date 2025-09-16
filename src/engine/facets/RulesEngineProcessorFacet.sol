@@ -429,9 +429,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
 
         return (encodedCall, lengthToAppend, dynamicData);
     }
-    event Log(string, uint);
-    event Log(string, bool);
-    event Log(string, address);
+
     /**
      * @notice Checks a specific policy for compliance.
      * @param _policyId The ID of the policy to check.
@@ -441,12 +439,10 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     function _checkPolicy(uint256 _policyId, bytes calldata _arguments) internal returns (bool retVal) {
         // Load the policy data from storage
         PolicyStorageSet storage policyStorageSet = lib._getPolicyStorage().policyStorageSets[_policyId];
-        emit Log("policyType", uint(policyStorageSet.policy.policyType));
         // if this is a closed policy, then we check that the calling contract admin is a verified subscriber
         if (policyStorageSet.policy.policyType == PolicyType.CLOSED_POLICY) {
             CallingContractAdminStorage storage callingContractAdminData = lib._getCallingContractAdminStorage();
             address callingContractAdmin = callingContractAdminData.callingContractToAdmin[msg.sender];
-            emit Log("policyType", uint(policyStorageSet.policy.policyType));
             if (!policyStorageSet.policy.closedPolicySubscribers[callingContractAdmin]) revert(NOT_POLICY_SUSBSCRIBER);
         }
 
