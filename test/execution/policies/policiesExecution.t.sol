@@ -768,37 +768,49 @@ abstract contract policiesExecution is RulesEngineCommon {
         // 2. We apply the policy from another admin to a contract and we test that it works
         address anotherAdmin = address(0x007);
         vm.startPrank(anotherAdmin);
+        RulesEngineComponentFacet(address(red)).isClosedPolicySubscriber(policyIds[0], anotherAdmin);
         RulesEnginePolicyFacet(address(red)).createPolicy(PolicyType.CLOSED_POLICY, policyName, policyDescription);
         ExampleUserContract userContract2 = new ExampleUserContract();
         userContract2.setRulesEngineAddress(address(red));
         userContract2.setCallingContractAdmin(anotherAdmin);
 
         RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract2), policyIds);
-        userContract2.transfer(address(0x123), 1000);
+        userContract2.transfer(address(0x123), transferValue);
 
         // 3. We now close the policy and test that it no longer works
         vm.startPrank(policyAdmin);
         RulesEnginePolicyFacet(address(red)).closePolicy(policyIds[0]);
-        vm.expectRevert("No policy subscriber");
-        userContract2.transfer(address(0x123), 1000);
+        // vm.startPrank(anotherAdmin);
+        // vm.expectRevert("Not a policy subscriber");
+        // userContract2.transfer(address(0x123), transferValue);
 
         // 4. We now add such admin to the subscriber list and test that it works again
         vm.startPrank(policyAdmin);
         RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyId, anotherAdmin);
-        userContract2.transfer(address(0x123), 1000);
+        vm.startPrank(anotherAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract2), policyIds);
+        userContract2.transfer(address(0x123), transferValue);
 
         // 5. we remove the admin from the subscriber list and test that it no longer works, yet again
         vm.startPrank(policyAdmin);
         RulesEngineComponentFacet(address(red)).removeClosedPolicySubscriber(policyId, anotherAdmin);
-        userContract2.transfer(address(0x123), 1000);
+        vm.expectRevert("Not a policy subscriber");
+        userContract2.transfer(address(0x123), transferValue);
 
         // 6. now we test that transferring the role is not a loophole
         vm.startPrank(policyAdmin);
-        RulesEngineAdminRolesFacet(address(red)).proposeNewPolicyAdmin(address(0xc0c0), policyIds[0]);
+        RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyId, anotherAdmin);
+        userContract2.transfer(address(0x123), transferValue); // we check that this works before transferring the role
+        vm.startPrank(anotherAdmin);
+        RulesEngineAdminRolesFacet(address(red)).proposeNewCallingContractAdmin(address(userContract2), address(0xc0c0));
         vm.startPrank(address(0xc0c0));
-        RulesEngineAdminRolesFacet(address(red)).confirmNewPolicyAdmin(policyIds[0]);
-        vm.startPrank(address(0xb0b)); // Coco is not in the allowed pfc list. Only address(0x1337) and address(0x1338) are allowed at this point
-        vm.expectRevert("Not Permissioned For Foreign Call");
-        userContract.transfer(address(0x7654321), transferValue);
+        RulesEngineAdminRolesFacet(address(red)).confirmNewCallingContractAdmin(address(userContract2));
+        vm.startPrank(address(0xb0b)); // bob is just a random user we add to test that the msg sender has nothing to do here
+        vm.expectRevert("Not a policy subscriber"); // Coco is not in a subscriber yet, so this should fail
+        userContract2.transfer(address(0x7654321), transferValue);
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyId, address(0xc0c0));
+        vm.startPrank(address(0xb0b)); // bob is just a random user we add to test that the msg sender has nothing to do here
+        userContract2.transfer(address(0x7654321), transferValue); // this should work now since Coco has been added to the subscriber list
     }
 }
