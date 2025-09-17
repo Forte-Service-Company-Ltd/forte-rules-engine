@@ -28,13 +28,19 @@ abstract contract rulesFuzz is RulesEngineCommon {
         Rule memory rule;
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
+        _addCallingFunctionToPolicy(policyIds[0]);
         rule.instructionSet = instructionSet;
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
         // test
-        if (opA > RulesEngineRuleFacet(address(red)).getOpsTotalSize() || opB > RulesEngineRuleFacet(address(red)).getOpsTotalSize())
-            vm.expectRevert("Invalid Instruction");
-        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        uint ruleId;
+        bool willRevert = opA >= RulesEngineRuleFacet(address(red)).getOpsTotalSize() ||
+            opB >= RulesEngineRuleFacet(address(red)).getOpsTotalSize();
+        if (willRevert) vm.expectRevert("Invalid Instruction");
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        // we check that the rule will never overflow memory during execution
+        if (!willRevert) _checkRuleExecution(policyIds);
     }
 
     function testRulesEngine_Fuzz_createRule_negInvalidInstructionSet(uint8 _opA, uint8 _opB, uint _opAElements, uint _opBElements) public {
@@ -54,15 +60,22 @@ abstract contract rulesFuzz is RulesEngineCommon {
         Rule memory rule;
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
+        _addCallingFunctionToPolicy(policyIds[0]);
         rule.instructionSet = instructionSet;
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
+
         // test
+        uint ruleId;
         /// @notice we could revert for 2 reasons so we cannot check for a specific string
         /// @notice we can also run into a scenario where instruction _a_ can take 3 or 4 elements and total instructions are 4 or 5,
         /// which would match a valid case, so we have to account for that exception
-        if ((opAElements != _opAElements || opBElements != _opBElements) && totalElements != opAElements + 1) vm.expectRevert();
+        bool willRevert = (opAElements != _opAElements || opBElements != _opBElements) && (totalElements != opAElements + 1);
+        if (willRevert) vm.expectRevert();
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        // we check that the rule will never overflow memory during execution
+        if (!willRevert) _checkRuleExecution(policyIds);
     }
 
     function testRulesEngine_Fuzz_createRule_NUMOpcodeNeedsItsArgument(uint8 _opA, uint8 _opB, bool shouldRevert) public {
@@ -85,13 +98,18 @@ abstract contract rulesFuzz is RulesEngineCommon {
         Rule memory rule;
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
+        _addCallingFunctionToPolicy(policyIds[0]);
         rule.instructionSet = extendedInstructionSet;
         rule.negEffects = new Effect[](1);
         rule.negEffects[0] = effectId_revert;
 
         // test
+        uint ruleId;
         if (shouldRevert) vm.expectRevert();
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        // we check that the rule will never overflow memory during execution
+        if (!shouldRevert) _checkRuleExecution(policyIds);
     }
 
     function testRulesEngine_Fuzz_createRule_memoryOverFlow(uint8 _opA, uint8 _opB, uint8 _plhIdx, uint8 _data) public {
@@ -113,8 +131,6 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.instructionSet = instructionSet;
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
-        rule.negEffects = new Effect[](1);
-        rule.negEffects[0] = effectId_event;
         rule.placeHolders = new Placeholder[](2);
         rule.placeHolders[0].pType = ParamTypes.UINT;
         rule.placeHolders[0].typeSpecificIndex = 1;
@@ -123,15 +139,12 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.placeHolders[1].typeSpecificIndex = _plhIdx;
         // test
         uint ruleId;
-        if (_data >= RulesEngineRuleFacet(address(red)).getMemorySize()) vm.expectRevert("Memory Overflow");
+        bool willRevert = _data >= RulesEngineRuleFacet(address(red)).getMemorySize();
+        if (willRevert) vm.expectRevert("Memory Overflow");
         ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
         // we check that the rule will never overflow memory during execution
-        if (_data < RulesEngineRuleFacet(address(red)).getMemorySize()) {
-            vm.startPrank(callingContractAdmin);
-            RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
-            userContract.transfer(address(0xb0b), 1_000);
-        }
+        if (!willRevert) _checkRuleExecution(policyIds);
     }
 
     function testRulesEngine_Fuzz_createRule_WithPLHmemoryOverFlow(uint8 _plhIdx, uint8 _data) public {
@@ -146,6 +159,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         Rule memory rule;
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
+        _addCallingFunctionToPolicy(policyIds[0]);
         rule.instructionSet = instructionSet;
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
@@ -155,12 +169,15 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
         rule.placeHolders[1].typeSpecificIndex = _plhIdx;
-        // test
 
-        if (_data >= RulesEngineRuleFacet(address(red)).getMaxLoopSize()) {
-            vm.expectRevert("Memory Overflow");
-        }
+        // test
+        uint ruleId;
+        bool willRevert = _data >= RulesEngineRuleFacet(address(red)).getMaxLoopSize();
+        if (willRevert) vm.expectRevert("Memory Overflow");
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        // we check that the rule will never overflow memory during execution
+        if (!willRevert) _checkRuleExecution(policyIds);
     }
 
     function testRulesEngine_Fuzz_createRule_instructionSetLength(uint opA, uint opB, bool causesOverflow) public {
@@ -204,6 +221,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         Rule memory rule;
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
+        _addCallingFunctionToPolicy(policyIds[0]);
         // Only create a tracker some of the time
         if (!causesTrackerNotSet) {
             Trackers memory tracker;
@@ -219,8 +237,11 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_revert;
         // test
+        uint ruleId;
         if (causesTrackerNotSet) vm.expectRevert("Tracker referenced in rule not set");
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        // we check that the rule will never overflow memory during execution
+        if (!causesTrackerNotSet) _checkRuleExecution(policyIds);
     }
 
     function testRulesEngine_Fuzz_createRule_simple(uint256 _ruleValue, uint256 _transferValue) public {
@@ -415,5 +436,11 @@ abstract contract rulesFuzz is RulesEngineCommon {
             }
         }
         return instructionSet;
+    }
+
+    function _checkRuleExecution(uint[] memory policyIds) internal {
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+        userContract.transfer(address(0xb0b), 1_000);
     }
 }
