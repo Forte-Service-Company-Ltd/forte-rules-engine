@@ -72,6 +72,7 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
         _revokeRole(_generatePolicyAdminRoleId(policyId, PROPOSED_POLICY_ADMIN), msg.sender);
         _revokeRole(_generatePolicyAdminRoleId(policyId, POLICY_ADMIN), oldPolicyAdmin);
         _grantRole(_generatePolicyAdminRoleId(policyId, POLICY_ADMIN), msg.sender);
+        lib._getPolicyAdminStorage().policyIdToPolicyAdmin[policyId] = msg.sender;
         emit PolicyAdminRoleConfirmed(msg.sender, policyId);
     }
 
@@ -236,6 +237,9 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
         _revokeRole(_generateCallingContractAdminRoleId(callingContractAddress, PROPOSED_CALLING_CONTRACT_ADMIN), msg.sender);
         _revokeRole(_generateCallingContractAdminRoleId(callingContractAddress, CALLING_CONTRACT_ADMIN), oldCallingContractAdmin);
         _grantRole(_generateCallingContractAdminRoleId(callingContractAddress, CALLING_CONTRACT_ADMIN), msg.sender);
+        // set calling contract admin in storage
+        CallingContractAdminStorage storage callingContractAdminData = lib._getCallingContractAdminStorage();
+        callingContractAdminData.callingContractToAdmin[callingContractAddress] = msg.sender;
         emit CallingContractAdminRoleConfirmed(callingContractAddress, msg.sender);
     }
 
@@ -257,6 +261,10 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
 
         // grant the admin role to the calling address of the createPolicy function from RulesEnginePolicyFacet
         _grantRole(adminRoleId, _account);
+
+        // set calling contract admin in storage
+        CallingContractAdminStorage storage callingContractAdminData = lib._getCallingContractAdminStorage();
+        callingContractAdminData.callingContractToAdmin[_callingContract] = _account;
 
         emit CallingContractAdminRoleGranted(_callingContract, _account);
         return adminRoleId;

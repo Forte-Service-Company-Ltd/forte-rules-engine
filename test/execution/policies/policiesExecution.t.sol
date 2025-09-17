@@ -43,19 +43,22 @@ abstract contract policiesExecution is RulesEngineCommon {
         vm.stopPrank();
 
         uint256[] memory appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[0]);
-        assertEq(appliedPolicies.length, 2);
-        assertEq(appliedPolicies[0], policyIds[1]);
-        assertEq(appliedPolicies[1], policyIds[2]);
+        assertEq(appliedPolicies.length, 3);
+        assertEq(appliedPolicies[0], policyIds[0]);
+        assertEq(appliedPolicies[1], policyIds[1]);
+        assertEq(appliedPolicies[2], policyIds[2]);
 
         appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[1]);
-        assertEq(appliedPolicies.length, 2);
-        assertEq(appliedPolicies[0], policyIds[1]);
-        assertEq(appliedPolicies[1], policyIds[2]);
+        assertEq(appliedPolicies.length, 3);
+        assertEq(appliedPolicies[0], policyIds[0]);
+        assertEq(appliedPolicies[1], policyIds[1]);
+        assertEq(appliedPolicies[2], policyIds[2]);
 
         appliedPolicies = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(contracts[2]);
-        assertEq(appliedPolicies.length, 2);
-        assertEq(appliedPolicies[0], policyIds[1]);
-        assertEq(appliedPolicies[1], policyIds[2]);
+        assertEq(appliedPolicies.length, 3);
+        assertEq(appliedPolicies[0], policyIds[0]);
+        assertEq(appliedPolicies[1], policyIds[1]);
+        assertEq(appliedPolicies[2], policyIds[2]);
     }
 
     function testRulesArrayStillFullAfterCallingFunctionDeletion() public ifDeploymentTestsEnabled resetsGlobalVariables {
@@ -160,7 +163,7 @@ abstract contract policiesExecution is RulesEngineCommon {
 
         RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
-            bytes4(bytes4(keccak256(bytes("transfer2(address,uint256)")))),
+            bytes4(keccak256(bytes("transfer2(address,uint256)"))),
             pTypes,
             "transfer2(address,uint256)",
             ""
@@ -173,16 +176,30 @@ abstract contract policiesExecution is RulesEngineCommon {
 
         RulesEngineComponentFacet(address(red)).createCallingFunction(
             policyIds[0],
-            bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)")))),
+            bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))),
             pTypes,
             "transferFrom(address,address,uint256)",
             ""
         );
 
-        bytes4[] memory callingFunctions = new bytes4[](2);
+        pTypes = new ParamTypes[](4);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        pTypes[2] = ParamTypes.BYTES;
+
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyIds[0],
+            bytes4(keccak256(bytes("transfer(address,uint256,bytes)"))),
+            pTypes,
+            "transfer(address,uint256,bytes)",
+            ""
+        );
+
+        bytes4[] memory callingFunctions = new bytes4[](3);
         callingFunctions[0] = bytes4(bytes4(keccak256(bytes("transfer2(address,uint256)"))));
         callingFunctions[1] = bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))));
-        uint256[][] memory ruleIds = new uint256[][](2);
+        callingFunctions[2] = bytes4(bytes4(keccak256(bytes("transfer(address,uint256,bytes)"))));
+        uint256[][] memory ruleIds = new uint256[][](3);
         ruleIds[0] = new uint256[](3);
         ruleIds[0][0] = 1;
         ruleIds[0][1] = 2;
@@ -190,6 +207,9 @@ abstract contract policiesExecution is RulesEngineCommon {
         ruleIds[1] = new uint256[](2);
         ruleIds[1][0] = 1;
         ruleIds[1][1] = 2;
+        ruleIds[2] = new uint256[](2);
+        ruleIds[2][0] = 1;
+        ruleIds[2][1] = 3;
 
         RulesEnginePolicyFacet(address(red)).updatePolicy(
             policyIds[0],
@@ -201,9 +221,10 @@ abstract contract policiesExecution is RulesEngineCommon {
         );
 
         Rule[][] memory rules = RulesEngineRuleFacet(address(red)).getAllRules(policy1);
-        assertEq(rules.length, 2);
+        assertEq(rules.length, 3);
         assertEq(rules[0].length, 3);
         assertEq(rules[1].length, 2);
+        assertEq(rules[2].length, 2);
         assertEq(keccak256(abi.encodePacked(rules[0][0].instructionSet)), keccak256(abi.encodePacked(initialRules[0].instructionSet)));
         assertEq(keccak256(abi.encodePacked(rules[0][1].instructionSet)), keccak256(abi.encodePacked(initialRules[1].instructionSet)));
         assertEq(keccak256(abi.encodePacked(rules[0][2].instructionSet)), keccak256(abi.encodePacked(initialRules[2].instructionSet)));
@@ -212,12 +233,119 @@ abstract contract policiesExecution is RulesEngineCommon {
 
         RulesEngineRuleFacet(address(red)).deleteRule(policy1, 2);
         rules = RulesEngineRuleFacet(address(red)).getAllRules(policy1);
-        assertEq(rules.length, 2);
+        assertEq(rules.length, 3);
         assertEq(rules[0].length, 2);
         assertEq(rules[1].length, 1);
+        assertEq(rules[2].length, 2);
         assertEq(keccak256(abi.encodePacked(rules[0][0].instructionSet)), keccak256(abi.encodePacked(initialRules[0].instructionSet)));
         assertEq(keccak256(abi.encodePacked(rules[0][1].instructionSet)), keccak256(abi.encodePacked(initialRules[2].instructionSet)));
         assertEq(keccak256(abi.encodePacked(rules[1][0].instructionSet)), keccak256(abi.encodePacked(initialRules[0].instructionSet)));
+        assertEq(keccak256(abi.encodePacked(rules[2][0].instructionSet)), keccak256(abi.encodePacked(initialRules[0].instructionSet)));
+        assertEq(keccak256(abi.encodePacked(rules[2][1].instructionSet)), keccak256(abi.encodePacked(initialRules[2].instructionSet)));
+    }
+
+    function testRulesEngine_Unit_tryToAddMultipleRulesAndDeleteMultipleRules() public ifDeploymentTestsEnabled resetsGlobalVariables {
+        uint256[] memory policyIds = new uint256[](1);
+        uint256 policy1 = _createBlankPolicy();
+        policyIds[0] = policy1;
+        Rule[] memory initialRules = createArrayOfRules();
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policy1, initialRules[0], "rule1", "rule1");
+        assertEq(ruleId, 1);
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policy1, initialRules[1], "rule2", "rule2");
+        assertEq(ruleId, 2);
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policy1, initialRules[2], "rule3", "rule3");
+        assertEq(ruleId, 3);
+
+        vm.startPrank(policyAdmin);
+        ParamTypes[] memory pTypes = new ParamTypes[](2);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyIds[0],
+            bytes4(keccak256(bytes("transfer(address,uint256)"))),
+            pTypes,
+            "transfer(address,uint256)",
+            ""
+        );
+
+        pTypes = new ParamTypes[](3);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.ADDR;
+        pTypes[2] = ParamTypes.UINT;
+
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyIds[0],
+            bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))),
+            pTypes,
+            "transferFrom(address,address,uint256)",
+            ""
+        );
+
+        pTypes = new ParamTypes[](4);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        pTypes[2] = ParamTypes.BYTES;
+
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyIds[0],
+            bytes4(keccak256(bytes("transfer(address,uint256,bytes)"))),
+            pTypes,
+            "transfer(address,uint256,bytes)",
+            ""
+        );
+        bytes4[] memory callingFunctions = new bytes4[](3);
+        callingFunctions[0] = bytes4(keccak256(bytes("transfer(address,uint256)")));
+        callingFunctions[1] = bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
+        callingFunctions[2] = bytes4(keccak256(bytes("transfer(address,uint256,bytes)")));
+
+
+
+        uint256[][] memory ruleIds = new uint256[][](3);
+        ruleIds[0] = new uint256[](2);
+        ruleIds[0][0] = 1;
+        ruleIds[0][1] = 1;
+        
+        ruleIds[1] = new uint256[](2);
+        ruleIds[1][0] = 2;
+        ruleIds[1][1] = 2;
+
+        ruleIds[2] = new uint256[](2);
+        ruleIds[2][0] = 3;
+        ruleIds[2][1] = 3;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyIds[0],
+            callingFunctions,
+            ruleIds,
+            PolicyType.CLOSED_POLICY,
+            "policyName",
+            "policyDescription"
+        );
+
+        Rule[][] memory rules = RulesEngineRuleFacet(address(red)).getAllRules(policy1);
+        assertEq(rules.length, 3);
+        assertEq(rules[0].length, 2);
+        assertEq(rules[1].length, 2);
+        assertEq(rules[2].length, 2);
+        assertEq(keccak256(abi.encodePacked(rules[0][0].instructionSet)), keccak256(abi.encodePacked(initialRules[0].instructionSet)));
+        assertEq(keccak256(abi.encodePacked(rules[0][1].instructionSet)), keccak256(abi.encodePacked(initialRules[0].instructionSet)));
+        assertEq(keccak256(abi.encodePacked(rules[1][0].instructionSet)), keccak256(abi.encodePacked(initialRules[1].instructionSet)));
+        assertEq(keccak256(abi.encodePacked(rules[1][1].instructionSet)), keccak256(abi.encodePacked(initialRules[1].instructionSet)));
+        assertEq(keccak256(abi.encodePacked(rules[2][0].instructionSet)), keccak256(abi.encodePacked(initialRules[2].instructionSet)));
+        assertEq(keccak256(abi.encodePacked(rules[2][1].instructionSet)), keccak256(abi.encodePacked(initialRules[2].instructionSet)));
+
+        RulesEngineRuleFacet(address(red)).deleteRule(policy1, 2);
+        rules = RulesEngineRuleFacet(address(red)).getAllRules(policy1);
+        assertEq(rules.length, 3);
+        assertEq(rules[0].length, 2);
+        assertEq(rules[1].length, 0);
+        assertEq(rules[2].length, 2);
+
+        assertEq(keccak256(abi.encodePacked(rules[0][0].instructionSet)), keccak256(abi.encodePacked(initialRules[0].instructionSet)));
+        assertEq(keccak256(abi.encodePacked(rules[0][1].instructionSet)), keccak256(abi.encodePacked(initialRules[0].instructionSet)));
+        assertEq(keccak256(abi.encodePacked(rules[2][0].instructionSet)), keccak256(abi.encodePacked(initialRules[2].instructionSet)));
+        assertEq(keccak256(abi.encodePacked(rules[2][1].instructionSet)), keccak256(abi.encodePacked(initialRules[2].instructionSet)));
     }
 
     function testRulesArrayDeletionIsStillFull() public ifDeploymentTestsEnabled resetsGlobalVariables {
@@ -754,5 +882,60 @@ abstract contract policiesExecution is RulesEngineCommon {
         assertTrue(denyListContract.getNaughty(deniedAddress1), "Denied address 1 should be on deny list");
         assertTrue(denyListContract.getNaughty(deniedAddress2), "Denied address 2 should be on deny list");
         assertFalse(denyListContract.getNaughty(allowedAddress), "Allowed address should not be on deny list");
+    }
+
+    function testRulesEngine_Unit_SubscriberLosesSubscription() public ifDeploymentTestsEnabled endWithStopPrank {
+        // 1. Set up a simple policy with one rule
+        (uint256 policyId, ) = setUpRuleSimple();
+        uint[] memory policyIds = new uint[](1);
+        policyIds[0] = policyId;
+        vm.startPrank(policyAdmin);
+        // we open the policy
+        RulesEnginePolicyFacet(address(red)).openPolicy(policyIds[0]);
+
+        // 2. We apply the policy from another admin to a contract and we test that it works
+        address anotherAdmin = address(0x007);
+        vm.startPrank(anotherAdmin);
+        ExampleUserContract userContract2 = new ExampleUserContract();
+        userContract2.setRulesEngineAddress(address(red));
+        userContract2.setCallingContractAdmin(anotherAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract2), policyIds);
+        userContract2.transfer(address(0x123), transferValue); // should go through
+
+        // 3. We now close the policy and test that it no longer works
+        vm.startPrank(policyAdmin);
+        RulesEnginePolicyFacet(address(red)).closePolicy(policyIds[0]);
+        vm.startPrank(anotherAdmin);
+        vm.expectRevert("Not a policy subscriber");
+        userContract2.transfer(address(0x123), transferValue);
+
+        // 4. We now add such admin to the subscriber list and test that it works again
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyId, anotherAdmin);
+        vm.startPrank(anotherAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract2), policyIds);
+        userContract2.transfer(address(0x123), transferValue);
+
+        // 5. we remove the admin from the subscriber list and test that it no longer works, yet again
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).removeClosedPolicySubscriber(policyId, anotherAdmin);
+        vm.expectRevert("Not a policy subscriber");
+        userContract2.transfer(address(0x123), transferValue);
+
+        // 6. now we test that transferring the role is not a loophole
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyId, anotherAdmin);
+        userContract2.transfer(address(0x123), transferValue); // we check that this works before transferring the role
+        vm.startPrank(anotherAdmin);
+        RulesEngineAdminRolesFacet(address(red)).proposeNewCallingContractAdmin(address(userContract2), address(0xc0c0));
+        vm.startPrank(address(0xc0c0));
+        RulesEngineAdminRolesFacet(address(red)).confirmNewCallingContractAdmin(address(userContract2));
+        vm.startPrank(address(0xb0b)); // bob is just a random user we add to test that the msg sender has nothing to do here
+        vm.expectRevert("Not a policy subscriber"); // Coco is not in a subscriber yet, so this should fail
+        userContract2.transfer(address(0x7654321), transferValue);
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).addClosedPolicySubscriber(policyId, address(0xc0c0));
+        vm.startPrank(address(0xb0b)); // bob is just a random user we add to test that the msg sender has nothing to do here
+        userContract2.transfer(address(0x7654321), transferValue); // this should work now since Coco has been added to the subscriber list
     }
 }

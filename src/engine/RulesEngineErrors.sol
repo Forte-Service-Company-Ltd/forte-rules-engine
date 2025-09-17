@@ -6,6 +6,7 @@ string constant POLICY_ID_0 = "Policy ID cannot be 0. Create policy before updat
 string constant POLICY_DOES_NOT_EXIST = "Policy does not exist";
 string constant POLICY_CEMENTED = "Not allowed for cemented policy";
 string constant VERIFIED_SUBSCRIBER_ONLY = "Only verified policy subscriber can apply closed policies";
+string constant NOT_POLICY_SUBSCRIBER = "Not a policy subscriber";
 string constant INVALID_RULE = "Invalid Rule";
 string constant INVALID_SIGNATURE = "Invalid Signature";
 string constant FOREIGN_CALL_NOT_SET = "Foreign Call referenced in rule not set";
