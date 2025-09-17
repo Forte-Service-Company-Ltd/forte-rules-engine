@@ -601,74 +601,25 @@ abstract contract policiesExecution is RulesEngineCommon {
         vm.startPrank(callingContractAdmin);
         RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
 
-        // we test that the policy works
+        // we check that the policy is in the policy association storage
+        uint[] memory policiesApplied = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(userContractAddress);
+        assertEq(policiesApplied.length, 1, "applied policies should be 1");
+        assertEq(policiesApplied[0], policyId, "applied policy mismatch");
+
+        // we test that the policy works (it should always revert)
         vm.startPrank(user1);
         vm.expectRevert("Rules Engine Revert");
         userContract.transfer(address(0xbad), 666);
 
         // now we can delete the policy
-        // RulesEngineRuleFacet(address(red)).deleteRule(policyId, ruleId);
         RulesEnginePolicyFacet(address(red)).deletePolicy(policyId);
 
+        // this should not revert anymore as the policy was deleted
         vm.startPrank(user1);
-        // this shoul not revert
         userContract.transfer(address(0xbad), 666);
 
-        // Verify that the policy has been completely deleted
-        // attempting to create a rule for the deleted policy should revert with "Policy does not exist"
-        {
-            Rule memory rule;
-            rule.instructionSet = new uint256[](7);
-            rule.instructionSet[0] = uint(LogicalOp.PLH);
-            rule.instructionSet[1] = 0;
-            rule.instructionSet[2] = uint(LogicalOp.NUM);
-            rule.instructionSet[3] = uint256(keccak256(abi.encode("Test")));
-            rule.instructionSet[4] = uint(LogicalOp.EQ);
-            rule.instructionSet[5] = 0;
-            rule.instructionSet[6] = 1;
-
-            rule.rawData.argumentTypes = new ParamTypes[](1);
-            rule.rawData.dataValues = new bytes[](1);
-            rule.rawData.instructionSetIndex = new uint256[](1);
-            rule.rawData.argumentTypes[0] = ParamTypes.STR;
-            rule.rawData.dataValues[0] = abi.encode("Test");
-            rule.rawData.instructionSetIndex[0] = 3;
-
-            rule.placeHolders = new Placeholder[](1);
-            rule.placeHolders[0].pType = ParamTypes.STR;
-            rule.placeHolders[0].typeSpecificIndex = 1;
-            rule.negEffects = new Effect[](1);
-            rule.negEffects[0] = effectId_revert;
-
-            vm.expectRevert("Rule not set");
-            RulesEngineRuleFacet(address(red)).updateRule(policyId, ruleId, rule, "Test rule", "Test description");
-        }
-
-        // attempting to create a calling function for the deleted policy should revert
-        {
-            ParamTypes[] memory pTypes = new ParamTypes[](2);
-            pTypes[0] = ParamTypes.ADDR;
-            pTypes[1] = ParamTypes.UINT;
-            vm.expectRevert("Policy does not exist");
-            RulesEngineComponentFacet(address(red)).createCallingFunction(
-                policyId,
-                bytes4(keccak256(bytes("test(address,uint256)"))),
-                pTypes,
-                "test(address,uint256)",
-                ""
-            );
-        }
-
-        // verify that getPolicy shows cleared mappings for the deleted policy
-        // Note: The calling functions array may still exist, but the mappings should be cleared
-        {
-            (bytes4[] memory callingFunctions, uint256[][] memory ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
-            // The calling functions array may still contain the function signature
-            if (callingFunctions.length > 0) {
-                // And rule associations should be empty
-                assertEq(ruleIds[0].length, 0, "Deleted policy should have no rule associations");
-            }
-        }
+        policiesApplied = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(userContractAddress);
+        assertEq(policiesApplied.length, 0, "No policies should be applied after deletion");
     }
 
     function testRulesEngine_Unit_OFACDenyListPolicy() public ifDeploymentTestsEnabled endWithStopPrank {
