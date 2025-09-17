@@ -236,4 +236,23 @@ contract ERC20UnitTests is ERC20UnitTestsCommon {
         );
         vm.stopPrank();
     }
+
+    function testERC20_setRulesEngineAddress_FailsForNonOwner() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.startPrank(address(0x7654321));
+        vm.expectRevert(abi.encodePacked("OwnableUnauthorizedAccount(0x0000000000000000000000000000000007654321)"));
+        userContractERC20.setRulesEngineAddress(address(0x1234567));
+    }
+
+    function testERC20_setRulesEngineAddress_OwnerCanSet() public ifDeploymentTestsEnabled endWithStopPrank {
+        address newRulesEngine = address(0x1234567);
+
+        // Pre-condition: rules engine is currently set to red
+        assertEq(userContractERC20.rulesEngineAddress(), address(red), "Rules engine should initially be set to red");
+
+        // Test that the owner can set a new rules engine address
+        vm.startPrank(callingContractAdmin);
+        userContractERC20.setRulesEngineAddress(newRulesEngine);
+        assertEq(userContractERC20.rulesEngineAddress(), newRulesEngine, "Rules engine address should be updated");
+        vm.stopPrank();
+    }
 }

@@ -33,6 +33,13 @@ contract ExampleERC20 is ERC20, ERC20Burnable, ReentrancyGuard, RulesEngineClien
     }
 
     /**
+     * @notice Override the default setRulesEngineAddress and add onlyOwner modifier to prevent unauthorized access
+     */
+    function setRulesEngineAddress(address rulesEngine) public override onlyOwner {
+        super.setRulesEngineAddress(rulesEngine);
+    }
+
+    /**
      * @notice Mints new tokens to a specified address.
      * @dev This function interacts with the Rules Engine to ensure compliance with minting policies.
      * @param to The recipient address.
