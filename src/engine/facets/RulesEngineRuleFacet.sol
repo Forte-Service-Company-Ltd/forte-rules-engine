@@ -119,9 +119,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         PolicyStorageSet storage data = lib._getPolicyStorage().policyStorageSets[policyId];
         bytes4[] memory callingFunctions = data.policy.callingFunctions;
         for (uint256 i = 0; i < callingFunctions.length; i++) {
-            uint256[] memory ruleIds = data.policy.callingFunctionsToRuleIds[
-                callingFunctions[i]
-            ];
+            uint256[] memory ruleIds = data.policy.callingFunctionsToRuleIds[callingFunctions[i]];
             uint256[] memory newRuleIds = new uint256[](ruleIds.length);
             uint256 k = 0;
             uint256 found = 0;
@@ -270,7 +268,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                 }
             }
         }
-        
+
         for (uint256 k = 0; k < negativeEffectPlaceHolders.length; k++) {
             // check for tracker flag on placeholder
             if (FacetUtils._isTrackerValue(negativeEffectPlaceHolders[k])) {
@@ -301,8 +299,16 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         TrackerStorage storage trackerData = lib._getTrackerStorage();
 
         Placeholder[] memory placeHolders = lib._getRuleStorage().ruleStorageSets[_policyId][_ruleId].rule.placeHolders;
-        Placeholder[] memory positiveEffectPlaceHolders = lib._getRuleStorage().ruleStorageSets[_policyId][_ruleId].rule.positiveEffectPlaceHolders;
-        Placeholder[] memory negativeEffectPlaceHolders = lib._getRuleStorage().ruleStorageSets[_policyId][_ruleId].rule.negativeEffectPlaceHolders;
+        Placeholder[] memory positiveEffectPlaceHolders = lib
+            ._getRuleStorage()
+            .ruleStorageSets[_policyId][_ruleId]
+            .rule
+            .positiveEffectPlaceHolders;
+        Placeholder[] memory negativeEffectPlaceHolders = lib
+            ._getRuleStorage()
+            .ruleStorageSets[_policyId][_ruleId]
+            .rule
+            .negativeEffectPlaceHolders;
         // check if a tracker is used in the instruction set of the rule
         // if so, we update the mapping to remove rule ID
         for (uint256 i = 0; i < placeHolders.length; i++) {
@@ -330,7 +336,11 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             // check for tracker flag on effect placeholder
             if (FacetUtils._isTrackerValue(positiveEffectPlaceHolders[k])) {
                 // if the placeholder flag is a tracker, retrieve the tracker ID and remove the rule ID from the mapping
-                for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][positiveEffectPlaceHolders[k].typeSpecificIndex].length; ) {
+                for (
+                    uint256 l = 0;
+                    l < trackerData.trackerIdToRuleIds[_policyId][positiveEffectPlaceHolders[k].typeSpecificIndex].length;
+
+                ) {
                     // check if the rule ID is already in the array
                     if (trackerData.trackerIdToRuleIds[_policyId][positiveEffectPlaceHolders[k].typeSpecificIndex][l] == _ruleId) {
                         trackerData.trackerIdToRuleIds[_policyId][positiveEffectPlaceHolders[k].typeSpecificIndex][l] = trackerData
@@ -346,12 +356,16 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             }
         }
 
-                // repeat for effectPlaceHolders
+        // repeat for effectPlaceHolders
         for (uint256 k = 0; k < negativeEffectPlaceHolders.length; k++) {
             // check for tracker flag on effect placeholder
             if (FacetUtils._isTrackerValue(negativeEffectPlaceHolders[k])) {
                 // if the placeholder flag is a tracker, retrieve the tracker ID and remove the rule ID from the mapping
-                for (uint256 l = 0; l < trackerData.trackerIdToRuleIds[_policyId][negativeEffectPlaceHolders[k].typeSpecificIndex].length; ) {
+                for (
+                    uint256 l = 0;
+                    l < trackerData.trackerIdToRuleIds[_policyId][negativeEffectPlaceHolders[k].typeSpecificIndex].length;
+
+                ) {
                     // check if the rule ID is already in the array
                     if (trackerData.trackerIdToRuleIds[_policyId][negativeEffectPlaceHolders[k].typeSpecificIndex][l] == _ruleId) {
                         trackerData.trackerIdToRuleIds[_policyId][negativeEffectPlaceHolders[k].typeSpecificIndex][l] = trackerData
@@ -413,7 +427,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
     /**
      * @notice Validates an array of effects.
      * @param effects The effects to validate.
-     * @param policyId The policyId 
+     * @param policyId The policyId
      */
     function _validateEffects(Effect[] calldata effects, uint256 policyId) internal view {
         for (uint256 i = 0; i < effects.length; i++) {
@@ -433,7 +447,6 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             _validateParamType(placeholders[i].pType);
         }
     }
-
     /**
      * @notice Validates an instruction set.
      * @param instructionSet The instructionSet to validate.
@@ -446,25 +459,26 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         uint instructionHold; // The current instruction used as it iterates through data elements
         uint dataCounter; // The current data element within the opCode
         // we loop through the instructionSet to validate it
+        if (instructionSet.length == 0) return;
         for (uint256 i = 0; i < instructionSet.length; i++) {
             // we extract the specific item from the validation set which is in memory, and we place it in the stack to save some gas
             uint instruction = instructionSet[i];
-            if (isData) {  
+            if (isData) {
                 dataCounter++;
-                if (!_isLessLimitedOpCode(instructionHold)) {  
+                if (!_isLessLimitedOpCode(instructionHold)) {
                     // if the instruction is data, we just check that it won't point to an index outside of max memory size
-                    if (instruction > memorySize) revert(MEMORY_OVERFLOW);             
+                    if (instruction > memorySize) revert(MEMORY_OVERFLOW);
                 } else {
                     // Verify that the tracker exists in the policy
-                    if (dataCounter == 1){
-                        if (instructionHold == uint(LogicalOp.PLH)) {// PLH is only limited by the Max loop size
+                    if (dataCounter == 1) {
+                        if (instructionHold == uint(LogicalOp.PLH)) {
+                            // PLH is only limited by the Max loop size
                             if (instruction > MAX_LOOP) revert(MEMORY_OVERFLOW);
                         } else {
                             TrackerStorage storage trackerData = lib._getTrackerStorage();
                             if (!trackerData.trackers[policyId][instruction].set) revert(TRACKER_NOT_SET);
                         }
                     }
-
                 }
                 // we reduce the expectedDataElements count by one, but only if necessary
                 if (expectedDataElements > 1) --expectedDataElements;
@@ -477,8 +491,10 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                 ++totalInstructions;
                 // if the instruction is not data, we check that it is a valid opcode
                 if (instruction > opsTotalSize) revert(INVALID_INSTRUCTION);
-                // NUM is a special case since it can expect any data, so no check is needed next
+                // NUM is a special case since it can expect any data, so very little check is needed
                 if (instruction == uint(LogicalOp.NUM)) {
+                    // we only validate that NUM will have its argument as part of the instruction set
+                    if ((i + 1) >= instructionSet.length) revert(INVALID_INSTRUCTION_SET);
                     unchecked {
                         ++i; // we simply incrememt the iterator to skip the next data element
                     }
@@ -507,12 +523,10 @@ contract RulesEngineRuleFacet is FacetCommonImports {
      * @return bool Returns `true` if the operation code is less limited, otherwise `false`.
      */
     function _isLessLimitedOpCode(uint opCode) internal pure returns (bool) {
-        return (
-            opCode == uint(LogicalOp.PLHM) ||
+        return (opCode == uint(LogicalOp.PLHM) ||
             opCode == uint(LogicalOp.PLH) ||
             opCode == uint(LogicalOp.TRUM) ||
-            opCode == uint(LogicalOp.TRU)
-        ); 
+            opCode == uint(LogicalOp.TRU));
     }
 
     /**
