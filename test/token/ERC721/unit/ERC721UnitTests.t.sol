@@ -227,4 +227,23 @@ contract ERC721UnitTests is ERC721UnitTestsCommon {
         userContract721.withdraw();
         vm.stopPrank();
     }
+
+    function testERC721_setRulesEngineAddress_FailsForNonOwner() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.startPrank(address(0x7654321));
+        vm.expectRevert(abi.encodePacked("OwnableUnauthorizedAccount(0x0000000000000000000000000000000007654321)"));
+        userContract721.setRulesEngineAddress(address(0x1234567));
+    }
+
+    function testERC721_setRulesEngineAddress_OwnerCanSet() public ifDeploymentTestsEnabled endWithStopPrank {
+        address newRulesEngine = address(0x1234567);
+
+        // Pre-condition: rules engine is currently set to red
+        assertEq(userContract721.rulesEngineAddress(), address(red), "Rules engine should initially be set to red");
+
+        // Test that the owner can set a new rules engine address
+        vm.startPrank(callingContractAdmin);
+        userContract721.setRulesEngineAddress(newRulesEngine);
+        assertEq(userContract721.rulesEngineAddress(), newRulesEngine, "Rules engine address should be updated");
+        vm.stopPrank();
+    }
 }

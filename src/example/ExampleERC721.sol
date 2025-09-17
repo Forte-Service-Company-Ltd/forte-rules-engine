@@ -38,6 +38,13 @@ contract ExampleERC721 is ERC721, ReentrancyGuard, ERC721Burnable, RulesEngineCl
     }
 
     /**
+     * @notice Override the default setRulesEngineAddress and add onlyOwner modifier to prevent unauthorized access
+     */
+    function setRulesEngineAddress(address rulesEngine) public override onlyOwner {
+        super.setRulesEngineAddress(rulesEngine);
+    }
+
+    /**
      * @notice Mints a new token to the specified address.
      * @dev The token ID is incremented by 1 from the previous minted token. This function is payable to allow child
      *      contracts to override it with a priced mint function.
