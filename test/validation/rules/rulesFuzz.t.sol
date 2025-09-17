@@ -109,9 +109,12 @@ abstract contract rulesFuzz is RulesEngineCommon {
         Rule memory rule;
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
+        _addCallingFunctionToPolicy(policyIds[0]);
         rule.instructionSet = instructionSet;
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_event;
         rule.placeHolders = new Placeholder[](2);
         rule.placeHolders[0].pType = ParamTypes.UINT;
         rule.placeHolders[0].typeSpecificIndex = 1;
@@ -119,8 +122,16 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
         rule.placeHolders[1].typeSpecificIndex = _plhIdx;
         // test
-        if (_data > RulesEngineRuleFacet(address(red)).getMemorySize()) vm.expectRevert("Memory Overflow");
-        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        uint ruleId;
+        if (_data >= RulesEngineRuleFacet(address(red)).getMemorySize()) vm.expectRevert("Memory Overflow");
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        // we check that the rule will never overflow memory during execution
+        if (_data < RulesEngineRuleFacet(address(red)).getMemorySize()) {
+            vm.startPrank(callingContractAdmin);
+            RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+            userContract.transfer(address(0xb0b), 1_000);
+        }
     }
 
     function testRulesEngine_Fuzz_createRule_WithPLHmemoryOverFlow(uint8 _plhIdx, uint8 _data) public {
@@ -146,7 +157,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.placeHolders[1].typeSpecificIndex = _plhIdx;
         // test
 
-        if (_data > RulesEngineRuleFacet(address(red)).getMaxLoopSize()) {
+        if (_data >= RulesEngineRuleFacet(address(red)).getMaxLoopSize()) {
             vm.expectRevert("Memory Overflow");
         }
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
