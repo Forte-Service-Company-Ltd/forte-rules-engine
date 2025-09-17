@@ -286,7 +286,7 @@ abstract contract policies is RulesEngineCommon {
             policyName,
             policyDescription
         );
-        assertEq(RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(address(potentialSubscriber)).length, 0);
+        assertEq(RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(address(potentialSubscriber)).length, 1);
     }
 
     function testRulesEngine_Unit_UpdatePolicy_With_Rules_Delete_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -369,12 +369,11 @@ abstract contract policies is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        bytes4 callingFunctionId;        
+        bytes4 callingFunctionId;
 
-        uint256[][] memory ruleIds = new uint256[][](50);        
+        uint256[][] memory ruleIds = new uint256[][](50);
         ruleIds[0] = new uint256[](50);
         bytes4[] memory selectors = new bytes4[](50);
-        uint256[] memory functionIds = new uint256[](50);
         r = _createLTRule();
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], r, "rule", "ruleDescription");
         string memory caller = "transfer";
@@ -391,9 +390,9 @@ abstract contract policies is RulesEngineCommon {
                 callingFunction,
                 ""
             );
-            
+
             selectors[i] = bytes4(keccak256(bytes(builtCaller)));
-            
+
             ruleIds[i] = new uint256[](1);
             ruleIds[i][0] = ruleId;
         }
@@ -405,7 +404,7 @@ abstract contract policies is RulesEngineCommon {
             policyName,
             policyDescription
         );
-        
+
         // Delete the calling function
         RulesEngineComponentFacet(address(red)).deleteCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction))));
         // retrieve the rule
@@ -436,7 +435,7 @@ abstract contract policies is RulesEngineCommon {
         assertEq(RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(address(potentialSubscriber)).length, 1);
         vm.startPrank(policyAdmin);
         RulesEnginePolicyFacet(address(red)).closePolicy(policyId);
-        assertEq(RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(address(potentialSubscriber)).length, 0);
+        assertEq(RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(address(potentialSubscriber)).length, 1);
     }
 
     function testRulesEngine_Unit_OpenPolicy_Positive() public ifDeploymentTestsEnabled endWithStopPrank {

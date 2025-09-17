@@ -61,7 +61,7 @@ contract DiamondMineNoCheatcodes is Script {
             selectors[10] = RulesEngineComponentFacet.getMappedTrackerValue.selector;
             // Handle overloaded updateTracker functions with explicit signatures
             selectors[11] = bytes4(keccak256("updateTracker(uint256,uint256,(bool,uint8,bool,uint8,bytes,uint256))"));
-            selectors[12] = bytes4(keccak256("updateTracker(uint256,uint256,(bool,uint8,bool,uint8,bytes,uint256),bytes,bytes)"));
+            selectors[12] = bytes4(keccak256("updateTracker(uint256,uint256,(bool,uint8,bool,uint8,bytes,uint256),bytes[],bytes[])"));
             selectors[13] = RulesEngineComponentFacet.getCallingFunctionMetadata.selector;
             selectors[14] = RulesEngineComponentFacet.addClosedPolicySubscriber.selector;
             selectors[15] = RulesEngineComponentFacet.removeClosedPolicySubscriber.selector;
@@ -224,7 +224,7 @@ contract DiamondMineNoCheatcodes is Script {
         DiamondInit diamondInit = new DiamondInit();
 
         // Build the DiamondArgs.
-         RulesEngineDiamondArgs memory diamondArgs = RulesEngineDiamondArgs({
+        RulesEngineDiamondArgs memory diamondArgs = RulesEngineDiamondArgs({
             init: address(diamondInit),
             // NOTE: "interfaceId" can be used since "init" is the only function in IDiamondInit.
             initCalldata: abi.encode(type(IDiamondInit).interfaceId)

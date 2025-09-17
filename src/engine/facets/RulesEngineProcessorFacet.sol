@@ -60,6 +60,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         // Load the Foreign Call data from storage
         ForeignCall memory foreignCall = lib._getForeignCallStorage().foreignCalls[policyId][foreignCallIndex];
         if (foreignCall.set) {
+            _checkForForeignCallPermission(foreignCall.foreignCallAddress, foreignCall.signature, policyId);
             retVal = evaluateForeignCallForRule(foreignCall, callingFunctionArgs, retVals, metadata, policyId);
         } else {
             revert(FOREIGN_CALL_NOT_SET);
@@ -438,6 +439,13 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     function _checkPolicy(uint256 _policyId, bytes calldata _arguments) internal returns (bool retVal) {
         // Load the policy data from storage
         PolicyStorageSet storage policyStorageSet = lib._getPolicyStorage().policyStorageSets[_policyId];
+        // if this is a closed policy, then we check that the calling contract admin is a verified subscriber
+        if (policyStorageSet.policy.policyType == PolicyType.CLOSED_POLICY) {
+            CallingContractAdminStorage storage callingContractAdminData = lib._getCallingContractAdminStorage();
+            address callingContractAdmin = callingContractAdminData.callingContractToAdmin[msg.sender];
+            if (!policyStorageSet.policy.closedPolicySubscribers[callingContractAdmin]) revert(NOT_POLICY_SUBSCRIBER);
+        }
+
         mapping(uint256 ruleId => RuleStorageSet) storage ruleData = lib._getRuleStorage().ruleStorageSets[_policyId];
 
         // Retrieve placeHolder[] for specific rule to be evaluated and translate function signature argument array
@@ -715,6 +723,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             trk.trackerValue = abi.encode(_trackerValue);
         } else if (trk.pType == ParamTypes.BYTES || trk.pType == ParamTypes.STR) {
             trk.trackerValue = ProcessorLib._uintToBytes(_trackerValue);
+        } else if (trk.pType == ParamTypes.STATIC_TYPE_ARRAY || trk.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+            trk.trackerValue = abi.encode(_trackerValue);
         } else {
             revert(INVALID_TYPE);
         }
@@ -760,6 +770,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             encodedValue = abi.encode(_trackerValue);
         } else if (trk.pType == ParamTypes.BYTES || trk.pType == ParamTypes.STR) {
             encodedValue = ProcessorLib._uintToBytes(_trackerValue);
+        } else if (trk.pType == ParamTypes.STATIC_TYPE_ARRAY || trk.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+            encodedValue = abi.encode(_trackerValue);
         }
         // re encode as bytes to mapping
         lib._getTrackerStorage().mappedTrackerValues[_policyId][_trackerId][encodedKey] = encodedValue;
@@ -855,6 +867,15 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     ) internal returns (bytes memory, ParamTypes) {
         ForeignCallReturnValue memory retVal = evaluateForeignCalls(_policyId, _callingFunctionArgs, typeSpecificIndex, retVals, metadata);
         return (retVal.value, retVal.pType);
+    }
+
+    function _checkForForeignCallPermission(address contractAddress, bytes4 functionSig, uint policyId) internal view {
+        if (lib._getForeignCallStorage().isPermissionedForeignCall[contractAddress][functionSig]) {
+            address policyAdmin = lib._getPolicyAdminStorage().policyIdToPolicyAdmin[policyId];
+            if (!lib._getForeignCallStorage().permissionedForeignCallAdmins[contractAddress][functionSig][policyAdmin]) {
+                revert(NOT_PERMISSIONED_FOR_FOREIGN_CALL);
+            }
+        }
     }
 
     /**
