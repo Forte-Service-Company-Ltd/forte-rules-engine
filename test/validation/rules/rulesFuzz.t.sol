@@ -65,6 +65,35 @@ abstract contract rulesFuzz is RulesEngineCommon {
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
+    function testRulesEngine_Fuzz_createRule_NUMOpcodeNeedsItsArgument(uint8 _opA, uint8 _opB, bool shouldRevert) public {
+        uint256 opA = bound(_opA, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
+        uint256 opB = bound(_opB, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
+        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM
+        if (opA == 17 || opA == 18 || opA == 4 || opA == 2) opA = 6;
+        if (opB == 17 || opB == 18 || opB == 4 || opB == 2) opB = 6;
+
+        (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
+        uint totalElements = opAElements + opBElements + 2 + (shouldRevert ? 1 : 2); // 2 for the opA and opB themselves and some room for NUM opcode
+        uint256[] memory instructionSet = buildInstructionSet2Opcodes(opA, opB, opAElements, opBElements, 20);
+        uint256[] memory extendedInstructionSet = new uint256[](totalElements);
+        for (uint i = 0; i < instructionSet.length; i++) extendedInstructionSet[i] = instructionSet[i];
+        // we append the NUM opcode at the end of the instruction set, with or without its argument depending on the shouldRevert flag
+        extendedInstructionSet[shouldRevert ? extendedInstructionSet.length - 1 : extendedInstructionSet.length - 2] = uint(LogicalOp.NUM);
+        if (!shouldRevert) extendedInstructionSet[extendedInstructionSet.length - 1] = 10; // just a random number with no meaning nor impact
+
+        // rule setup
+        Rule memory rule;
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        rule.instructionSet = extendedInstructionSet;
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
+
+        // test
+        if (shouldRevert) vm.expectRevert();
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+    }
+
     function testRulesEngine_Fuzz_createRule_memoryOverFlow(uint8 _opA, uint8 _opB, uint8 _plhIdx, uint8 _data) public {
         // we avoid opcode 0 as it is the only one whose element won't be checked
         uint256 opA = bound(_opA, 1, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
@@ -117,9 +146,9 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.placeHolders[1].typeSpecificIndex = _plhIdx;
         // test
 
-        if (_data > RulesEngineRuleFacet(address(red)).getMaxLoopSize()){
+        if (_data > RulesEngineRuleFacet(address(red)).getMaxLoopSize()) {
             vm.expectRevert("Memory Overflow");
-        } 
+        }
         RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
@@ -153,10 +182,10 @@ abstract contract rulesFuzz is RulesEngineCommon {
     function testRulesEngine_Fuzz_createRule_instructionSetLengthForLessLimited(uint opA, uint opB, bool causesTrackerNotSet) public {
         opA = bound(opA, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
         opB = bound(opB, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
-        uint8[3] memory lessLimitedOps = [4,17,18];
+        uint8[3] memory lessLimitedOps = [4, 17, 18];
         // we only use less limited opcodes: PLHM, TRU, TRUM
-        opA = lessLimitedOps[opA% 3];
-        opB = lessLimitedOps[opB% 3];
+        opA = lessLimitedOps[opA % 3];
+        opB = lessLimitedOps[opB % 3];
         (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
         // the instruction set will have 90 or 91 instructions depending on the causesOverflow flag.
         uint[] memory instructionSet = buildInstructionSetMax(opA, opB, opAElements, opBElements, false, 1);
@@ -165,7 +194,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
         // Only create a tracker some of the time
-        if (!causesTrackerNotSet){
+        if (!causesTrackerNotSet) {
             Trackers memory tracker;
             /// build the members of the struct
             tracker.pType = ParamTypes.UINT;
@@ -347,8 +376,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         bool causesOverflow,
         uint256 data
     ) internal view returns (uint256[] memory instructionSet) {
-        uint instructionSetLength = (opAElements + opBElements + 2) *
-            (RulesEngineRuleFacet(address(red)).getMemorySize() / 2);
+        uint instructionSetLength = (opAElements + opBElements + 2) * (RulesEngineRuleFacet(address(red)).getMemorySize() / 2);
         instructionSet = new uint256[](instructionSetLength);
         // we build the instruction set by alternating opA and opB. We assign all data elements with the "data" parameter
         bool isOpBTurn;
@@ -356,7 +384,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         uint dataElements;
         for (uint i = 0; i < instructionSetLength; i++) {
             if (isData) {
-                instructionSet[i] = data+ (causesOverflow ? 1 : 0);
+                instructionSet[i] = data + (causesOverflow ? 1 : 0);
                 if (dataElements > 1) {
                     --dataElements;
                 } else {

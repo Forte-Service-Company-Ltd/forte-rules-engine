@@ -2758,7 +2758,7 @@ contract RulesEngineCommon is DiamondMine, Test {
     }
 
     function _createEffectEvent(string memory _text) public pure returns (Effect memory) {
-        uint256[] memory emptyArray = new uint256[](1);
+        uint256[] memory emptyArray = new uint256[](0);
         // Create a event effect
         return
             Effect({
@@ -2774,7 +2774,7 @@ contract RulesEngineCommon is DiamondMine, Test {
     }
 
     function _createCustomEffectEvent(bytes memory param, ParamTypes paramType) public pure returns (Effect memory) {
-        uint256[] memory emptyArray = new uint256[](1);
+        uint256[] memory emptyArray = new uint256[](0);
         bytes memory encodedParam;
         if (paramType == ParamTypes.UINT) {
             encodedParam = abi.encode(abi.decode(param, (uint)));
@@ -2852,7 +2852,7 @@ contract RulesEngineCommon is DiamondMine, Test {
     }
 
     function _createEffectRevert(string memory _text) public pure returns (Effect memory) {
-        uint256[] memory emptyArray = new uint256[](1);
+        uint256[] memory emptyArray = new uint256[](0);
         // Create a revert effect
         return
             Effect({
