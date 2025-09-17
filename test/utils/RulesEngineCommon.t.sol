@@ -1026,7 +1026,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             param: "",
             text: EVENTTEXT,
             errorMessage: "foreign call failed",
-            instructionSet: effectBytecode
+            instructionSet: effectBytecode,
+            eventPlaceholderIndex: 0
         });
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = positiveEffect;
@@ -1173,7 +1174,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             param: "",
             text: EVENTTEXT,
             errorMessage: "foreign call failed",
-            instructionSet: effectBytecode
+            instructionSet: effectBytecode,
+            eventPlaceholderIndex: 0
         });
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = positiveEffect;
@@ -1395,7 +1397,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 param: "",
                 text: EVENTTEXT,
                 errorMessage: "",
-                instructionSet: mintEffectBytecode
+                instructionSet: mintEffectBytecode,
+                eventPlaceholderIndex: 0
             });
             rule.posEffects = new Effect[](1);
             rule.posEffects[0] = mintEffect;
@@ -1412,7 +1415,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 param: "",
                 text: EVENTTEXT,
                 errorMessage: "",
-                instructionSet: banEffectBytecode
+                instructionSet: banEffectBytecode,
+                eventPlaceholderIndex: 0
             });
             rule.negEffects = new Effect[](1);
             rule.negEffects[0] = banEffect;
@@ -1490,7 +1494,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             param: "",
             text: EVENTTEXT,
             errorMessage: "",
-            instructionSet: effectInstructionSet
+            instructionSet: effectInstructionSet,
+            eventPlaceholderIndex: pType == ParamTypes.ADDR ? 0 : 1
         });
         Effect memory negEffect = Effect({
             valid: true,
@@ -1500,7 +1505,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             param: "",
             text: EVENTTEXT2,
             errorMessage: "",
-            instructionSet: effectInstructionSet
+            instructionSet: effectInstructionSet,
+            eventPlaceholderIndex: pType == ParamTypes.ADDR ? 0 : 1
         });
         // Rule: amount > 4 -> event -> transfer(address _to, uint256 amount) returns (bool)"
         if (pType == ParamTypes.ADDR) {
@@ -2672,9 +2678,11 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.placeHolders[0].pType = ParamTypes.UINT;
         rule.placeHolders[0].typeSpecificIndex = 1;
 
-        rule.positiveEffectPlaceHolders = new Placeholder[](1);
-        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.UINT;
-        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.positiveEffectPlaceHolders = new Placeholder[](2);
+        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 0;
+        rule.positiveEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 1;
 
         rule.negativeEffectPlaceHolders = new Placeholder[](1);
         rule.negativeEffectPlaceHolders[0].pType = ParamTypes.UINT;
@@ -2701,9 +2709,11 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.placeHolders[0].pType = ParamTypes.UINT;
         rule.placeHolders[0].typeSpecificIndex = 1;
 
-        rule.positiveEffectPlaceHolders = new Placeholder[](1);
+        rule.positiveEffectPlaceHolders = new Placeholder[](2);
         rule.positiveEffectPlaceHolders[0].pType = ParamTypes.ADDR;
         rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 0;
+        rule.positiveEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 1;
 
         rule.negativeEffectPlaceHolders = new Placeholder[](1);
         rule.negativeEffectPlaceHolders[0].pType = ParamTypes.ADDR;
@@ -2910,7 +2920,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 param: abi.encode(_text),
                 text: EVENTTEXT,
                 errorMessage: _text,
-                instructionSet: emptyArray
+                instructionSet: emptyArray,
+                eventPlaceholderIndex: 0
             });
     }
 
@@ -2938,7 +2949,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 param: encodedParam,
                 text: EVENTTEXT,
                 errorMessage: event_text,
-                instructionSet: emptyArray
+                instructionSet: emptyArray,
+                eventPlaceholderIndex: 0
             });
     }
 
@@ -3004,7 +3016,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 param: abi.encode(_text),
                 text: EVENTTEXT,
                 errorMessage: revert_text,
-                instructionSet: emptyArray
+                instructionSet: emptyArray,
+                eventPlaceholderIndex: 0
             });
     }
 

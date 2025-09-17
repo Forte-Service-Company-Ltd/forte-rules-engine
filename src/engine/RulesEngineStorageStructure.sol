@@ -134,6 +134,7 @@ struct Effect {
     string errorMessage;
     // The instruction set that will be run at effect execution
     uint256[] instructionSet;
+    uint256 eventPlaceholderIndex;
 }
 
 /**
