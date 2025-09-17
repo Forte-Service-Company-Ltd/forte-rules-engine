@@ -370,9 +370,17 @@ contract RulesEngineAdminRolesFacet is AccessControlEnumerable, ReentrancyGuard 
         _grantRole(_generateForeignCallAdminRoleId(foreignCallContract, functionSignature, FOREIGN_CALL_ADMIN), msg.sender);
 
         ForeignCallStorage storage foreignCallData = lib._getForeignCallStorage();
+        // permissionedForeignCallAdminsList
+        for (uint i; foreignCallData.permissionedForeignCallAdminsList[foreignCallContract][functionSignature].length > i; i++) {
+            if (foreignCallData.permissionedForeignCallAdminsList[foreignCallContract][functionSignature][i] == oldForeignCallAdmin) {
+                foreignCallData.permissionedForeignCallAdminsList[foreignCallContract][functionSignature][i] = msg.sender;
+                break;
+            }
+        }
+        // permissionedForeignCallAdmins
         foreignCallData.permissionedForeignCallAdmins[foreignCallContract][functionSignature][oldForeignCallAdmin] = false;
-        foreignCallData.permissionedForeignCallAdminsList[foreignCallContract][functionSignature].push(msg.sender);
         foreignCallData.permissionedForeignCallAdmins[foreignCallContract][functionSignature][msg.sender] = true;
+
         emit ForeignCallAdminRoleConfirmed(foreignCallContract, msg.sender);
     }
 
