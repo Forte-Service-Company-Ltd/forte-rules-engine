@@ -3625,6 +3625,22 @@ abstract contract trackers is RulesEngineCommon {
         _executeMsgDataTest(policyId, trackerIndex);
     }
 
+    function testRulesEngine_Unit_DeletedTrackerCannotBeUsed() public ifDeploymentTestsEnabled endWithStopPrank {
+        //build tracker
+        uint256 policyId = setupRuleWithTracker(13);
+        uint256 trackerIndex = 1;
+
+        // delete the tracker
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).deleteTracker(policyId, 1);
+        vm.stopPrank();
+
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 5);
+        vm.startPrank(address(userContract));
+        vm.expectRevert("Tracker referenced in rule not set");
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+    }
+
     function _createMsgDataMappedTracker(uint256 policyId) internal returns (uint256) {
         Trackers memory tracker;
         tracker.set = true;
