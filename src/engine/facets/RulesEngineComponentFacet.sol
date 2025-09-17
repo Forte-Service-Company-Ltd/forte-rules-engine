@@ -431,7 +431,13 @@ contract RulesEngineComponentFacet is FacetCommonImports {
      * @param pTypes The new parameter types to append.
      * @return functionId The updated calling function ID.
      */
-    function updateCallingFunction(uint256 policyId, bytes4 functionSignature, ParamTypes[] memory pTypes) external returns (bytes4) {
+    function updateCallingFunction(
+        uint256 policyId,
+        bytes4 functionSignature,
+        ParamTypes[] memory pTypes,
+        string memory callingFunctionName,
+        string memory encodedValues
+    ) external returns (bytes4) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
         // Load the calling function data from storage
@@ -448,6 +454,8 @@ contract RulesEngineComponentFacet is FacetCommonImports {
                 callingFunction.parameterTypes.push(pTypes[i]);
             }
         }
+        // Store calling function metadata updates
+        _storeCallingFunctionMetadata(policyId, functionSignature, callingFunctionName, encodedValues);
         emit CallingFunctionUpdated(policyId, functionSignature);
         return functionSignature;
     }

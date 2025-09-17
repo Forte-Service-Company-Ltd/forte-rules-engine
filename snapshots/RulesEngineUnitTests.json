@@ -67,11 +67,9 @@
   "StaticArrayTracker_LargeArray": "76599",
   "StaticArrayTracker_UintArray": "104940",
   "checkRule_Effect_Positive_ForeignCallMint": "109742",
-  "checkRule_ForeignCall": "58198",
-  "checkRule_ForeignCall_ForeignCallDynamicArrayReferenced": "46226",
+  "checkRule_ForeignCall": "58220",
   "checkRule_ForeignCall_ForeignCallReferenced": "61457",
-  "checkRule_ForeignCall_ForeignCallWithArrayToAnotherForeignCallNoParameter": "46168",
-  "checkRule_ForeignCall_TrackerValuesUsed": "34991",
+  "checkRule_ForeignCall_TrackerValuesUsed": "34969",
   "checkRule_simpleGTEQL": "28762",
   "checkRule_simpleLTEQL": "28791",
   "checkRule_simple_GT": "28603"
