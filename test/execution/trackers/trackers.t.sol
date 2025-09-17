@@ -3957,8 +3957,10 @@ abstract contract trackers is RulesEngineCommon {
             manualTracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
             manualTracker.trackerKeyType = ParamTypes.ADDR;
 
-            bytes memory trackerKey = abi.encode(address(0x7654321));
-            bytes memory trackerValue = abi.encode(7); // Update to array length 7
+            bytes[] memory trackerKey = new bytes[](1);
+            trackerKey[0] = abi.encode(address(0x7654321));
+            bytes[] memory trackerValue = new bytes[](1);
+            trackerValue[0] = abi.encode(7); // Update to array length 7
             RulesEngineComponentFacet(address(red)).updateTracker(policyId, trackerIndex, manualTracker, trackerKey, trackerValue);
             vm.stopPrank();
         }
@@ -4151,8 +4153,10 @@ abstract contract trackers is RulesEngineCommon {
             manualTracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
             manualTracker.trackerKeyType = ParamTypes.UINT;
 
-            bytes memory trackerKey = abi.encode(1);
-            bytes memory trackerValue = abi.encode(6); // Update to array length 6
+            bytes[] memory trackerKey = new bytes[](1);
+            trackerKey[0] = abi.encode(1);
+            bytes[] memory trackerValue = new bytes[](1);
+            trackerValue[0] = abi.encode(6); // Update to array length 6
             RulesEngineComponentFacet(address(red)).updateTracker(policyId, trackerIndex, manualTracker, trackerKey, trackerValue);
             vm.stopPrank();
         }
