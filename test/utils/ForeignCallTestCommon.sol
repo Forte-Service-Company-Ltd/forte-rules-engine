@@ -112,11 +112,22 @@ contract ForeignCallTestContract {
         return true;
     }
 
-    function testSigWithArrayPassthrough(string[] memory encodedArray) public returns (string[] memory) {        
+    function testSigWithArrayPassthrough(string[] memory encodedArray) public pure returns (string[] memory) {        
         return encodedArray;
     }
 
-    function testSigWithArraySetInternally(string[] memory encodedArray) public returns (string[] memory) {
+    function testSigWithArraySetInternally(string[] memory encodedArray) public pure returns (string[] memory) {
+        encodedArray = new string[](5);
+        encodedArray[0] = ("super");
+        encodedArray[1] = ("superduper");
+        encodedArray[2] = ("superduperduper");
+        encodedArray[3] = ("superduperduperduper");
+        encodedArray[4] = ("superduperduperduperduper");
+        return encodedArray;
+    }
+
+    function testSigWithArraySetInternallyOneArg(uint256 x) public pure returns (string[] memory) {
+        x;
         string[] memory array = new string[](5);
         array[0] = ("super");
         array[1] = ("superduper");
@@ -126,17 +137,7 @@ contract ForeignCallTestContract {
         return array;
     }
 
-    function testSigWithArraySetInternallyOneArg(uint256 x) public returns (string[] memory) {
-        string[] memory array = new string[](5);
-        array[0] = ("super");
-        array[1] = ("superduper");
-        array[2] = ("superduperduper");
-        array[3] = ("superduperduperduper");
-        array[4] = ("superduperduperduperduper");
-        return array;
-    }
-
-    function testSigWithArraySetInternallyNoArg() public returns (string[] memory) {       
+    function testSigWithArraySetInternallyNoArg() public pure returns (string[] memory) {       
         string[] memory array = new string[](5);
         array[0] = ("super");
         array[1] = ("superduper");

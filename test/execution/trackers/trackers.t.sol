@@ -3628,7 +3628,6 @@ abstract contract trackers is RulesEngineCommon {
     function testRulesEngine_Unit_DeletedTrackerCannotBeUsed() public ifDeploymentTestsEnabled endWithStopPrank {
         //build tracker
         uint256 policyId = setupRuleWithTracker(13);
-        uint256 trackerIndex = 1;
 
         // delete the tracker
         vm.startPrank(policyAdmin);
