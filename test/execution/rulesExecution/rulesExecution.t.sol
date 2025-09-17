@@ -853,9 +853,9 @@ abstract contract rulesExecution is RulesEngineCommon {
 
         rule.instructionSet = new uint256[](7);
         rule.instructionSet[0] = uint(LogicalOp.PLH);
-        rule.instructionSet[1] = 2;
+        rule.instructionSet[1] = 2; // placeholder index 2
         rule.instructionSet[2] = uint(LogicalOp.PLH);
-        rule.instructionSet[3] = uint256(3); // uint length of array to test that rule retreives uint array length correctly
+        rule.instructionSet[3] = 3; // placeholder index 3
         rule.instructionSet[4] = uint(LogicalOp.EQ);
         rule.instructionSet[5] = 0;
         rule.instructionSet[6] = 1;
@@ -866,7 +866,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
         rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
-        rule.placeHolders[2].typeSpecificIndex = 2; // additional bytes32 param
+        rule.placeHolders[2].typeSpecificIndex = 2; // test array
         rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
         rule.placeHolders[3].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
         rule.placeHolders[3].typeSpecificIndex = 1; 
@@ -957,9 +957,9 @@ abstract contract rulesExecution is RulesEngineCommon {
 
         rule.instructionSet = new uint256[](7);
         rule.instructionSet[0] = uint(LogicalOp.PLH);
-        rule.instructionSet[1] = 2;
+        rule.instructionSet[1] = 2; // place holder index 2
         rule.instructionSet[2] = uint(LogicalOp.PLH);
-        rule.instructionSet[3] = uint256(3); // uint length of array to test that rule retreives uint array length correctly
+        rule.instructionSet[3] = 3; // place holder index 3
         rule.instructionSet[4] = uint(LogicalOp.EQ);
         rule.instructionSet[5] = 0;
         rule.instructionSet[6] = 1;
@@ -970,7 +970,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
         rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
-        rule.placeHolders[2].typeSpecificIndex = 2; // additional bytes32 param
+        rule.placeHolders[2].typeSpecificIndex = 2; // test array
         rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
         rule.placeHolders[3].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
         rule.placeHolders[3].typeSpecificIndex = 1; 
