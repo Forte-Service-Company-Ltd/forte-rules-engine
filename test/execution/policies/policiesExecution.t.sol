@@ -618,6 +618,7 @@ abstract contract policiesExecution is RulesEngineCommon {
         vm.startPrank(user1);
         userContract.transfer(address(0xbad), 666);
 
+        // we check that the policy is not in the policy association storage anymore since it was deleted
         policiesApplied = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(userContractAddress);
         assertEq(policiesApplied.length, 0, "No policies should be applied after deletion");
     }
