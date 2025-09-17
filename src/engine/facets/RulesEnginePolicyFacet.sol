@@ -132,19 +132,19 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
             }
         }
         {
-            PolicyAssociationStorage storage assocData = lib._getPolicyAssociationStorage();
-            for (uint256 i = 0; i < assocData.policyIdContractMap[policyId].length; i++) {
-                address mappedAddress = assocData.policyIdContractMap[policyId][i];
-                uint256 len = assocData.contractPolicyIdMap[mappedAddress].length;
-                for (uint256 j = 0; j < len; j++) {
-                    if (assocData.contractPolicyIdMap[mappedAddress][j] == policyId) {
-                        assocData.contractPolicyIdMap[mappedAddress][j] = assocData.contractPolicyIdMap[mappedAddress][len - 1];
-                        assocData.contractPolicyIdMap[mappedAddress].pop();
-                        break;
-                    }
-                }
-            }
-            delete assocData.policyIdContractMap[policyId];
+            // PolicyAssociationStorage storage assocData = lib._getPolicyAssociationStorage();
+            // for (uint256 i = 0; i < assocData.policyIdContractMap[policyId].length; i++) {
+            //     address mappedAddress = assocData.policyIdContractMap[policyId][i];
+            //     uint256 len = assocData.contractPolicyIdMap[mappedAddress].length;
+            //     for (uint256 j = 0; j < len; j++) {
+            //         if (assocData.contractPolicyIdMap[mappedAddress][j] == policyId) {
+            //             assocData.contractPolicyIdMap[mappedAddress][j] = assocData.contractPolicyIdMap[mappedAddress][len - 1];
+            //             assocData.contractPolicyIdMap[mappedAddress].pop();
+            //             break;
+            //         }
+            //     }
+            // }
+            // delete assocData.policyIdContractMap[policyId];
         }
         emit PolicyDeleted(policyId);
     }

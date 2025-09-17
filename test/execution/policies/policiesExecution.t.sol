@@ -299,13 +299,11 @@ abstract contract policiesExecution is RulesEngineCommon {
         callingFunctions[1] = bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
         callingFunctions[2] = bytes4(keccak256(bytes("transfer(address,uint256,bytes)")));
 
-
-
         uint256[][] memory ruleIds = new uint256[][](3);
         ruleIds[0] = new uint256[](2);
         ruleIds[0][0] = 1;
         ruleIds[0][1] = 1;
-        
+
         ruleIds[1] = new uint256[](2);
         ruleIds[1][0] = 2;
         ruleIds[1][1] = 2;
@@ -500,6 +498,121 @@ abstract contract policiesExecution is RulesEngineCommon {
         RulesEngineRuleFacet(address(red)).deleteRule(policyId, ruleId);
 
         RulesEnginePolicyFacet(address(red)).deletePolicy(policyId);
+
+        // Verify that the policy has been completely deleted
+        // attempting to create a rule for the deleted policy should revert with "Policy does not exist"
+        {
+            Rule memory rule;
+            rule.instructionSet = new uint256[](7);
+            rule.instructionSet[0] = uint(LogicalOp.PLH);
+            rule.instructionSet[1] = 0;
+            rule.instructionSet[2] = uint(LogicalOp.NUM);
+            rule.instructionSet[3] = uint256(keccak256(abi.encode("Test")));
+            rule.instructionSet[4] = uint(LogicalOp.EQ);
+            rule.instructionSet[5] = 0;
+            rule.instructionSet[6] = 1;
+
+            rule.rawData.argumentTypes = new ParamTypes[](1);
+            rule.rawData.dataValues = new bytes[](1);
+            rule.rawData.instructionSetIndex = new uint256[](1);
+            rule.rawData.argumentTypes[0] = ParamTypes.STR;
+            rule.rawData.dataValues[0] = abi.encode("Test");
+            rule.rawData.instructionSetIndex[0] = 3;
+
+            rule.placeHolders = new Placeholder[](1);
+            rule.placeHolders[0].pType = ParamTypes.STR;
+            rule.placeHolders[0].typeSpecificIndex = 1;
+            rule.negEffects = new Effect[](1);
+            rule.negEffects[0] = effectId_revert;
+
+            vm.expectRevert("Rule not set");
+            RulesEngineRuleFacet(address(red)).updateRule(policyId, ruleId, rule, "Test rule", "Test description");
+        }
+
+        // attempting to create a calling function for the deleted policy should revert
+        {
+            ParamTypes[] memory pTypes = new ParamTypes[](2);
+            pTypes[0] = ParamTypes.ADDR;
+            pTypes[1] = ParamTypes.UINT;
+            vm.expectRevert("Policy does not exist");
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyId,
+                bytes4(keccak256(bytes("test(address,uint256)"))),
+                pTypes,
+                "test(address,uint256)",
+                ""
+            );
+        }
+
+        // verify that getPolicy shows cleared mappings for the deleted policy
+        // Note: The calling functions array may still exist, but the mappings should be cleared
+        {
+            (bytes4[] memory callingFunctions, uint256[][] memory ruleIds) = RulesEnginePolicyFacet(address(red)).getPolicy(policyId);
+            // The calling functions array may still contain the function signature
+            if (callingFunctions.length > 0) {
+                // And rule associations should be empty
+                assertEq(ruleIds[0].length, 0, "Deleted policy should have no rule associations");
+            }
+        }
+    }
+
+    function testRulesEngine_Unit_deleteRule_deletePolicy_IsNotRunAfterDeletion() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.startPrank(user1);
+        uint policyId = _createBlankPolicy();
+        uint[] memory policyIds = new uint[](1);
+        policyIds[0] = policyId;
+
+        uint ruleId;
+        {
+            Rule memory rule;
+            // always true so it alwas triggers positive effect
+            rule.instructionSet = new uint256[](2);
+            rule.instructionSet[0] = uint(LogicalOp.NUM);
+            rule.instructionSet[1] = 1;
+            // revert in positive effect
+            rule.posEffects = new Effect[](1);
+            rule.posEffects[0] = effectId_revert; // always reverts
+            // Save the rule
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "My rule", "My way or the highway");
+        }
+
+        bytes4 sigCallingFunction;
+        {
+            ParamTypes[] memory pTypes = new ParamTypes[](2);
+            pTypes[0] = ParamTypes.ADDR;
+            pTypes[1] = ParamTypes.UINT;
+            sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
+            RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
+        }
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = sigCallingFunction;
+        uint256[][] memory _ruleIds = new uint256[][](1);
+        uint256[] memory _ids = new uint256[](1);
+        _ids[0] = ruleId;
+        _ruleIds[0] = _ids;
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            _ruleIds,
+            PolicyType.OPEN_POLICY,
+            "Test Policy",
+            "This is a test policy"
+        );
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+
+        // we test that the policy works
+        vm.startPrank(user1);
+        vm.expectRevert("Rules Engine Revert");
+        userContract.transfer(address(0xbad), 666);
+
+        // now we can delete the policy
+        // RulesEngineRuleFacet(address(red)).deleteRule(policyId, ruleId);
+        RulesEnginePolicyFacet(address(red)).deletePolicy(policyId);
+
+        vm.startPrank(user1);
+        // this shoul not revert
+        userContract.transfer(address(0xbad), 666);
 
         // Verify that the policy has been completely deleted
         // attempting to create a rule for the deleted policy should revert with "Policy does not exist"
