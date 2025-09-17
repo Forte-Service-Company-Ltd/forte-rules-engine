@@ -935,7 +935,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @return bytes The encoded value of the requested tracker
      */
     function _handleTrackerValue(uint256 _policyId, Placeholder memory placeholder) internal view returns (bytes memory) {
-        return lib._getTrackerStorage().trackers[_policyId][placeholder.typeSpecificIndex].trackerValue;
+        Trackers memory trk = lib._getTrackerStorage().trackers[_policyId][placeholder.typeSpecificIndex];
+        require(trk.set, TRACKER_NOT_SET);
+        return trk.trackerValue;
     }
 
     /**
