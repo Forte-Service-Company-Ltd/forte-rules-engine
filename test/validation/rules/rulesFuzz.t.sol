@@ -240,8 +240,8 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.placeHolders = new Placeholder[](1);
         rule.placeHolders[0].pType = ParamTypes.UINT;
         rule.placeHolders[0].typeSpecificIndex = 1;
-        rule.posEffects = new Effect[](1);
-        rule.posEffects[0] = effectId_event;
+        rule.negEffects = new Effect[](1);
+        rule.negEffects[0] = effectId_revert;
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
 
