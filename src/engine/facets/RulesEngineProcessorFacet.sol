@@ -235,12 +235,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             encodedCall = bytes.concat(encodedCall, bytes32(dynamicOffset));
             // Get the dynamic data - and bounds checking
             require(uint(value) < functionArguments.length, DYNDATA_OFFSET);
-            require(uint(value) + 32 <= functionArguments.length, DYNDATA_OUTBNDS);
             uint256 length = uint256(bytes32(functionArguments[uint(value):uint(value) + 32]));
             // Calculate total bytes needed: 32 bytes for length prefix + padded data length (round up to nearest 32-byte boundary)
             uint256 words = 32 + ((length + 31) / 32) * 32;
-
-            require(uint(value) + words <= functionArguments.length, DYNDATA_OUTBNDS);
+            // data size should be: value (offset) + 32 (length datum) + length (actual data)
+            require(uint(value) + 32 + length <= functionArguments.length, DYNDATA_OUTBNDS);
 
             bytes memory dynamicValue = functionArguments[uint(value):uint(value) + words];
             // Add length and data (data is already padded to 32 bytes)
@@ -251,10 +250,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             lengthToAppend += words; // 32 for length + 32 for padded data
         } else if (argType == ParamTypes.STATIC_TYPE_ARRAY) {
             require(uint(value) < functionArguments.length, DYNDATA_OFFSET);
-            require(uint(value) + 32 <= functionArguments.length, DYNDATA_OUTBNDS);
             // encode the static offset
             encodedCall = bytes.concat(encodedCall, bytes32(32 * (fc.parameterTypes.length) + lengthToAppend));
             uint256 arrayLength = uint256(bytes32(functionArguments[uint(value):uint(value) + 32]));
+            // data size should be: value (offset) + 32 (length datum) + length (actual data)
+            require(uint(value) + 32 + arrayLength <= functionArguments.length, DYNDATA_OUTBNDS);
             // Get the static type array
             uint256 lengthToGrab = ((arrayLength + 1) * 32);
             bytes memory staticArray = new bytes(lengthToGrab);
@@ -263,10 +263,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             lengthToAppend += lengthToGrab;
         } else if (argType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
             require(uint(value) < functionArguments.length, DYNDATA_OFFSET);
-            require(uint(value) + 32 <= functionArguments.length, DYNDATA_OUTBNDS);
             uint256 baseDynamicOffset = 32 * (fc.parameterTypes.length) + lengthToAppend;
             encodedCall = bytes.concat(encodedCall, bytes32(baseDynamicOffset));
             uint256 length = uint256(bytes32(functionArguments[uint(value):uint(value) + 32]));
+            // data size should be: value (offset) + 32 (length datum) + length (actual data)
+            require(uint(value) + 32 + length <= functionArguments.length, DYNDATA_OUTBNDS);
             lengthToAppend += 32;
             dynamicData = bytes.concat(dynamicData, abi.encode(length));
             (dynamicData, lengthToAppend) = _getDynamicValueArrayData(functionArguments, dynamicData, length, lengthToAppend, uint(value));
