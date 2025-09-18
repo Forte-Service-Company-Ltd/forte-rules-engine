@@ -37,7 +37,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         if (tracker.mapped) revert(INVALID_TYPE);
         // ensure tracker value types (pType) of arrays are not VOID type (used for non array tracker types)
         if (
-            (tracker.pType == ParamTypes.STATIC_TYPE_ARRAY || tracker.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) &&
+            (tracker.pType == ParamTypes.ARRAY_OF_VALUE_TYPES || tracker.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) &&
             arrayType == TrackerArrayTypes.VOID
         ) revert(INVALID_TYPE);
         _validateTrackerType(tracker);
@@ -75,7 +75,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         if (!tracker.mapped) revert(INVALID_TYPE);
         // ensure mapped tracker value types (pType) of arrays are not VOID type (used for non array value types)
         if (
-            (tracker.pType == ParamTypes.STATIC_TYPE_ARRAY || tracker.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) &&
+            (tracker.pType == ParamTypes.ARRAY_OF_VALUE_TYPES || tracker.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) &&
             arrayType == TrackerArrayTypes.VOID
         ) revert(INVALID_TYPE);
         _validateTrackerType(tracker);
@@ -108,8 +108,8 @@ contract RulesEngineComponentFacet is FacetCommonImports {
                 _tracker.pType == ParamTypes.BOOL ||
                 _tracker.pType == ParamTypes.BYTES ||
                 _tracker.pType == ParamTypes.ADDR ||
-                _tracker.pType == ParamTypes.STATIC_TYPE_ARRAY ||
-                _tracker.pType == ParamTypes.DYNAMIC_TYPE_ARRAY,
+                _tracker.pType == ParamTypes.ARRAY_OF_VALUE_TYPES ||
+                _tracker.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES,
             INVALID_TYPE
         );
         // Ensure the tracker key is of a valid type

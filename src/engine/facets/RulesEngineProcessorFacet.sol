@@ -248,7 +248,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 dynamicValue // data (already padded)
             );
             lengthToAppend += words; // 32 for length + 32 for padded data
-        } else if (argType == ParamTypes.STATIC_TYPE_ARRAY) {
+        } else if (argType == ParamTypes.ARRAY_OF_VALUE_TYPES) {
             require(uint(value) < functionArguments.length, DYNDATA_OFFSET);
             // encode the static offset
             encodedCall = bytes.concat(encodedCall, bytes32(32 * (fc.parameterTypes.length) + lengthToAppend));
@@ -261,7 +261,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             staticArray = functionArguments[uint(value):uint(value) + lengthToGrab];
             dynamicData = bytes.concat(dynamicData, staticArray);
             lengthToAppend += lengthToGrab;
-        } else if (argType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+        } else if (argType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             require(uint(value) < functionArguments.length, DYNDATA_OFFSET);
             uint256 baseDynamicOffset = 32 * (fc.parameterTypes.length) + lengthToAppend;
             encodedCall = bytes.concat(encodedCall, bytes32(baseDynamicOffset));
@@ -344,7 +344,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 stringData // data (already padded)
             );
             lengthToAppend += stringData.length;
-        } else if (argType == ParamTypes.STATIC_TYPE_ARRAY || argType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+        } else if (argType == ParamTypes.ARRAY_OF_VALUE_TYPES || argType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             // encode the static offset
             encodedCall = bytes.concat(encodedCall, bytes32(32 * (parameterTypesLength) + lengthToAppend));
             bytes memory arrayData = ProcessorLib._extractDynamicArrayData(value);
@@ -621,7 +621,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     } else {
                         v = uint256(keccak256(value));
                     }
-                } else if (typ == ParamTypes.STATIC_TYPE_ARRAY || typ == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+                } else if (typ == ParamTypes.ARRAY_OF_VALUE_TYPES || typ == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
                     // length of array for direct comparison using == and != operations
                     v = abi.decode(value, (uint256));
                 }
@@ -728,7 +728,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             trk.trackerValue = abi.encode(_trackerValue);
         } else if (trk.pType == ParamTypes.BYTES || trk.pType == ParamTypes.STR) {
             trk.trackerValue = ProcessorLib._uintToBytes(_trackerValue);
-        } else if (trk.pType == ParamTypes.STATIC_TYPE_ARRAY || trk.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+        } else if (trk.pType == ParamTypes.ARRAY_OF_VALUE_TYPES || trk.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             trk.trackerValue = abi.encode(_trackerValue);
         } else {
             revert(INVALID_TYPE);
@@ -775,7 +775,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             encodedValue = abi.encode(_trackerValue);
         } else if (trk.pType == ParamTypes.BYTES || trk.pType == ParamTypes.STR) {
             encodedValue = ProcessorLib._uintToBytes(_trackerValue);
-        } else if (trk.pType == ParamTypes.STATIC_TYPE_ARRAY || trk.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+        } else if (trk.pType == ParamTypes.ARRAY_OF_VALUE_TYPES || trk.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             encodedValue = abi.encode(_trackerValue);
         }
         // re encode as bytes to mapping
@@ -963,7 +963,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     ) internal pure returns (bytes memory) {
         if (placeholder.pType == ParamTypes.STR || placeholder.pType == ParamTypes.BYTES) {
             return _getDynamicVariableFromCalldata(_callingFunctionArgs, placeholder.typeSpecificIndex);
-        } else if (placeholder.pType == ParamTypes.STATIC_TYPE_ARRAY || placeholder.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+        } else if (placeholder.pType == ParamTypes.ARRAY_OF_VALUE_TYPES || placeholder.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             bytes32 value = bytes32(_callingFunctionArgs[placeholder.typeSpecificIndex * 32:(placeholder.typeSpecificIndex + 1) * 32]);
             return abi.encode(uint256(bytes32(_callingFunctionArgs[uint(value):uint(value) + 32])));
         } else {
