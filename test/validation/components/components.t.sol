@@ -238,7 +238,13 @@ abstract contract components is RulesEngineCommon {
         ParamTypes[] memory pTypes2 = new ParamTypes[](1);
         pTypes2[0] = ParamTypes.ADDR;
         vm.expectRevert("New parameter types must be of greater or equal length to the original");
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction))), pTypes2);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes2,
+            callingFunction,
+            ""
+        );
     }
 
     function testRulesEngine_Unit_updateCallingFunction_Negative_NewParameterTypesNotSameType()
@@ -252,7 +258,13 @@ abstract contract components is RulesEngineCommon {
         pTypes2[0] = ParamTypes.UINT;
         pTypes2[1] = ParamTypes.UINT;
         vm.expectRevert("New parameter types must be of the same type as the original");
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction))), pTypes2);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes2,
+            callingFunction,
+            ""
+        );
     }
 
     function testRulesEngine_Unit_updateCallingFunction_Negative_CallingFunctionDoesNotExist()
@@ -266,7 +278,13 @@ abstract contract components is RulesEngineCommon {
         pTypes[1] = ParamTypes.UINT;
         _addCallingFunctionToPolicy(policyId);
         vm.expectRevert("Calling function not set");
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction2))), pTypes);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction2))),
+            pTypes,
+            callingFunction,
+            ""
+        );
     }
 
     function testRulesEngine_Unit_updateCallingFunction_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -277,7 +295,13 @@ abstract contract components is RulesEngineCommon {
         _addCallingFunctionToPolicy(policyId);
         vm.startPrank(newPolicyAdmin);
         vm.expectRevert("Not Authorized To Policy");
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction2))), pTypes);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction2))),
+            pTypes,
+            callingFunction,
+            ""
+        );
     }
 
     function testRulesEngine_Unit_updateCallingFunctionWithRuleCheck_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -297,7 +321,13 @@ abstract contract components is RulesEngineCommon {
         );
         vm.stopPrank();
         vm.startPrank(policyAdmin);
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(1, bytes4(keccak256(bytes(callingFunction))), pTypes);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            1,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes,
+            callingFunction,
+            ""
+        );
         assertEq(callingFunc.set, true);
         // ensure orignal contract rule check works
         bool ruleCheck = userContract.transfer(address(0x7654321), 47);
@@ -305,6 +335,53 @@ abstract contract components is RulesEngineCommon {
         // test new contract rule check works
         bool secondRuleCheck = userContract.transfer(address(0x7654321), 47);
         assertTrue(secondRuleCheck);
+    }
+
+    function testRulesEngine_Unit_updateCallingFunctionWithRuleCheckAndMetadataUpdate_Positive()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        // create rule and set rule to user contract
+        setUpRuleSimple();
+        // test rule works for user contract
+        bool response = userContract.transfer(address(0x7654321), 47);
+        assertTrue(response);
+        // create pTypes array for new contract + new transfer function
+        ParamTypes[] memory pTypes = new ParamTypes[](3);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        pTypes[2] = ParamTypes.ADDR;
+        CallingFunctionStorageSet memory callingFunc = RulesEngineComponentFacet(address(red)).getCallingFunction(
+            1,
+            bytes4(keccak256(bytes(callingFunction)))
+        );
+        vm.stopPrank();
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            1,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes,
+            "NewCallingFunctionName",
+            "address,uint256,address"
+        );
+        assertEq(callingFunc.set, true);
+        // ensure orignal contract rule check works
+        bool ruleCheck = userContract.transfer(address(0x7654321), 47);
+        assertTrue(ruleCheck);
+        // test new contract rule check works
+        bool secondRuleCheck = userContract.transfer(address(0x7654321), 47);
+        assertTrue(secondRuleCheck);
+
+        string memory newCallingFunctionName = RulesEngineComponentFacet(address(red))
+            .getCallingFunctionMetadata(1, bytes4(keccak256(bytes(callingFunction))))
+            .callingFunction;
+        string memory newEncodedValues = RulesEngineComponentFacet(address(red))
+            .getCallingFunctionMetadata(1, bytes4(keccak256(bytes(callingFunction))))
+            .encodedValues;
+
+        assertEq(newCallingFunctionName, "NewCallingFunctionName");
+        assertEq(newEncodedValues, "address,uint256,address");
     }
 
     function testRulesEngine_Unit_updateCallingFunctionWithRuleCheck_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -325,7 +402,13 @@ abstract contract components is RulesEngineCommon {
         );
         vm.stopPrank();
         vm.startPrank(policyAdmin);
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(1, bytes4(keccak256(bytes(callingFunction))), pTypes);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            1,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes,
+            callingFunction,
+            ""
+        );
         assertEq(callingFunc.set, true);
         // ensure orignal contract rule check works
         vm.expectRevert(abi.encodePacked(revert_text));
@@ -346,7 +429,9 @@ abstract contract components is RulesEngineCommon {
         bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).updateCallingFunction(
             policyId,
             bytes4(keccak256(bytes(callingFunction))),
-            pTypes2
+            pTypes2,
+            callingFunction,
+            ""
         );
         CallingFunctionStorageSet memory sig = RulesEngineComponentFacet(address(red)).getCallingFunction(
             policyId,
@@ -368,7 +453,13 @@ abstract contract components is RulesEngineCommon {
         vm.startPrank(policyAdmin);
         RulesEnginePolicyFacet(address(red)).cementPolicy(policyID);
         vm.expectRevert("Not allowed for cemented policy");
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(1, bytes4(keccak256(bytes(callingFunction))), new ParamTypes[](3));
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            1,
+            bytes4(keccak256(bytes(callingFunction))),
+            new ParamTypes[](3),
+            callingFunction,
+            ""
+        );
     }
 
     function testRulesEngine_Unit_updateCallingFunction_Event() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -382,7 +473,13 @@ abstract contract components is RulesEngineCommon {
         pTypes2[3] = ParamTypes.UINT;
         vm.expectEmit(true, false, false, false);
         emit CallingFunctionUpdated(policyId, callingFunctionId);
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction))), pTypes2);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes2,
+            callingFunction,
+            ""
+        );
     }
 
     // Delete Calling Functions
