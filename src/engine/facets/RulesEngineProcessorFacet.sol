@@ -250,6 +250,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             );
             lengthToAppend += words; // 32 for length + 32 for padded data
         } else if (argType == ParamTypes.STATIC_TYPE_ARRAY) {
+            require(uint(value) < functionArguments.length, DYNDATA_OFFSET);
+            require(uint(value) + 32 <= functionArguments.length, DYNDATA_OUTBNDS);
             // encode the static offset
             encodedCall = bytes.concat(encodedCall, bytes32(32 * (fc.parameterTypes.length) + lengthToAppend));
             uint256 arrayLength = uint256(bytes32(functionArguments[uint(value):uint(value) + 32]));
@@ -260,6 +262,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             dynamicData = bytes.concat(dynamicData, staticArray);
             lengthToAppend += lengthToGrab;
         } else if (argType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+            require(uint(value) < functionArguments.length, DYNDATA_OFFSET);
+            require(uint(value) + 32 <= functionArguments.length, DYNDATA_OUTBNDS);
             uint256 baseDynamicOffset = 32 * (fc.parameterTypes.length) + lengthToAppend;
             encodedCall = bytes.concat(encodedCall, bytes32(baseDynamicOffset));
             uint256 length = uint256(bytes32(functionArguments[uint(value):uint(value) + 32]));
