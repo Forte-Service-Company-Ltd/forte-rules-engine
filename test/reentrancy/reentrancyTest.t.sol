@@ -95,7 +95,12 @@ contract ReentrancyTest is RulesEngineCommon {
         Trackers memory tracker;
         tracker.trackerValue = abi.encode(0);
         tracker.pType = ParamTypes.UINT;
-        RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
+        RulesEngineComponentFacet(address(red)).createTracker(
+            policyIds[0],
+            tracker,
+            "trName",
+            TrackerArrayTypes.VOID
+        );
 
         rule.posEffects = new Effect[](1);
         rule.posEffects[0].instructionSet = _createTrackerUpdateInstructionSet();
