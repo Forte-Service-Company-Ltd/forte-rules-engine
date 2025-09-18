@@ -97,8 +97,6 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         // Emit event
         emit TrackerCreated(policyId, trackerIndex);
         // return the final tracker index and the created tracker array
-        // Emit event
-        emit TrackerCreated(policyId, trackerIndex);
         return trackerIndex;
     }
 
