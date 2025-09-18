@@ -565,7 +565,7 @@ abstract contract policiesExecution is RulesEngineCommon {
         uint ruleId;
         {
             Rule memory rule;
-            // always true so it alwas triggers positive effect
+            // always true so it always triggers positive effect
             rule.instructionSet = new uint256[](2);
             rule.instructionSet[0] = uint(LogicalOp.NUM);
             rule.instructionSet[1] = 1;
