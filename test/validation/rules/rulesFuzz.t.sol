@@ -79,7 +79,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
     function testRulesEngine_Fuzz_createRule_NUMOpcodeNeedsItsArgument(uint8 _opA, uint8 _opB, bool shouldRevert) public {
         uint256 opA = bound(_opA, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
         uint256 opB = bound(_opB, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
-        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM
+        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM, DIV
         if (opA == 17 || opA == 18 || opA == 4 || opA == 2 || opA == 8) opA = 6;
         if (opB == 17 || opB == 18 || opB == 4 || opB == 2 || opB == 8) opB = 6;
 
@@ -421,11 +421,5 @@ abstract contract rulesFuzz is RulesEngineCommon {
             }
         }
         return instructionSet;
-    }
-
-    function _checkRuleExecution(uint[] memory policyIds) internal {
-        vm.startPrank(callingContractAdmin);
-        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
-        userContract.transfer(address(0xb0b), 1_000);
     }
 }
