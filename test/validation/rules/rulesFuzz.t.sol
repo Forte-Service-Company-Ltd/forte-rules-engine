@@ -227,9 +227,8 @@ abstract contract rulesFuzz is RulesEngineCommon {
     }
 
     function testRulesEngine_Fuzz_createRule_simple(uint256 _ruleValue, uint256 _transferValue) public {
-        // Rule: amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
-
-        // _createAllEffects();
+        // Rule: ruleAmount >= transferValue -> revert -> transfer(address _to, uint256 amount) returns (bool)"
+        // This rule is minimum transfer rule (transfer amount must be greater than or equal to the rule value)
         Rule memory rule;
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
@@ -276,7 +275,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         // test that rule ( amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)" ) processes correctly
         vm.startPrank(userContractAddress);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), _transferValue);
-        if (_ruleValue > _transferValue) vm.expectRevert();
+        if (_ruleValue >= _transferValue) vm.expectRevert();
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 

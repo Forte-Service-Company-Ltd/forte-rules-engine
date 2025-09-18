@@ -94,6 +94,8 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         }
         // Step 3: Store tracker metadata
         _storeMappedTrackerMetadata(policyId, trackerIndex, trackerName, trackerKeys, trackerValues, arrayType);
+        // Emit event
+        emit TrackerCreated(policyId, trackerIndex);
         // return the final tracker index and the created tracker array
         // Emit event
         emit TrackerCreated(policyId, trackerIndex);
