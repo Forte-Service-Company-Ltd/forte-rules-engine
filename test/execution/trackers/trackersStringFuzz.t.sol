@@ -50,7 +50,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             rule.instructionSet[3] = 1;
             rule.instructionSet[4] = 0;
             rule.instructionSet[5] = uint(LogicalOp.NUM);
-            rule.instructionSet[6] = uint256(bytes32(abi.encode(keccak256(_input))));
+            rule.instructionSet[6] = uint256(keccak256(_input));
             rule.instructionSet[7] = uint(LogicalOp.EQ);
             rule.instructionSet[8] = 1;
             rule.instructionSet[9] = 2;
@@ -114,7 +114,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             trackerValues[0] = _input;
             Trackers memory tracker = Trackers({
                 mapped: true,
-                pType: ParamTypes.STR,
+                pType: ParamTypes.BYTES,
                 trackerKeyType: ParamTypes.UINT,
                 trackerValue: abi.encode(0),
                 set: false,
@@ -221,7 +221,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             TestType.STRING_FROM_TRACKER
         );
         bytes[] memory arguments = new bytes[](1);
-        arguments[0] = bytes(abi.encode(keccak256(abi.encode(_input))));
+        arguments[0] = abi.encode(_input);
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
         assertTrue(result);
     }
@@ -233,7 +233,7 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             TestType.BYTES_FROM_TRACKER
         );
         bytes[] memory arguments = new bytes[](1);
-        arguments[0] = bytes(abi.encode(keccak256(abi.encode(_input))));
+        arguments[0] = abi.encode(_input);
         bool result = TestProcessorFacet(address(red)).run(instructionSet, placeHolders, policyId, arguments);
         assertTrue(result);
     }
