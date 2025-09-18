@@ -3722,7 +3722,8 @@ abstract contract trackers is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         // Update policy
@@ -3843,7 +3844,8 @@ abstract contract trackers is RulesEngineCommon {
                 bytes4(keccak256(bytes(callingFunction))),
                 pTypes,
                 callingFunction,
-                ""
+                "",
+                callingFunction
             );
 
             // Create a rule that updates the mapped tracker using TRUM and always passes
@@ -4043,7 +4045,8 @@ abstract contract trackers is RulesEngineCommon {
                 bytes4(keccak256(bytes(callingFunction))),
                 pTypes,
                 callingFunction,
-                ""
+                "",
+                callingFunction
             );
 
             // Create a rule that updates the mapped tracker using TRUM and always passes

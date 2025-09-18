@@ -95,6 +95,8 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         // Step 3: Store tracker metadata
         _storeMappedTrackerMetadata(policyId, trackerIndex, trackerName, trackerKeys, trackerValues, arrayType);
         // return the final tracker index and the created tracker array
+        // Emit event
+        emit TrackerCreated(policyId, trackerIndex);
         return trackerIndex;
     }
 
@@ -395,16 +397,18 @@ contract RulesEngineComponentFacet is FacetCommonImports {
      * @param policyId The policy ID the calling function is associated with.
      * @param functionSignature The function signature of the calling function.
      * @param pTypes The parameter types for the calling function.
-     * @param callingFunctionName the name of the calling function (to be stored in metadata)
+     * @param callingFunctionSignature the Human Readable signature of the calling function (to be stored in metadata)
      * @param encodedValues the string representation of the values encoded with the calling function (to be stored in metadata)
+     * @param name the name of the calling function (to be stored in metadata)
      * @return functionId The index of the created calling function.
      */
     function createCallingFunction(
         uint256 policyId,
         bytes4 functionSignature,
         ParamTypes[] memory pTypes,
-        string memory callingFunctionName,
-        string memory encodedValues
+        string memory callingFunctionSignature,
+        string memory encodedValues,
+        string memory name
     ) external returns (bytes4) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
@@ -415,7 +419,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         _storeCallingFunctionData(policyId, functionSignature, pTypes);
 
         // Step 3: Store calling function metadata
-        _storeCallingFunctionMetadata(policyId, functionSignature, callingFunctionName, encodedValues);
+        _storeCallingFunctionMetadata(policyId, functionSignature, callingFunctionSignature, encodedValues, name);
 
         // Emit event
         emit CallingFunctionCreated(policyId, functionSignature);
@@ -429,14 +433,18 @@ contract RulesEngineComponentFacet is FacetCommonImports {
      * @param policyId The policy ID the calling function is associated with.
      * @param functionSignature The function signature of the calling function.
      * @param pTypes The new parameter types to append.
+     * @param callingFunctionSignature the Human Readable signature of the calling function (to be stored in metadata)
+     * @param encodedValues the string representation of the values encoded with the calling function (to be stored in metadata)
+     * @param name the name of the calling function (to be stored in metadata)
      * @return functionId The updated calling function ID.
      */
     function updateCallingFunction(
         uint256 policyId,
         bytes4 functionSignature,
         ParamTypes[] memory pTypes,
-        string memory callingFunctionName,
-        string memory encodedValues
+        string memory callingFunctionSignature,
+        string memory encodedValues,
+        string memory name
     ) external returns (bytes4) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
@@ -455,7 +463,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
             }
         }
         // Store calling function metadata updates
-        _storeCallingFunctionMetadata(policyId, functionSignature, callingFunctionName, encodedValues);
+        _storeCallingFunctionMetadata(policyId, functionSignature, callingFunctionSignature, encodedValues, name);
         emit CallingFunctionUpdated(policyId, functionSignature);
         return functionSignature;
     }
@@ -578,20 +586,23 @@ contract RulesEngineComponentFacet is FacetCommonImports {
      * @dev Helper function to store calling function metadata
      * @param _policyId The policy ID the calling function is associated with.
      * @param _functionSignature The function signature of the calling function
-     * @param _callingFunctionName Name of the calling function
+     * @param callingFunctionSignature Human Readable signature of the calling function
      * @param _encodedValues Arguments to be encoded
+     * @param _name Name of the calling function
      */
     function _storeCallingFunctionMetadata(
         uint256 _policyId,
         bytes4 _functionSignature,
-        string memory _callingFunctionName,
-        string memory _encodedValues
+        string memory callingFunctionSignature,
+        string memory _encodedValues,
+        string memory _name
     ) private {
-        if (keccak256(bytes(_callingFunctionName)) == EMPTY_STRING_HASH) revert(NAME_REQ);
+        if (keccak256(bytes(callingFunctionSignature)) == EMPTY_STRING_HASH) revert(NAME_REQ);
         CallingFunctionMetadataStruct storage metaData = lib._getCallingFunctioneMetadataStorage();
-        metaData.callingFunctionMetadata[_policyId][_functionSignature].callingFunction = _callingFunctionName;
+        metaData.callingFunctionMetadata[_policyId][_functionSignature].callingFunction = callingFunctionSignature;
         metaData.callingFunctionMetadata[_policyId][_functionSignature].signature = _functionSignature;
         metaData.callingFunctionMetadata[_policyId][_functionSignature].encodedValues = _encodedValues;
+        metaData.callingFunctionMetadata[_policyId][_functionSignature].name = _name;
     }
 
     //-------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -361,7 +361,8 @@ abstract contract rules is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         // Update policy
@@ -445,7 +446,8 @@ abstract contract rules is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         // Update policy
@@ -522,7 +524,8 @@ abstract contract rules is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         // Update policy
@@ -596,7 +599,8 @@ abstract contract rules is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         // Update policy
@@ -721,7 +725,8 @@ abstract contract rules is RulesEngineCommon {
                     transferSelector,
                     pTypes,
                     "transferFrom(address,uint256,bytes)",
-                    ""
+                    "",
+                    "transferFrom"
                 );
 
                 bytes4[] memory selectors = new bytes4[](1);
@@ -851,7 +856,8 @@ abstract contract rules is RulesEngineCommon {
                     transferSelector,
                     pTypes,
                     "transferFrom(address,uint256,bytes)",
-                    ""
+                    "",
+                    "transferFrom"
                 );
 
                 bytes4[] memory selectors = new bytes4[](1);
@@ -947,7 +953,8 @@ abstract contract rules is RulesEngineCommon {
                     transferSelector,
                     pTypes,
                     "transferFrom(address,uint256,bytes)",
-                    ""
+                    "",
+                    "transferFrom"
                 );
 
                 bytes4[] memory selectors = new bytes4[](1);
@@ -1060,7 +1067,8 @@ abstract contract rules is RulesEngineCommon {
                     transferSelector,
                     pTypes,
                     "transferFrom(address,uint256,bytes)",
-                    ""
+                    "",
+                    "transferFrom"
                 );
 
                 bytes4[] memory selectors = new bytes4[](1);
@@ -1171,7 +1179,8 @@ abstract contract rules is RulesEngineCommon {
                     transferSelector,
                     pTypes,
                     "transferFrom(address,uint256,bytes)",
-                    ""
+                    "",
+                    "transferFrom"
                 );
 
                 bytes4[] memory selectors = new bytes4[](1);
@@ -1287,7 +1296,8 @@ abstract contract rules is RulesEngineCommon {
                     transferSelector,
                     pTypes,
                     "transferFrom(address,uint256,bytes)",
-                    ""
+                    "",
+                    "transferFrom"
                 );
 
                 bytes4[] memory selectors = new bytes4[](1);
@@ -1403,7 +1413,8 @@ abstract contract rules is RulesEngineCommon {
                     transferSelector,
                     pTypes,
                     "transferFrom(address,uint256,bytes)",
-                    ""
+                    "",
+                    "transferFrom"
                 );
 
                 bytes4[] memory selectors = new bytes4[](1);
@@ -1516,7 +1527,8 @@ abstract contract rules is RulesEngineCommon {
                 bytes4(keccak256(bytes(callingFunction))),
                 pTypes,
                 callingFunction,
-                ""
+                "",
+                callingFunction
             );
 
             // Link rule to calling function in policy

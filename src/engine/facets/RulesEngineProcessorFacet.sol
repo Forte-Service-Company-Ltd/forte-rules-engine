@@ -1021,7 +1021,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         // determine if we need to dynamically build event key
         if (_isDynamicParam) {
             // fire event by param type based on return value
-            _fireDynamicEvent(_rule, _policyId, _message, _callingFunctionArgs, _kind);
+            _fireDynamicEvent(_rule, _policyId, _message, _callingFunctionArgs, _kind, _effectStruct.eventPlaceholderIndex);
         } else {
             _fireEvent(_policyId, _message, _effectStruct);
         }
@@ -1039,7 +1039,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 _policyId,
         bytes32 _message,
         bytes calldata _callingFunctionArgs,
-        PlaceholderType _kind
+        PlaceholderType _kind,
+        uint256 index
     ) internal {
         // Build the effect arguments struct for event parameters:
         (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(
@@ -1048,25 +1049,23 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             _callingFunctionArgs,
             _kind
         );
-        // Data validation will always ensure effectArguments.length will be less than MAX_LOOP
-        for (uint256 i = 0; i < effectArguments.length; i++) {
-            // loop through parameter types and set eventParam
-            if (placeholders[i].pType == ParamTypes.UINT) {
-                uint256 uintParam = abi.decode(effectArguments[i], (uint));
-                emit RulesEngineEvent(_policyId, _message, uintParam);
-            } else if (placeholders[i].pType == ParamTypes.ADDR) {
-                address addrParam = abi.decode(effectArguments[i], (address));
-                emit RulesEngineEvent(_policyId, _message, addrParam);
-            } else if (placeholders[i].pType == ParamTypes.BOOL) {
-                bool boolParam = abi.decode(effectArguments[i], (bool));
-                emit RulesEngineEvent(_policyId, _message, boolParam);
-            } else if (placeholders[i].pType == ParamTypes.STR) {
-                string memory textParam = abi.decode(effectArguments[i], (string));
-                emit RulesEngineEvent(_policyId, _message, textParam);
-            } else if (placeholders[i].pType == ParamTypes.BYTES) {
-                bytes memory bytesParam = abi.decode(effectArguments[i], (bytes));
-                emit RulesEngineEvent(_policyId, _message, keccak256(bytesParam));
-            }
+
+        // loop through parameter types and set eventParam
+        if (placeholders[index].pType == ParamTypes.UINT) {
+            uint256 uintParam = abi.decode(effectArguments[index], (uint));
+            emit RulesEngineEvent(_policyId, _message, uintParam);
+        } else if (placeholders[index].pType == ParamTypes.ADDR) {
+            address addrParam = abi.decode(effectArguments[index], (address));
+            emit RulesEngineEvent(_policyId, _message, addrParam);
+        } else if (placeholders[index].pType == ParamTypes.BOOL) {
+            bool boolParam = abi.decode(effectArguments[index], (bool));
+            emit RulesEngineEvent(_policyId, _message, boolParam);
+        } else if (placeholders[index].pType == ParamTypes.STR) {
+            string memory textParam = abi.decode(effectArguments[index], (string));
+            emit RulesEngineEvent(_policyId, _message, textParam);
+        } else if (placeholders[index].pType == ParamTypes.BYTES) {
+            bytes memory bytesParam = abi.decode(effectArguments[index], (bytes));
+            emit RulesEngineEvent(_policyId, _message, keccak256(bytesParam));
         }
     }
 

@@ -84,7 +84,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes("transfer2(address,uint256)")))),
             pTypes,
             "transfer2(address,uint256)",
-            ""
+            "",
+            "transfer2"
         );
 
         pTypes = new ParamTypes[](3);
@@ -97,7 +98,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)")))),
             pTypes,
             "transferFrom(address,address,uint256)",
-            ""
+            "",
+            "transferFrom"
         );
 
         bytes4[] memory callingFunctions = new bytes4[](2);
@@ -166,7 +168,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             bytes4(keccak256(bytes("transfer2(address,uint256)"))),
             pTypes,
             "transfer2(address,uint256)",
-            ""
+            "",
+            "transfer2"
         );
 
         pTypes = new ParamTypes[](3);
@@ -179,7 +182,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))),
             pTypes,
             "transferFrom(address,address,uint256)",
-            ""
+            "",
+            "transferFrom"
         );
 
         pTypes = new ParamTypes[](4);
@@ -192,7 +196,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             bytes4(keccak256(bytes("transfer(address,uint256,bytes)"))),
             pTypes,
             "transfer(address,uint256,bytes)",
-            ""
+            "",
+            "transfer"
         );
 
         bytes4[] memory callingFunctions = new bytes4[](3);
@@ -266,7 +271,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             bytes4(keccak256(bytes("transfer(address,uint256)"))),
             pTypes,
             "transfer(address,uint256)",
-            ""
+            "",
+            "transfer"
         );
 
         pTypes = new ParamTypes[](3);
@@ -279,7 +285,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))),
             pTypes,
             "transferFrom(address,address,uint256)",
-            ""
+            "",
+            "transferFrom"
         );
 
         pTypes = new ParamTypes[](4);
@@ -292,7 +299,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             bytes4(keccak256(bytes("transfer(address,uint256,bytes)"))),
             pTypes,
             "transfer(address,uint256,bytes)",
-            ""
+            "",
+            "transfer"
         );
         bytes4[] memory callingFunctions = new bytes4[](3);
         callingFunctions[0] = bytes4(keccak256(bytes("transfer(address,uint256)")));
@@ -476,7 +484,8 @@ abstract contract policiesExecution is RulesEngineCommon {
                 sigCallingFunction,
                 pTypes,
                 callingFunction,
-                ""
+                "",
+                callingFunction
             );
         }
         bytes4[] memory selectors = new bytes4[](1);
@@ -540,7 +549,8 @@ abstract contract policiesExecution is RulesEngineCommon {
                 bytes4(keccak256(bytes("test(address,uint256)"))),
                 pTypes,
                 "test(address,uint256)",
-                ""
+                "",
+                "test"
             );
         }
 
@@ -582,7 +592,14 @@ abstract contract policiesExecution is RulesEngineCommon {
             pTypes[0] = ParamTypes.ADDR;
             pTypes[1] = ParamTypes.UINT;
             sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
-            RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyId,
+                sigCallingFunction,
+                pTypes,
+                callingFunction,
+                "",
+                callingFunction
+            );
         }
         bytes4[] memory selectors = new bytes4[](1);
         selectors[0] = sigCallingFunction;
@@ -653,7 +670,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             pTypes,
             "transfer(address,uint256)",
             "address to, uint256 value"
-            ""
+            "",
+            "transfer"
         );
 
         uint256[] memory ruleIds = new uint256[](7);
@@ -861,7 +879,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             bytes4(keccak256(bytes("transfer(address,uint256)"))),
             transferPTypes,
             "transfer(address,uint256)",
-            "address to, uint256 value"
+            "address to, uint256 value",
+            "transfer"
         );
 
         ParamTypes[] memory transferFromPTypes = new ParamTypes[](3);
@@ -874,7 +893,8 @@ abstract contract policiesExecution is RulesEngineCommon {
             bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))),
             transferFromPTypes,
             "transferFrom(address,address,uint256)",
-            "address from, address to, uint256 value"
+            "address from, address to, uint256 value",
+            "transferFrom"
         );
 
         // Update policy with calling functions and rules

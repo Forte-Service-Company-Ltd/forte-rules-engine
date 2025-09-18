@@ -66,7 +66,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction2)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
@@ -94,7 +95,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction3)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction3))));
@@ -174,7 +176,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -190,7 +193,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -206,7 +210,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -223,7 +228,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -243,7 +249,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes2,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -263,7 +270,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes2,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -283,7 +291,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -300,7 +309,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -326,7 +336,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         assertEq(callingFunc.set, true);
         // ensure orignal contract rule check works
@@ -362,8 +373,9 @@ abstract contract components is RulesEngineCommon {
             1,
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
-            "NewCallingFunctionName",
-            "address,uint256,address"
+            callingFunction,
+            "address,uint256,address",
+            "NewCallingFunctionName"
         );
         assertEq(callingFunc.set, true);
         // ensure orignal contract rule check works
@@ -375,7 +387,7 @@ abstract contract components is RulesEngineCommon {
 
         string memory newCallingFunctionName = RulesEngineComponentFacet(address(red))
             .getCallingFunctionMetadata(1, bytes4(keccak256(bytes(callingFunction))))
-            .callingFunction;
+            .name;
         string memory newEncodedValues = RulesEngineComponentFacet(address(red))
             .getCallingFunctionMetadata(1, bytes4(keccak256(bytes(callingFunction))))
             .encodedValues;
@@ -407,7 +419,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         assertEq(callingFunc.set, true);
         // ensure orignal contract rule check works
@@ -431,7 +444,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes2,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         CallingFunctionStorageSet memory sig = RulesEngineComponentFacet(address(red)).getCallingFunction(
             policyId,
@@ -458,7 +472,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             new ParamTypes[](3),
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -478,7 +493,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes2,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -499,7 +515,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction3)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         assertEq(nextCallingFunctionId, bytes4(bytes4(keccak256(bytes(callingFunction3)))));
 
@@ -553,7 +570,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes("transfer()"))),
             pTypes,
             "", //name
-            "address,uint256"
+            "address,uint256",
+            ""
         );
     }
 
@@ -568,7 +586,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(""))), // function signature
             pTypes,
             "transfer(address,uint256)",
-            "address,uint256"
+            "address,uint256",
+            "transfer"
         );
     }
 
@@ -585,7 +604,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         assertEq(callingFunctionId, bytes4(keccak256(bytes(callingFunction))));
         bytes4 callingFunctionId2 = RulesEngineComponentFacet(address(red)).createCallingFunction(
@@ -593,7 +613,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
             callingFunction2,
-            ""
+            "",
+            callingFunction2
         );
         assertEq(callingFunctionId2, bytes4(keccak256(bytes(callingFunction2))));
         RulesEngineComponentFacet(address(red)).getCallingFunction(policyId, callingFunctionId);
