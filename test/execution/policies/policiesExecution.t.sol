@@ -592,7 +592,14 @@ abstract contract policiesExecution is RulesEngineCommon {
             pTypes[0] = ParamTypes.ADDR;
             pTypes[1] = ParamTypes.UINT;
             sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
-            RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyId,
+                sigCallingFunction,
+                pTypes,
+                callingFunction,
+                "",
+                callingFunction
+            );
         }
         bytes4[] memory selectors = new bytes4[](1);
         selectors[0] = sigCallingFunction;

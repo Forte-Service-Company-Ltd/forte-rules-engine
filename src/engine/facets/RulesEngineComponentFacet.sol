@@ -431,14 +431,18 @@ contract RulesEngineComponentFacet is FacetCommonImports {
      * @param policyId The policy ID the calling function is associated with.
      * @param functionSignature The function signature of the calling function.
      * @param pTypes The new parameter types to append.
+     * @param callingFunctionSignature the Human Readable signature of the calling function (to be stored in metadata)
+     * @param encodedValues the string representation of the values encoded with the calling function (to be stored in metadata)
+     * @param name the name of the calling function (to be stored in metadata)
      * @return functionId The updated calling function ID.
      */
     function updateCallingFunction(
         uint256 policyId,
         bytes4 functionSignature,
         ParamTypes[] memory pTypes,
-        string memory callingFunctionName,
-        string memory encodedValues
+        string memory callingFunctionSignature,
+        string memory encodedValues,
+        string memory name
     ) external returns (bytes4) {
         _policyAdminOnly(policyId, msg.sender);
         _notCemented(policyId);
@@ -457,7 +461,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
             }
         }
         // Store calling function metadata updates
-        _storeCallingFunctionMetadata(policyId, functionSignature, callingFunctionName, encodedValues);
+        _storeCallingFunctionMetadata(policyId, functionSignature, callingFunctionSignature, encodedValues, name);
         emit CallingFunctionUpdated(policyId, functionSignature);
         return functionSignature;
     }

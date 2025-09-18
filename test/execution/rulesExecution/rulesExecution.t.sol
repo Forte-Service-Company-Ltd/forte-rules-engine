@@ -824,11 +824,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         assertTrue(response);
     }
 
-    function testRulesEngine_Unit_CallData_Array_To_ForeignCall_And_Back()
-        public
-        ifDeploymentTestsEnabled
-        endWithStopPrank
-    {
+    function testRulesEngine_Unit_CallData_Array_To_ForeignCall_And_Back() public ifDeploymentTestsEnabled endWithStopPrank {
         // encode additional datas with the calling contract call into rules engine
         //deploy ExampleUserContractEncoding
         encodingContract = new ExampleUserContractEncoding();
@@ -877,7 +873,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[2].typeSpecificIndex = 2; // test array
         rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
         rule.placeHolders[3].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
-        rule.placeHolders[3].typeSpecificIndex = 1; 
+        rule.placeHolders[3].typeSpecificIndex = 1;
 
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
@@ -890,7 +886,12 @@ abstract contract rulesExecution is RulesEngineCommon {
         fc.encodedIndices[0].index = 2;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArrayPassthrough(string[])", "testSigWithArrayPassthrough(string[])");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "testSigWithArrayPassthrough(string[])",
+            "testSigWithArrayPassthrough(string[])"
+        );
 
         // Add a negative/positive effects
         rule.negEffects = new Effect[](1);
@@ -902,7 +903,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
             pTypes,
             callingFunctionArrayDynamic,
-            ""
+            "",
+            callingFunctionArrayDynamic
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -981,7 +983,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[2].typeSpecificIndex = 2; // test array
         rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
         rule.placeHolders[3].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
-        rule.placeHolders[3].typeSpecificIndex = 1; 
+        rule.placeHolders[3].typeSpecificIndex = 1;
 
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
@@ -994,7 +996,12 @@ abstract contract rulesExecution is RulesEngineCommon {
         fc.encodedIndices[0].index = 2;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternally(string[])", "testSigWithArraySetInternally(string[])");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "testSigWithArraySetInternally(string[])",
+            "testSigWithArraySetInternally(string[])"
+        );
 
         // Add a negative/positive effects
         rule.negEffects = new Effect[](1);
@@ -1006,7 +1013,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
             pTypes,
             callingFunctionArrayDynamic,
-            ""
+            "",
+            callingFunctionArrayDynamic
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
