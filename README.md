@@ -144,4 +144,4 @@ The primary license for Forte Protocol Rules Engine is the Business Source Licen
   Other Exceptions
 
 [version-image]: https://img.shields.io/badge/Version-0.7.0-brightgreen?style=for-the-badge&logo=appveyor
-[version-url]: https://github.com/Forte-Service-Company-Ltd/forte-rules-engine
+[version-url]: https://github.com/Forte-Service-Company-Ltd/forte-rules-engine/tags
