@@ -299,13 +299,11 @@ abstract contract policiesExecution is RulesEngineCommon {
         callingFunctions[1] = bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
         callingFunctions[2] = bytes4(keccak256(bytes("transfer(address,uint256,bytes)")));
 
-
-
         uint256[][] memory ruleIds = new uint256[][](3);
         ruleIds[0] = new uint256[](2);
         ruleIds[0][0] = 1;
         ruleIds[0][1] = 1;
-        
+
         ruleIds[1] = new uint256[](2);
         ruleIds[1][0] = 2;
         ruleIds[1][1] = 2;
@@ -556,6 +554,73 @@ abstract contract policiesExecution is RulesEngineCommon {
                 assertEq(ruleIds[0].length, 0, "Deleted policy should have no rule associations");
             }
         }
+    }
+
+    function testRulesEngine_Unit_deleteRule_deletePolicy_IsNotRunAfterDeletion() public ifDeploymentTestsEnabled endWithStopPrank {
+        vm.startPrank(user1);
+        uint policyId = _createBlankPolicy();
+        uint[] memory policyIds = new uint[](1);
+        policyIds[0] = policyId;
+
+        uint ruleId;
+        {
+            Rule memory rule;
+            // always true so it always triggers positive effect
+            rule.instructionSet = new uint256[](2);
+            rule.instructionSet[0] = uint(LogicalOp.NUM);
+            rule.instructionSet[1] = 1;
+            // revert in positive effect
+            rule.posEffects = new Effect[](1);
+            rule.posEffects[0] = effectId_revert; // always reverts
+            // Save the rule
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, "My rule", "My way or the highway");
+        }
+
+        bytes4 sigCallingFunction;
+        {
+            ParamTypes[] memory pTypes = new ParamTypes[](2);
+            pTypes[0] = ParamTypes.ADDR;
+            pTypes[1] = ParamTypes.UINT;
+            sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
+            RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
+        }
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = sigCallingFunction;
+        uint256[][] memory _ruleIds = new uint256[][](1);
+        uint256[] memory _ids = new uint256[](1);
+        _ids[0] = ruleId;
+        _ruleIds[0] = _ids;
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            selectors,
+            _ruleIds,
+            PolicyType.OPEN_POLICY,
+            "Test Policy",
+            "This is a test policy"
+        );
+        vm.startPrank(callingContractAdmin);
+        RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+
+        // we check that the policy is in the policy association storage
+        uint[] memory policiesApplied = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(userContractAddress);
+        assertEq(policiesApplied.length, 1, "applied policies should be 1");
+        assertEq(policiesApplied[0], policyId, "applied policy mismatch");
+
+        // we test that the policy works (it should always revert)
+        vm.startPrank(user1);
+        vm.expectRevert("Rules Engine Revert");
+        userContract.transfer(address(0xbad), 666);
+
+        // now we can delete the policy
+        RulesEnginePolicyFacet(address(red)).deletePolicy(policyId);
+
+        // this should not revert anymore as the policy was deleted
+        vm.startPrank(user1);
+        userContract.transfer(address(0xbad), 666);
+
+        // we check that the policy is not in the policy association storage anymore since it was deleted
+        policiesApplied = RulesEnginePolicyFacet(address(red)).getAppliedPolicyIds(userContractAddress);
+        assertEq(policiesApplied.length, 0, "No policies should be applied after deletion");
     }
 
     function testRulesEngine_Unit_OFACDenyListPolicy() public ifDeploymentTestsEnabled endWithStopPrank {

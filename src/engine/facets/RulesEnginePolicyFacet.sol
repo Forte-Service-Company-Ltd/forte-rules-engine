@@ -104,31 +104,48 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
                 delete lib._getRuleStorage().ruleStorageSets[policyId][i];
             }
         }
-
-        uint256 foreignCallCount = lib._getForeignCallStorage().foreignCallIdxCounter[policyId];
-        for (uint256 i = 0; i <= foreignCallCount; i++) {
-            if (lib._getForeignCallStorage().foreignCalls[policyId][i].set) {
-                delete lib._getForeignCallStorage().foreignCalls[policyId][i];
-                emit ForeignCallDeleted(policyId, i);
+        {
+            uint256 foreignCallCount = lib._getForeignCallStorage().foreignCallIdxCounter[policyId];
+            for (uint256 i = 0; i <= foreignCallCount; i++) {
+                if (lib._getForeignCallStorage().foreignCalls[policyId][i].set) {
+                    delete lib._getForeignCallStorage().foreignCalls[policyId][i];
+                    emit ForeignCallDeleted(policyId, i);
+                }
             }
         }
-
-        TrackerStorage storage trackerData = lib._getTrackerStorage();
-        uint256 trackerCount = trackerData.trackerIndexCounter[policyId];
-        for (uint256 i = 1; i <= trackerCount; i++) {
-            if (trackerData.trackers[policyId][i].set) {
-                delete lib._getTrackerStorage().trackers[policyId][i];
-                emit TrackerDeleted(policyId, i);
+        {
+            TrackerStorage storage trackerData = lib._getTrackerStorage();
+            uint256 trackerCount = trackerData.trackerIndexCounter[policyId];
+            for (uint256 i = 1; i <= trackerCount; i++) {
+                if (trackerData.trackers[policyId][i].set) {
+                    delete lib._getTrackerStorage().trackers[policyId][i];
+                    emit TrackerDeleted(policyId, i);
+                }
             }
         }
-
-        bytes4[] memory oldCallingFunctions = data.policy.callingFunctions;
-        for (uint256 i = 0; i < oldCallingFunctions.length; i++) {
-            delete data.policy.callingFunctionsToRuleIds[oldCallingFunctions[i]];
-            // Clear the iterator array
-            data.policy.callingFunctions.pop();
+        {
+            bytes4[] memory oldCallingFunctions = data.policy.callingFunctions;
+            for (uint256 i = 0; i < oldCallingFunctions.length; i++) {
+                delete data.policy.callingFunctionsToRuleIds[oldCallingFunctions[i]];
+                // Clear the iterator array
+                data.policy.callingFunctions.pop();
+            }
         }
-
+        {
+            PolicyAssociationStorage storage assocData = lib._getPolicyAssociationStorage();
+            for (uint256 i = 0; i < assocData.policyIdContractMap[policyId].length; i++) {
+                address mappedAddress = assocData.policyIdContractMap[policyId][i];
+                uint256 len = assocData.contractPolicyIdMap[mappedAddress].length;
+                for (uint256 j = 0; j < len; j++) {
+                    if (assocData.contractPolicyIdMap[mappedAddress][j] == policyId) {
+                        assocData.contractPolicyIdMap[mappedAddress][j] = assocData.contractPolicyIdMap[mappedAddress][len - 1];
+                        assocData.contractPolicyIdMap[mappedAddress].pop();
+                        break;
+                    }
+                }
+            }
+            delete assocData.policyIdContractMap[policyId];
+        }
         emit PolicyDeleted(policyId);
     }
 
