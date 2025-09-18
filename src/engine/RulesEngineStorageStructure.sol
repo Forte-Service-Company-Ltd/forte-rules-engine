@@ -68,8 +68,8 @@ enum ParamTypes {
     BOOL,
     VOID,
     BYTES,
-    STATIC_TYPE_ARRAY,
-    DYNAMIC_TYPE_ARRAY
+    ARRAY_OF_VALUE_TYPES,
+    ARRAY_OF_REFERENCE_TYPES
 }
 
 enum TrackerArrayTypes {

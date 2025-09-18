@@ -773,7 +773,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         return policyIds[0];
     }
 
-    // Same as setupRuleWithForeignCall except that it contains a foreign call that returns an array that is referenced by another foreign call 
+    // Same as setupRuleWithForeignCall except that it contains a foreign call that returns an array that is referenced by another foreign call
     function setupRuleWithForeignCallWithArrayToAnotherForeignCall(
         EffectTypes _effectType,
         bool isPositive
@@ -803,7 +803,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         instructionSet[6] = 1;
         // Build the instruction set for the rule (including placeholders)
         rule.instructionSet = instructionSet;
-        
+
         rule = _setUpEffect(rule, _effectType, isPositive);
 
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
@@ -817,19 +817,29 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternallyOneArg(uint256)","testSigWithArraySetInternallyOneArg(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "testSigWithArraySetInternallyOneArg(uint256)",
+            "testSigWithArraySetInternallyOneArg(uint256)"
+        );
 
         ForeignCallTestContract foreignCall2 = new ForeignCallTestContract();
         ForeignCall memory fc2;
         fc2.foreignCallAddress = address(foreignCall2);
         fc2.signature = bytes4(keccak256(bytes("testSigWithArrayPassthrough(string[])")));
         fc2.parameterTypes = new ParamTypes[](1);
-        fc2.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc2.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc2.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc2.encodedIndices[0].index = 1;
         fc2.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
         fc2.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc2, "testSigWithArrayPassthrough(string[])", "testSigWithArrayPassthrough(string[])");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc2,
+            "testSigWithArrayPassthrough(string[])",
+            "testSigWithArrayPassthrough(string[])"
+        );
 
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
@@ -873,7 +883,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         instructionSet[6] = 1;
         // Build the instruction set for the rule (including placeholders)
         rule.instructionSet = instructionSet;
-        
+
         rule = _setUpEffect(rule, _effectType, isPositive);
 
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
@@ -887,19 +897,29 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternallyNoArg()","testSigWithArraySetInternallyNoArg()");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "testSigWithArraySetInternallyNoArg()",
+            "testSigWithArraySetInternallyNoArg()"
+        );
 
         ForeignCallTestContract foreignCall2 = new ForeignCallTestContract();
         ForeignCall memory fc2;
         fc2.foreignCallAddress = address(foreignCall2);
         fc2.signature = bytes4(keccak256(bytes("testSigWithArrayPassthrough(string[])")));
         fc2.parameterTypes = new ParamTypes[](1);
-        fc2.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc2.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc2.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc2.encodedIndices[0].index = 1;
         fc2.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
         fc2.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc2, "testSigWithArrayPassthrough(string[])", "testSigWithArrayPassthrough(string[])");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc2,
+            "testSigWithArrayPassthrough(string[])",
+            "testSigWithArrayPassthrough(string[])"
+        );
 
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
@@ -1138,7 +1158,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         // we fuzz the amount of arrays
         ParamTypes[] memory pTypes = new ParamTypes[](arrayAmount);
         // we assign the same type to all the arrays
-        for (uint array; array < arrayAmount; array++) pTypes[array] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        for (uint array; array < arrayAmount; array++) pTypes[array] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
 
         // Save the calling function
         RulesEngineComponentFacet(address(red)).createCallingFunction(

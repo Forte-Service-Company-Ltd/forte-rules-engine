@@ -1375,7 +1375,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         uint256[] memory emptyArray = new uint256[](0);
         tracker.trackerValue = abi.encode(emptyArray);
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
             policyID,
             tracker,
@@ -1398,7 +1398,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         bytes[] memory emptyArray = new bytes[](0);
         tracker.trackerValue = abi.encode(emptyArray);
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
             policyID,
             tracker,
@@ -1421,7 +1421,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         address[] memory emptyArray = new address[](0);
         tracker.trackerValue = abi.encode(emptyArray);
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
             policyID,
             tracker,
@@ -1444,7 +1444,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         string[] memory emptyArray = new string[](0);
         tracker.trackerValue = abi.encode(emptyArray);
-        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.STR_ARRAY);
 
         // ensure metadata is correct
@@ -1467,7 +1467,7 @@ abstract contract components is RulesEngineCommon {
             2
         ] = "test a second and even longer string to really make sure this is testing the dynamic bytes array functionality properly.";
         tracker.trackerValue = abi.encode(initialArray);
-        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
             policyID,
             tracker,
@@ -1490,7 +1490,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         uint256[] memory emptyArray = new uint256[](0);
         tracker.trackerValue = abi.encode(emptyArray);
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         vm.expectRevert("Invalid type");
         RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
     }
@@ -1531,7 +1531,7 @@ abstract contract components is RulesEngineCommon {
         string memory trackerName = "tracker1";
 
         /// build the members of the struct:
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.trackerValue = abi.encode(trackerValues);
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
             policyID,
@@ -1581,7 +1581,7 @@ abstract contract components is RulesEngineCommon {
         string memory trackerName = "tracker1";
 
         /// build the members of the struct:
-        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         tracker.trackerValue = abi.encode(trackerValues);
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
             policyID,
@@ -1631,7 +1631,7 @@ abstract contract components is RulesEngineCommon {
         string memory trackerName = "tracker1";
 
         /// build the members of the struct:
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.trackerValue = abi.encode(trackerValues);
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
             policyID,
@@ -1678,7 +1678,7 @@ abstract contract components is RulesEngineCommon {
         string memory trackerName = "tracker1";
 
         /// build the members of the struct:
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.trackerValue = abi.encode(trackerValues);
         vm.expectRevert("Invalid type");
         RulesEngineComponentFacet(address(red)).createMappedTracker(

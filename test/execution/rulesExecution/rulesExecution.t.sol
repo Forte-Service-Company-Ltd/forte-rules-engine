@@ -766,7 +766,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        pTypes[2] = ParamTypes.STATIC_TYPE_ARRAY;
+        pTypes[2] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         pTypes[3] = ParamTypes.ADDR;
 
         rule.instructionSet = new uint256[](7);
@@ -783,7 +783,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[0].typeSpecificIndex = 0; // to address
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
-        rule.placeHolders[2].pType = ParamTypes.STATIC_TYPE_ARRAY;
+        rule.placeHolders[2].pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         rule.placeHolders[2].typeSpecificIndex = 2; // additional bytes32 param
 
         // Add a negative/positive effects
@@ -852,7 +852,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        pTypes[2] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        pTypes[2] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         pTypes[3] = ParamTypes.ADDR;
 
         rule.instructionSet = new uint256[](7);
@@ -869,10 +869,10 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[0].typeSpecificIndex = 0; // to address
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
-        rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[2].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         rule.placeHolders[2].typeSpecificIndex = 2; // test array
         rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[3].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[3].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         rule.placeHolders[3].typeSpecificIndex = 1;
 
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
@@ -881,7 +881,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes("testSigWithArrayPassthrough(string[])")));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 2;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -962,7 +962,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        pTypes[2] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        pTypes[2] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         pTypes[3] = ParamTypes.ADDR;
 
         rule.instructionSet = new uint256[](7);
@@ -979,10 +979,10 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[0].typeSpecificIndex = 0; // to address
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
-        rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[2].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         rule.placeHolders[2].typeSpecificIndex = 2; // test array
         rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[3].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[3].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         rule.placeHolders[3].typeSpecificIndex = 1;
 
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
@@ -991,7 +991,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes("testSigWithArraySetInternally(string[])")));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 2;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -1072,7 +1072,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        pTypes[2] = ParamTypes.STATIC_TYPE_ARRAY;
+        pTypes[2] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         pTypes[3] = ParamTypes.ADDR;
 
         rule.instructionSet = new uint256[](7);
@@ -1089,7 +1089,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[0].typeSpecificIndex = 0; // to address
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
-        rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[2].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         rule.placeHolders[2].typeSpecificIndex = 2; // additional bytes32 param
 
         // Add a negative/positive effects
@@ -1162,7 +1162,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        pTypes[2] = ParamTypes.STATIC_TYPE_ARRAY;
+        pTypes[2] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         pTypes[3] = ParamTypes.ADDR;
 
         rule.instructionSet = new uint256[](7);
@@ -1179,7 +1179,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[0].typeSpecificIndex = 0; // to address
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
-        rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[2].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         rule.placeHolders[2].typeSpecificIndex = 2; // additional bytes32 param
 
         // Add a negative/positive effects
