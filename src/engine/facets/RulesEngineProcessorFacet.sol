@@ -389,23 +389,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         } else if (globalVarType == GLOBAL_MSG_DATA) {
             if (argType == ParamTypes.STR || argType == ParamTypes.BYTES) {
                 encodedCall = bytes.concat(encodedCall, bytes32(32 * (fc.parameterTypes.length) + lengthToAppend));
-
-                // Create properly encoded msg.data with length prefix
-                bytes memory encodedMsgData = new bytes(msg.data.length + 32);
-
-                // Store length in first 32 bytes
-                uint256 msgDataLength = msg.data.length;
-                assembly {
-                    mstore(add(encodedMsgData, 32), msgDataLength)
-                }
-
-                // Copy the actual data
-                for (uint256 j = 0; j < msg.data.length; j++) {
-                    encodedMsgData[j + 32] = msg.data[j];
-                }
-
-                dynamicData = bytes.concat(dynamicData, encodedMsgData);
-                lengthToAppend += encodedMsgData.length;
+                dynamicData = bytes.concat(dynamicData, bytes32(msg.data.length), msg.data);
+                lengthToAppend += msg.data.length;
             } else {
                 revert(MSGDTA_ONLY_STRING);
             }
@@ -897,23 +882,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         } else if (globalVarType == GLOBAL_BLOCK_TIMESTAMP) {
             return (abi.encode(block.timestamp), ParamTypes.UINT);
         } else if (globalVarType == GLOBAL_MSG_DATA) {
-            // Important: Return msg.data properly formatted for dynamic bytes parameters
-            // We need to create a properly encoded bytes value with length prefix
-            bytes memory msgData = msg.data;
-            bytes memory encodedData = new bytes(msg.data.length + 64);
-
-            // Store length in first 32 bytes
-            assembly {
-                mstore(add(encodedData, 32), 0x20)
-                mstore(add(encodedData, 64), mload(msgData))
-            }
-
-            // Copy the actual data
-            for (uint256 i = 0; i < msg.data.length; i++) {
-                encodedData[i + 64] = msg.data[i];
-            }
-
-            return (encodedData, ParamTypes.BYTES);
+            return (msg.data, ParamTypes.BYTES);
         } else if (globalVarType == GLOBAL_BLOCK_NUMBER) {
             return (abi.encode(block.number), ParamTypes.UINT);
         } else if (globalVarType == GLOBAL_TX_ORIGIN) {
