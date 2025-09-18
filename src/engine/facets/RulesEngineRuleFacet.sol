@@ -447,6 +447,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             _validateParamType(placeholders[i].pType);
         }
     }
+
     /**
      * @notice Validates an instruction set.
      * @param instructionSet The instructionSet to validate.
@@ -467,13 +468,13 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                 dataCounter++;
                 if (!_isLessLimitedOpCode(instructionHold)) {
                     // if the instruction is data, we just check that it won't point to an index outside of max memory size
-                    if (instruction > memorySize) revert(MEMORY_OVERFLOW);
+                    if (instruction >= memorySize) revert(MEMORY_OVERFLOW);
                 } else {
                     // Verify that the tracker exists in the policy
                     if (dataCounter == 1) {
                         if (instructionHold == uint(LogicalOp.PLH)) {
                             // PLH is only limited by the Max loop size
-                            if (instruction > MAX_LOOP) revert(MEMORY_OVERFLOW);
+                            if (instruction >= MAX_LOOP) revert(MEMORY_OVERFLOW);
                         } else {
                             TrackerStorage storage trackerData = lib._getTrackerStorage();
                             if (!trackerData.trackers[policyId][instruction].set) revert(TRACKER_NOT_SET);
@@ -490,7 +491,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             } else {
                 ++totalInstructions;
                 // if the instruction is not data, we check that it is a valid opcode
-                if (instruction > opsTotalSize) revert(INVALID_INSTRUCTION);
+                if (instruction >= opsTotalSize) revert(INVALID_INSTRUCTION);
                 // NUM is a special case since it can expect any data, so very little check is needed
                 if (instruction == uint(LogicalOp.NUM)) {
                     // we only validate that NUM will have its argument as part of the instruction set
