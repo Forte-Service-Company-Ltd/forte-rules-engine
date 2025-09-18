@@ -309,7 +309,7 @@ abstract contract policies is RulesEngineCommon {
         // This loop will create 50 calling functions with a rule on each one.
         for (uint i = 0; i < ruleCount; i++) {
             bytes4 selector = _modifySelectorWithIterator(cfSelector, i);
-            RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, selector, pTypes, callingFunction, "");
+            RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, selector, pTypes, callingFunction, "", callingFunction);
             selectors[i] = selector;
 
             r = _createLTRule();
@@ -388,7 +388,8 @@ abstract contract policies is RulesEngineCommon {
                 bytes4(keccak256(bytes(builtCaller))),
                 pTypes,
                 callingFunction,
-                ""
+                "",
+                callingFunction
             );
 
             selectors[i] = bytes4(keccak256(bytes(builtCaller)));
@@ -1008,7 +1009,14 @@ abstract contract policies is RulesEngineCommon {
             pTypes[0] = ParamTypes.ADDR;
             pTypes[1] = ParamTypes.UINT;
             sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
-            RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyId,
+                sigCallingFunction,
+                pTypes,
+                callingFunction,
+                "",
+                callingFunction
+            );
         }
         bytes4[] memory selectors = new bytes4[](1);
         selectors[0] = sigCallingFunction;
@@ -1065,7 +1073,14 @@ abstract contract policies is RulesEngineCommon {
             pTypes[1] = ParamTypes.UINT;
             sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
             vm.expectRevert("Policy does not exist");
-            RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyId,
+                sigCallingFunction,
+                pTypes,
+                callingFunction,
+                "",
+                callingFunction
+            );
         }
         uint[][] memory noRules = new uint[][](0);
         // we check that we can't update a deleted policy

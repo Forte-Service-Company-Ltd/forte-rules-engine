@@ -211,6 +211,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
 
         _data.ruleStorageSets[_policyId][_ruleId].set = true;
         _data.ruleStorageSets[_policyId][_ruleId].rule = _rule;
+        _data.ruleStorageSets[_policyId][_ruleId].rule.ruleIndex = _ruleId;
         _updateTrackerIdMapping(_data, _policyId, _ruleId);
         return _ruleId;
     }

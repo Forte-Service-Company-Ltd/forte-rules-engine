@@ -112,7 +112,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
@@ -238,7 +239,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction3)))),
             pTypes,
             callingFunction3,
-            ""
+            "",
+            callingFunction3
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction3))));
@@ -350,7 +352,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction3)))),
             pTypes,
             callingFunction3,
-            ""
+            "",
+            callingFunction3
         );
 
         // Save the Policy
@@ -436,7 +439,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionBool)))),
             pTypes,
             callingFunctionBool,
-            ""
+            "",
+            callingFunctionBool
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -519,7 +523,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionWithBytes)))),
             pTypes,
             callingFunctionWithBytes,
-            ""
+            "",
+            callingFunctionWithBytes
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -612,7 +617,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionBytes)))),
             pTypes,
             callingFunctionBytes,
-            ""
+            "",
+            callingFunctionBytes
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -700,7 +706,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionWithString)))),
             pTypes,
             callingFunctionWithString,
-            ""
+            "",
+            callingFunctionWithString
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -789,7 +796,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayStatic)))),
             pTypes,
             callingFunctionArrayStatic,
-            ""
+            "",
+            callingFunctionArrayStatic
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -1086,7 +1094,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
             pTypes,
             callingFunctionArrayDynamic,
-            ""
+            "",
+            callingFunctionArrayDynamic
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -1176,7 +1185,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
             pTypes,
             callingFunctionArrayDynamic,
-            ""
+            "",
+            callingFunctionArrayDynamic
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -1221,7 +1231,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes("transfer(address,uint256)")))),
             pTypes,
             "transfer(address,uint256)",
-            "address,uint256"
+            "address,uint256",
+            "transfer"
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes("transfer(address,uint256)"))));

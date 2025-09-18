@@ -194,6 +194,7 @@ struct CallingFunctionHashMapping {
     string callingFunction;
     bytes4 signature;
     string encodedValues;
+    string name;
 }
 
 /**
@@ -364,6 +365,7 @@ struct Rule {
     Placeholder[] placeHolders;
     Placeholder[] positiveEffectPlaceHolders;
     Placeholder[] negativeEffectPlaceHolders;
+    uint256 ruleIndex;
     // List of all positive effects
     Effect[] posEffects;
     // List of all negative effects

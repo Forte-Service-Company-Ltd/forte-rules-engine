@@ -254,7 +254,8 @@ abstract contract rulesFuzz is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
@@ -304,7 +305,8 @@ abstract contract rulesFuzz is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));

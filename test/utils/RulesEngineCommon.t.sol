@@ -339,7 +339,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
             callingFunction2,
-            ""
+            "",
+            callingFunction2
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
@@ -404,7 +405,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
             callingFunction2,
-            ""
+            "",
+            callingFunction2
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
@@ -994,7 +996,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(bytes4(keccak256(bytes(callingSignature)))),
             pTypes,
             callingSignature,
-            ""
+            "",
+            callingSignature
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
@@ -1074,7 +1077,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(bytes4(keccak256(bytes(callingSignature)))),
             pTypes,
             callingSignature,
-            ""
+            "",
+            callingSignature
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
@@ -1142,7 +1146,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(bytes4(keccak256(bytes(callingSignature)))),
             pTypes,
             callingSignature,
-            ""
+            "",
+            callingSignature
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
@@ -1314,7 +1319,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))),
                 pTypes,
                 "transferFrom(address,address,uint256)",
-                ""
+                "",
+                "transferFrom"
             );
         }
 
@@ -2760,7 +2766,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         if (callingFunctions.length == 0) callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
@@ -2789,7 +2796,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
@@ -2819,7 +2827,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(_callingFunction),
             pTypes,
             functionName,
-            ""
+            "",
+            functionName
         );
         // Save the Policy
         callingFunctions.push(_callingFunction);
@@ -2849,7 +2858,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(_callingFunction),
             pTypes,
             functionName,
-            ""
+            "",
+            functionName
         );
         // Save the Policy
         callingFunctions.push(_callingFunction);
