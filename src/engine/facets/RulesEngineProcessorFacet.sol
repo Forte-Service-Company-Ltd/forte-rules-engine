@@ -254,8 +254,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             encodedCall = bytes.concat(encodedCall, bytes32(32 * (fc.parameterTypes.length) + lengthToAppend));
             uint256 arrayLength = uint256(bytes32(functionArguments[uint(value):uint(value) + 32]));
             // Get the static type array
-            bytes memory staticArray = new bytes(arrayLength * 32);
             uint256 lengthToGrab = ((arrayLength + 1) * 32);
+            bytes memory staticArray = new bytes(lengthToGrab);
             staticArray = functionArguments[uint(value):uint(value) + lengthToGrab];
             dynamicData = bytes.concat(dynamicData, staticArray);
             lengthToAppend += lengthToGrab;
