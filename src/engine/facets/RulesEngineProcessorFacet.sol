@@ -235,12 +235,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             encodedCall = bytes.concat(encodedCall, bytes32(dynamicOffset));
             // Get the dynamic data - and bounds checking
             require(uint(value) < functionArguments.length, DYNDATA_OFFSET);
-            require(uint(value) + 32 <= functionArguments.length, DYNDATA_OUTBNDS);
             uint256 length = uint256(bytes32(functionArguments[uint(value):uint(value) + 32]));
             // Calculate total bytes needed: 32 bytes for length prefix + padded data length (round up to nearest 32-byte boundary)
             uint256 words = 32 + ((length + 31) / 32) * 32;
-
-            require(uint(value) + words <= functionArguments.length, DYNDATA_OUTBNDS);
+            // data size should be: value (offset) + 32 (length datum) + length (actual data)
+            require(uint(value) + 32 + length <= functionArguments.length, DYNDATA_OUTBNDS);
 
             bytes memory dynamicValue = functionArguments[uint(value):uint(value) + words];
             // Add length and data (data is already padded to 32 bytes)
@@ -249,20 +248,26 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 dynamicValue // data (already padded)
             );
             lengthToAppend += words; // 32 for length + 32 for padded data
-        } else if (argType == ParamTypes.STATIC_TYPE_ARRAY) {
+        } else if (argType == ParamTypes.ARRAY_OF_VALUE_TYPES) {
+            require(uint(value) < functionArguments.length, DYNDATA_OFFSET);
             // encode the static offset
             encodedCall = bytes.concat(encodedCall, bytes32(32 * (fc.parameterTypes.length) + lengthToAppend));
             uint256 arrayLength = uint256(bytes32(functionArguments[uint(value):uint(value) + 32]));
+            // data size should be: value (offset) + 32 (length datum) + length (actual data)
+            require(uint(value) + 32 + arrayLength <= functionArguments.length, DYNDATA_OUTBNDS);
             // Get the static type array
-            bytes memory staticArray = new bytes(arrayLength * 32);
             uint256 lengthToGrab = ((arrayLength + 1) * 32);
+            bytes memory staticArray = new bytes(lengthToGrab);
             staticArray = functionArguments[uint(value):uint(value) + lengthToGrab];
             dynamicData = bytes.concat(dynamicData, staticArray);
             lengthToAppend += lengthToGrab;
-        } else if (argType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+        } else if (argType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
+            require(uint(value) < functionArguments.length, DYNDATA_OFFSET);
             uint256 baseDynamicOffset = 32 * (fc.parameterTypes.length) + lengthToAppend;
             encodedCall = bytes.concat(encodedCall, bytes32(baseDynamicOffset));
             uint256 length = uint256(bytes32(functionArguments[uint(value):uint(value) + 32]));
+            // data size should be: value (offset) + 32 (length datum) + length (actual data)
+            require(uint(value) + 32 + length <= functionArguments.length, DYNDATA_OUTBNDS);
             lengthToAppend += 32;
             dynamicData = bytes.concat(dynamicData, abi.encode(length));
             (dynamicData, lengthToAppend) = _getDynamicValueArrayData(functionArguments, dynamicData, length, lengthToAppend, uint(value));
@@ -339,7 +344,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 stringData // data (already padded)
             );
             lengthToAppend += stringData.length;
-        } else if (argType == ParamTypes.STATIC_TYPE_ARRAY || argType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+        } else if (argType == ParamTypes.ARRAY_OF_VALUE_TYPES || argType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             // encode the static offset
             encodedCall = bytes.concat(encodedCall, bytes32(32 * (parameterTypesLength) + lengthToAppend));
             bytes memory arrayData = ProcessorLib._extractDynamicArrayData(value);
@@ -616,7 +621,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     } else {
                         v = uint256(keccak256(value));
                     }
-                } else if (typ == ParamTypes.STATIC_TYPE_ARRAY || typ == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+                } else if (typ == ParamTypes.ARRAY_OF_VALUE_TYPES || typ == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
                     // length of array for direct comparison using == and != operations
                     v = abi.decode(value, (uint256));
                 }
@@ -723,7 +728,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             trk.trackerValue = abi.encode(_trackerValue);
         } else if (trk.pType == ParamTypes.BYTES || trk.pType == ParamTypes.STR) {
             trk.trackerValue = ProcessorLib._uintToBytes(_trackerValue);
-        } else if (trk.pType == ParamTypes.STATIC_TYPE_ARRAY || trk.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+        } else if (trk.pType == ParamTypes.ARRAY_OF_VALUE_TYPES || trk.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             trk.trackerValue = abi.encode(_trackerValue);
         } else {
             revert(INVALID_TYPE);
@@ -770,7 +775,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             encodedValue = abi.encode(_trackerValue);
         } else if (trk.pType == ParamTypes.BYTES || trk.pType == ParamTypes.STR) {
             encodedValue = ProcessorLib._uintToBytes(_trackerValue);
-        } else if (trk.pType == ParamTypes.STATIC_TYPE_ARRAY || trk.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+        } else if (trk.pType == ParamTypes.ARRAY_OF_VALUE_TYPES || trk.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             encodedValue = abi.encode(_trackerValue);
         }
         // re encode as bytes to mapping
@@ -958,7 +963,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     ) internal pure returns (bytes memory) {
         if (placeholder.pType == ParamTypes.STR || placeholder.pType == ParamTypes.BYTES) {
             return _getDynamicVariableFromCalldata(_callingFunctionArgs, placeholder.typeSpecificIndex);
-        } else if (placeholder.pType == ParamTypes.STATIC_TYPE_ARRAY || placeholder.pType == ParamTypes.DYNAMIC_TYPE_ARRAY) {
+        } else if (placeholder.pType == ParamTypes.ARRAY_OF_VALUE_TYPES || placeholder.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             bytes32 value = bytes32(_callingFunctionArgs[placeholder.typeSpecificIndex * 32:(placeholder.typeSpecificIndex + 1) * 32]);
             return abi.encode(uint256(bytes32(_callingFunctionArgs[uint(value):uint(value) + 32])));
         } else {
@@ -1021,7 +1026,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         // determine if we need to dynamically build event key
         if (_isDynamicParam) {
             // fire event by param type based on return value
-            _fireDynamicEvent(_rule, _policyId, _message, _callingFunctionArgs, _kind);
+            _fireDynamicEvent(_rule, _policyId, _message, _callingFunctionArgs, _kind, _effectStruct.eventPlaceholderIndex);
         } else {
             _fireEvent(_policyId, _message, _effectStruct);
         }
@@ -1039,7 +1044,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 _policyId,
         bytes32 _message,
         bytes calldata _callingFunctionArgs,
-        PlaceholderType _kind
+        PlaceholderType _kind,
+        uint256 index
     ) internal {
         // Build the effect arguments struct for event parameters:
         (bytes[] memory effectArguments, Placeholder[] memory placeholders) = _buildArguments(
@@ -1048,25 +1054,23 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             _callingFunctionArgs,
             _kind
         );
-        // Data validation will always ensure effectArguments.length will be less than MAX_LOOP
-        for (uint256 i = 0; i < effectArguments.length; i++) {
-            // loop through parameter types and set eventParam
-            if (placeholders[i].pType == ParamTypes.UINT) {
-                uint256 uintParam = abi.decode(effectArguments[i], (uint));
-                emit RulesEngineEvent(_policyId, _message, uintParam);
-            } else if (placeholders[i].pType == ParamTypes.ADDR) {
-                address addrParam = abi.decode(effectArguments[i], (address));
-                emit RulesEngineEvent(_policyId, _message, addrParam);
-            } else if (placeholders[i].pType == ParamTypes.BOOL) {
-                bool boolParam = abi.decode(effectArguments[i], (bool));
-                emit RulesEngineEvent(_policyId, _message, boolParam);
-            } else if (placeholders[i].pType == ParamTypes.STR) {
-                string memory textParam = abi.decode(effectArguments[i], (string));
-                emit RulesEngineEvent(_policyId, _message, textParam);
-            } else if (placeholders[i].pType == ParamTypes.BYTES) {
-                bytes memory bytesParam = abi.decode(effectArguments[i], (bytes));
-                emit RulesEngineEvent(_policyId, _message, keccak256(bytesParam));
-            }
+
+        // loop through parameter types and set eventParam
+        if (placeholders[index].pType == ParamTypes.UINT) {
+            uint256 uintParam = abi.decode(effectArguments[index], (uint));
+            emit RulesEngineEvent(_policyId, _message, uintParam);
+        } else if (placeholders[index].pType == ParamTypes.ADDR) {
+            address addrParam = abi.decode(effectArguments[index], (address));
+            emit RulesEngineEvent(_policyId, _message, addrParam);
+        } else if (placeholders[index].pType == ParamTypes.BOOL) {
+            bool boolParam = abi.decode(effectArguments[index], (bool));
+            emit RulesEngineEvent(_policyId, _message, boolParam);
+        } else if (placeholders[index].pType == ParamTypes.STR) {
+            string memory textParam = abi.decode(effectArguments[index], (string));
+            emit RulesEngineEvent(_policyId, _message, textParam);
+        } else if (placeholders[index].pType == ParamTypes.BYTES) {
+            bytes memory bytesParam = abi.decode(effectArguments[index], (bytes));
+            emit RulesEngineEvent(_policyId, _message, keccak256(bytesParam));
         }
     }
 

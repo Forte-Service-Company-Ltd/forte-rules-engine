@@ -112,7 +112,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
@@ -238,7 +239,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction3)))),
             pTypes,
             callingFunction3,
-            ""
+            "",
+            callingFunction3
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction3))));
@@ -350,7 +352,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction3)))),
             pTypes,
             callingFunction3,
-            ""
+            "",
+            callingFunction3
         );
 
         // Save the Policy
@@ -436,7 +439,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionBool)))),
             pTypes,
             callingFunctionBool,
-            ""
+            "",
+            callingFunctionBool
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -519,7 +523,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionWithBytes)))),
             pTypes,
             callingFunctionWithBytes,
-            ""
+            "",
+            callingFunctionWithBytes
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -612,7 +617,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionBytes)))),
             pTypes,
             callingFunctionBytes,
-            ""
+            "",
+            callingFunctionBytes
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -700,7 +706,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionWithString)))),
             pTypes,
             callingFunctionWithString,
-            ""
+            "",
+            callingFunctionWithString
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -759,7 +766,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        pTypes[2] = ParamTypes.STATIC_TYPE_ARRAY;
+        pTypes[2] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         pTypes[3] = ParamTypes.ADDR;
 
         rule.instructionSet = new uint256[](7);
@@ -776,7 +783,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[0].typeSpecificIndex = 0; // to address
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
-        rule.placeHolders[2].pType = ParamTypes.STATIC_TYPE_ARRAY;
+        rule.placeHolders[2].pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         rule.placeHolders[2].typeSpecificIndex = 2; // additional bytes32 param
 
         // Add a negative/positive effects
@@ -789,7 +796,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayStatic)))),
             pTypes,
             callingFunctionArrayStatic,
-            ""
+            "",
+            callingFunctionArrayStatic
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -816,11 +824,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         assertTrue(response);
     }
 
-    function testRulesEngine_Unit_CallData_Array_To_ForeignCall_And_Back()
-        public
-        ifDeploymentTestsEnabled
-        endWithStopPrank
-    {
+    function testRulesEngine_Unit_CallData_Array_To_ForeignCall_And_Back() public ifDeploymentTestsEnabled endWithStopPrank {
         // encode additional datas with the calling contract call into rules engine
         //deploy ExampleUserContractEncoding
         encodingContract = new ExampleUserContractEncoding();
@@ -848,7 +852,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        pTypes[2] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        pTypes[2] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         pTypes[3] = ParamTypes.ADDR;
 
         rule.instructionSet = new uint256[](7);
@@ -865,11 +869,11 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[0].typeSpecificIndex = 0; // to address
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
-        rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[2].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         rule.placeHolders[2].typeSpecificIndex = 2; // test array
         rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[3].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
-        rule.placeHolders[3].typeSpecificIndex = 1; 
+        rule.placeHolders[3].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
+        rule.placeHolders[3].typeSpecificIndex = 1;
 
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
@@ -877,12 +881,17 @@ abstract contract rulesExecution is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes("testSigWithArrayPassthrough(string[])")));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 2;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArrayPassthrough(string[])", "testSigWithArrayPassthrough(string[])");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "testSigWithArrayPassthrough(string[])",
+            "testSigWithArrayPassthrough(string[])"
+        );
 
         // Add a negative/positive effects
         rule.negEffects = new Effect[](1);
@@ -894,7 +903,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
             pTypes,
             callingFunctionArrayDynamic,
-            ""
+            "",
+            callingFunctionArrayDynamic
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -952,7 +962,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        pTypes[2] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        pTypes[2] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         pTypes[3] = ParamTypes.ADDR;
 
         rule.instructionSet = new uint256[](7);
@@ -969,11 +979,11 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[0].typeSpecificIndex = 0; // to address
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
-        rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[2].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         rule.placeHolders[2].typeSpecificIndex = 2; // test array
         rule.placeHolders[3].flags = FLAG_FOREIGN_CALL;
-        rule.placeHolders[3].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
-        rule.placeHolders[3].typeSpecificIndex = 1; 
+        rule.placeHolders[3].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
+        rule.placeHolders[3].typeSpecificIndex = 1;
 
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
         //ForeignCall Builder not used here to test the data structures
@@ -981,12 +991,17 @@ abstract contract rulesExecution is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes("testSigWithArraySetInternally(string[])")));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 2;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternally(string[])", "testSigWithArraySetInternally(string[])");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "testSigWithArraySetInternally(string[])",
+            "testSigWithArraySetInternally(string[])"
+        );
 
         // Add a negative/positive effects
         rule.negEffects = new Effect[](1);
@@ -998,7 +1013,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
             pTypes,
             callingFunctionArrayDynamic,
-            ""
+            "",
+            callingFunctionArrayDynamic
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -1056,7 +1072,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        pTypes[2] = ParamTypes.STATIC_TYPE_ARRAY;
+        pTypes[2] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         pTypes[3] = ParamTypes.ADDR;
 
         rule.instructionSet = new uint256[](7);
@@ -1073,7 +1089,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[0].typeSpecificIndex = 0; // to address
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
-        rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[2].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         rule.placeHolders[2].typeSpecificIndex = 2; // additional bytes32 param
 
         // Add a negative/positive effects
@@ -1086,7 +1102,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
             pTypes,
             callingFunctionArrayDynamic,
-            ""
+            "",
+            callingFunctionArrayDynamic
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -1145,7 +1162,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         ParamTypes[] memory pTypes = new ParamTypes[](4);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
-        pTypes[2] = ParamTypes.STATIC_TYPE_ARRAY;
+        pTypes[2] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         pTypes[3] = ParamTypes.ADDR;
 
         rule.instructionSet = new uint256[](7);
@@ -1162,7 +1179,7 @@ abstract contract rulesExecution is RulesEngineCommon {
         rule.placeHolders[0].typeSpecificIndex = 0; // to address
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].typeSpecificIndex = 1; // amount
-        rule.placeHolders[2].pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        rule.placeHolders[2].pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         rule.placeHolders[2].typeSpecificIndex = 2; // additional bytes32 param
 
         // Add a negative/positive effects
@@ -1176,7 +1193,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunctionArrayDynamic)))),
             pTypes,
             callingFunctionArrayDynamic,
-            ""
+            "",
+            callingFunctionArrayDynamic
         );
 
         _addRuleIdsToPolicy(policyIds[0], ruleIds);
@@ -1221,7 +1239,8 @@ abstract contract rulesExecution is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes("transfer(address,uint256)")))),
             pTypes,
             "transfer(address,uint256)",
-            "address,uint256"
+            "address,uint256",
+            "transfer"
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes("transfer(address,uint256)"))));

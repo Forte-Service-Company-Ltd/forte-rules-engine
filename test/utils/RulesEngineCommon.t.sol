@@ -339,7 +339,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
             callingFunction2,
-            ""
+            "",
+            callingFunction2
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
@@ -404,7 +405,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
             callingFunction2,
-            ""
+            "",
+            callingFunction2
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
@@ -771,7 +773,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         return policyIds[0];
     }
 
-    // Same as setupRuleWithForeignCall except that it contains a foreign call that returns an array that is referenced by another foreign call 
+    // Same as setupRuleWithForeignCall except that it contains a foreign call that returns an array that is referenced by another foreign call
     function setupRuleWithForeignCallWithArrayToAnotherForeignCall(
         EffectTypes _effectType,
         bool isPositive
@@ -801,7 +803,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         instructionSet[6] = 1;
         // Build the instruction set for the rule (including placeholders)
         rule.instructionSet = instructionSet;
-        
+
         rule = _setUpEffect(rule, _effectType, isPositive);
 
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
@@ -815,19 +817,29 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternallyOneArg(uint256)","testSigWithArraySetInternallyOneArg(uint256)");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "testSigWithArraySetInternallyOneArg(uint256)",
+            "testSigWithArraySetInternallyOneArg(uint256)"
+        );
 
         ForeignCallTestContract foreignCall2 = new ForeignCallTestContract();
         ForeignCall memory fc2;
         fc2.foreignCallAddress = address(foreignCall2);
         fc2.signature = bytes4(keccak256(bytes("testSigWithArrayPassthrough(string[])")));
         fc2.parameterTypes = new ParamTypes[](1);
-        fc2.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc2.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc2.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc2.encodedIndices[0].index = 1;
         fc2.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
         fc2.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc2, "testSigWithArrayPassthrough(string[])", "testSigWithArrayPassthrough(string[])");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc2,
+            "testSigWithArrayPassthrough(string[])",
+            "testSigWithArrayPassthrough(string[])"
+        );
 
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
@@ -871,7 +883,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         instructionSet[6] = 1;
         // Build the instruction set for the rule (including placeholders)
         rule.instructionSet = instructionSet;
-        
+
         rule = _setUpEffect(rule, _effectType, isPositive);
 
         ForeignCallTestContract foreignCall = new ForeignCallTestContract();
@@ -885,19 +897,29 @@ contract RulesEngineCommon is DiamondMine, Test {
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
         fc.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc, "testSigWithArraySetInternallyNoArg()","testSigWithArraySetInternallyNoArg()");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc,
+            "testSigWithArraySetInternallyNoArg()",
+            "testSigWithArraySetInternallyNoArg()"
+        );
 
         ForeignCallTestContract foreignCall2 = new ForeignCallTestContract();
         ForeignCall memory fc2;
         fc2.foreignCallAddress = address(foreignCall2);
         fc2.signature = bytes4(keccak256(bytes("testSigWithArrayPassthrough(string[])")));
         fc2.parameterTypes = new ParamTypes[](1);
-        fc2.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc2.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc2.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc2.encodedIndices[0].index = 1;
         fc2.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
         fc2.foreignCallIndex = 0;
-        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyIds[0], fc2, "testSigWithArrayPassthrough(string[])", "testSigWithArrayPassthrough(string[])");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyIds[0],
+            fc2,
+            "testSigWithArrayPassthrough(string[])",
+            "testSigWithArrayPassthrough(string[])"
+        );
 
         // Save the rule
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
@@ -994,7 +1016,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(bytes4(keccak256(bytes(callingSignature)))),
             pTypes,
             callingSignature,
-            ""
+            "",
+            callingSignature
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
@@ -1026,7 +1049,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             param: "",
             text: EVENTTEXT,
             errorMessage: "foreign call failed",
-            instructionSet: effectBytecode
+            instructionSet: effectBytecode,
+            eventPlaceholderIndex: 0
         });
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = positiveEffect;
@@ -1073,7 +1097,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(bytes4(keccak256(bytes(callingSignature)))),
             pTypes,
             callingSignature,
-            ""
+            "",
+            callingSignature
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
@@ -1133,7 +1158,7 @@ contract RulesEngineCommon is DiamondMine, Test {
         // we fuzz the amount of arrays
         ParamTypes[] memory pTypes = new ParamTypes[](arrayAmount);
         // we assign the same type to all the arrays
-        for (uint array; array < arrayAmount; array++) pTypes[array] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        for (uint array; array < arrayAmount; array++) pTypes[array] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
 
         // Save the calling function
         RulesEngineComponentFacet(address(red)).createCallingFunction(
@@ -1141,7 +1166,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(bytes4(keccak256(bytes(callingSignature)))),
             pTypes,
             callingSignature,
-            ""
+            "",
+            callingSignature
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingSignature))));
@@ -1173,7 +1199,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             param: "",
             text: EVENTTEXT,
             errorMessage: "foreign call failed",
-            instructionSet: effectBytecode
+            instructionSet: effectBytecode,
+            eventPlaceholderIndex: 0
         });
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = positiveEffect;
@@ -1312,7 +1339,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))),
                 pTypes,
                 "transferFrom(address,address,uint256)",
-                ""
+                "",
+                "transferFrom"
             );
         }
 
@@ -1395,7 +1423,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 param: "",
                 text: EVENTTEXT,
                 errorMessage: "",
-                instructionSet: mintEffectBytecode
+                instructionSet: mintEffectBytecode,
+                eventPlaceholderIndex: 0
             });
             rule.posEffects = new Effect[](1);
             rule.posEffects[0] = mintEffect;
@@ -1412,7 +1441,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 param: "",
                 text: EVENTTEXT,
                 errorMessage: "",
-                instructionSet: banEffectBytecode
+                instructionSet: banEffectBytecode,
+                eventPlaceholderIndex: 0
             });
             rule.negEffects = new Effect[](1);
             rule.negEffects[0] = banEffect;
@@ -1490,7 +1520,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             param: "",
             text: EVENTTEXT,
             errorMessage: "",
-            instructionSet: effectInstructionSet
+            instructionSet: effectInstructionSet,
+            eventPlaceholderIndex: pType == ParamTypes.ADDR ? 0 : 1
         });
         Effect memory negEffect = Effect({
             valid: true,
@@ -1500,7 +1531,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             param: "",
             text: EVENTTEXT2,
             errorMessage: "",
-            instructionSet: effectInstructionSet
+            instructionSet: effectInstructionSet,
+            eventPlaceholderIndex: pType == ParamTypes.ADDR ? 0 : 1
         });
         // Rule: amount > 4 -> event -> transfer(address _to, uint256 amount) returns (bool)"
         if (pType == ParamTypes.ADDR) {
@@ -2672,9 +2704,11 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.placeHolders[0].pType = ParamTypes.UINT;
         rule.placeHolders[0].typeSpecificIndex = 1;
 
-        rule.positiveEffectPlaceHolders = new Placeholder[](1);
-        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.UINT;
-        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 1;
+        rule.positiveEffectPlaceHolders = new Placeholder[](2);
+        rule.positiveEffectPlaceHolders[0].pType = ParamTypes.ADDR;
+        rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 0;
+        rule.positiveEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 1;
 
         rule.negativeEffectPlaceHolders = new Placeholder[](1);
         rule.negativeEffectPlaceHolders[0].pType = ParamTypes.UINT;
@@ -2701,9 +2735,11 @@ contract RulesEngineCommon is DiamondMine, Test {
         rule.placeHolders[0].pType = ParamTypes.UINT;
         rule.placeHolders[0].typeSpecificIndex = 1;
 
-        rule.positiveEffectPlaceHolders = new Placeholder[](1);
+        rule.positiveEffectPlaceHolders = new Placeholder[](2);
         rule.positiveEffectPlaceHolders[0].pType = ParamTypes.ADDR;
         rule.positiveEffectPlaceHolders[0].typeSpecificIndex = 0;
+        rule.positiveEffectPlaceHolders[1].pType = ParamTypes.UINT;
+        rule.positiveEffectPlaceHolders[1].typeSpecificIndex = 1;
 
         rule.negativeEffectPlaceHolders = new Placeholder[](1);
         rule.negativeEffectPlaceHolders[0].pType = ParamTypes.ADDR;
@@ -2750,7 +2786,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         if (callingFunctions.length == 0) callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
@@ -2779,7 +2816,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
@@ -2809,7 +2847,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(_callingFunction),
             pTypes,
             functionName,
-            ""
+            "",
+            functionName
         );
         // Save the Policy
         callingFunctions.push(_callingFunction);
@@ -2839,7 +2878,8 @@ contract RulesEngineCommon is DiamondMine, Test {
             bytes4(_callingFunction),
             pTypes,
             functionName,
-            ""
+            "",
+            functionName
         );
         // Save the Policy
         callingFunctions.push(_callingFunction);
@@ -2910,7 +2950,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 param: abi.encode(_text),
                 text: EVENTTEXT,
                 errorMessage: _text,
-                instructionSet: emptyArray
+                instructionSet: emptyArray,
+                eventPlaceholderIndex: 0
             });
     }
 
@@ -2938,7 +2979,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 param: encodedParam,
                 text: EVENTTEXT,
                 errorMessage: event_text,
-                instructionSet: emptyArray
+                instructionSet: emptyArray,
+                eventPlaceholderIndex: 0
             });
     }
 
@@ -3004,7 +3046,8 @@ contract RulesEngineCommon is DiamondMine, Test {
                 param: abi.encode(_text),
                 text: EVENTTEXT,
                 errorMessage: revert_text,
-                instructionSet: emptyArray
+                instructionSet: emptyArray,
+                eventPlaceholderIndex: 0
             });
     }
 

@@ -66,7 +66,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction2)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
@@ -94,7 +95,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction3)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction3))));
@@ -174,7 +176,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -190,7 +193,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -206,7 +210,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -223,7 +228,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
     }
 
@@ -238,7 +244,14 @@ abstract contract components is RulesEngineCommon {
         ParamTypes[] memory pTypes2 = new ParamTypes[](1);
         pTypes2[0] = ParamTypes.ADDR;
         vm.expectRevert("New parameter types must be of greater or equal length to the original");
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction))), pTypes2);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes2,
+            callingFunction,
+            "",
+            callingFunction
+        );
     }
 
     function testRulesEngine_Unit_updateCallingFunction_Negative_NewParameterTypesNotSameType()
@@ -252,7 +265,14 @@ abstract contract components is RulesEngineCommon {
         pTypes2[0] = ParamTypes.UINT;
         pTypes2[1] = ParamTypes.UINT;
         vm.expectRevert("New parameter types must be of the same type as the original");
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction))), pTypes2);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes2,
+            callingFunction,
+            "",
+            callingFunction
+        );
     }
 
     function testRulesEngine_Unit_updateCallingFunction_Negative_CallingFunctionDoesNotExist()
@@ -266,7 +286,14 @@ abstract contract components is RulesEngineCommon {
         pTypes[1] = ParamTypes.UINT;
         _addCallingFunctionToPolicy(policyId);
         vm.expectRevert("Calling function not set");
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction2))), pTypes);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction2))),
+            pTypes,
+            callingFunction,
+            "",
+            callingFunction
+        );
     }
 
     function testRulesEngine_Unit_updateCallingFunction_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -277,7 +304,14 @@ abstract contract components is RulesEngineCommon {
         _addCallingFunctionToPolicy(policyId);
         vm.startPrank(newPolicyAdmin);
         vm.expectRevert("Not Authorized To Policy");
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction2))), pTypes);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction2))),
+            pTypes,
+            callingFunction,
+            "",
+            callingFunction
+        );
     }
 
     function testRulesEngine_Unit_updateCallingFunctionWithRuleCheck_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -297,7 +331,14 @@ abstract contract components is RulesEngineCommon {
         );
         vm.stopPrank();
         vm.startPrank(policyAdmin);
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(1, bytes4(keccak256(bytes(callingFunction))), pTypes);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            1,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes,
+            callingFunction,
+            "",
+            callingFunction
+        );
         assertEq(callingFunc.set, true);
         // ensure orignal contract rule check works
         bool ruleCheck = userContract.transfer(address(0x7654321), 47);
@@ -305,6 +346,54 @@ abstract contract components is RulesEngineCommon {
         // test new contract rule check works
         bool secondRuleCheck = userContract.transfer(address(0x7654321), 47);
         assertTrue(secondRuleCheck);
+    }
+
+    function testRulesEngine_Unit_updateCallingFunctionWithRuleCheckAndMetadataUpdate_Positive()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        // create rule and set rule to user contract
+        setUpRuleSimple();
+        // test rule works for user contract
+        bool response = userContract.transfer(address(0x7654321), 47);
+        assertTrue(response);
+        // create pTypes array for new contract + new transfer function
+        ParamTypes[] memory pTypes = new ParamTypes[](3);
+        pTypes[0] = ParamTypes.ADDR;
+        pTypes[1] = ParamTypes.UINT;
+        pTypes[2] = ParamTypes.ADDR;
+        CallingFunctionStorageSet memory callingFunc = RulesEngineComponentFacet(address(red)).getCallingFunction(
+            1,
+            bytes4(keccak256(bytes(callingFunction)))
+        );
+        vm.stopPrank();
+        vm.startPrank(policyAdmin);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            1,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes,
+            callingFunction,
+            "address,uint256,address",
+            "NewCallingFunctionName"
+        );
+        assertEq(callingFunc.set, true);
+        // ensure orignal contract rule check works
+        bool ruleCheck = userContract.transfer(address(0x7654321), 47);
+        assertTrue(ruleCheck);
+        // test new contract rule check works
+        bool secondRuleCheck = userContract.transfer(address(0x7654321), 47);
+        assertTrue(secondRuleCheck);
+
+        string memory newCallingFunctionName = RulesEngineComponentFacet(address(red))
+            .getCallingFunctionMetadata(1, bytes4(keccak256(bytes(callingFunction))))
+            .name;
+        string memory newEncodedValues = RulesEngineComponentFacet(address(red))
+            .getCallingFunctionMetadata(1, bytes4(keccak256(bytes(callingFunction))))
+            .encodedValues;
+
+        assertEq(newCallingFunctionName, "NewCallingFunctionName");
+        assertEq(newEncodedValues, "address,uint256,address");
     }
 
     function testRulesEngine_Unit_updateCallingFunctionWithRuleCheck_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -325,7 +414,14 @@ abstract contract components is RulesEngineCommon {
         );
         vm.stopPrank();
         vm.startPrank(policyAdmin);
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(1, bytes4(keccak256(bytes(callingFunction))), pTypes);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            1,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes,
+            callingFunction,
+            "",
+            callingFunction
+        );
         assertEq(callingFunc.set, true);
         // ensure orignal contract rule check works
         vm.expectRevert(abi.encodePacked(revert_text));
@@ -346,7 +442,10 @@ abstract contract components is RulesEngineCommon {
         bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).updateCallingFunction(
             policyId,
             bytes4(keccak256(bytes(callingFunction))),
-            pTypes2
+            pTypes2,
+            callingFunction,
+            "",
+            callingFunction
         );
         CallingFunctionStorageSet memory sig = RulesEngineComponentFacet(address(red)).getCallingFunction(
             policyId,
@@ -368,7 +467,14 @@ abstract contract components is RulesEngineCommon {
         vm.startPrank(policyAdmin);
         RulesEnginePolicyFacet(address(red)).cementPolicy(policyID);
         vm.expectRevert("Not allowed for cemented policy");
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(1, bytes4(keccak256(bytes(callingFunction))), new ParamTypes[](3));
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            1,
+            bytes4(keccak256(bytes(callingFunction))),
+            new ParamTypes[](3),
+            callingFunction,
+            "",
+            callingFunction
+        );
     }
 
     function testRulesEngine_Unit_updateCallingFunction_Event() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -382,7 +488,14 @@ abstract contract components is RulesEngineCommon {
         pTypes2[3] = ParamTypes.UINT;
         vm.expectEmit(true, false, false, false);
         emit CallingFunctionUpdated(policyId, callingFunctionId);
-        RulesEngineComponentFacet(address(red)).updateCallingFunction(policyId, bytes4(keccak256(bytes(callingFunction))), pTypes2);
+        RulesEngineComponentFacet(address(red)).updateCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes(callingFunction))),
+            pTypes2,
+            callingFunction,
+            "",
+            callingFunction
+        );
     }
 
     // Delete Calling Functions
@@ -402,7 +515,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes(callingFunction3)))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         assertEq(nextCallingFunctionId, bytes4(bytes4(keccak256(bytes(callingFunction3)))));
 
@@ -456,7 +570,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes("transfer()"))),
             pTypes,
             "", //name
-            "address,uint256"
+            "address,uint256",
+            ""
         );
     }
 
@@ -471,7 +586,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(""))), // function signature
             pTypes,
             "transfer(address,uint256)",
-            "address,uint256"
+            "address,uint256",
+            "transfer"
         );
     }
 
@@ -488,7 +604,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         assertEq(callingFunctionId, bytes4(keccak256(bytes(callingFunction))));
         bytes4 callingFunctionId2 = RulesEngineComponentFacet(address(red)).createCallingFunction(
@@ -496,7 +613,8 @@ abstract contract components is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
             callingFunction2,
-            ""
+            "",
+            callingFunction2
         );
         assertEq(callingFunctionId2, bytes4(keccak256(bytes(callingFunction2))));
         RulesEngineComponentFacet(address(red)).getCallingFunction(policyId, callingFunctionId);
@@ -1257,7 +1375,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         uint256[] memory emptyArray = new uint256[](0);
         tracker.trackerValue = abi.encode(emptyArray);
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
             policyID,
             tracker,
@@ -1280,7 +1398,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         bytes[] memory emptyArray = new bytes[](0);
         tracker.trackerValue = abi.encode(emptyArray);
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
             policyID,
             tracker,
@@ -1303,7 +1421,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         address[] memory emptyArray = new address[](0);
         tracker.trackerValue = abi.encode(emptyArray);
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
             policyID,
             tracker,
@@ -1326,7 +1444,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         string[] memory emptyArray = new string[](0);
         tracker.trackerValue = abi.encode(emptyArray);
-        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.STR_ARRAY);
 
         // ensure metadata is correct
@@ -1349,7 +1467,7 @@ abstract contract components is RulesEngineCommon {
             2
         ] = "test a second and even longer string to really make sure this is testing the dynamic bytes array functionality properly.";
         tracker.trackerValue = abi.encode(initialArray);
-        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
             policyID,
             tracker,
@@ -1372,7 +1490,7 @@ abstract contract components is RulesEngineCommon {
         Trackers memory tracker;
         uint256[] memory emptyArray = new uint256[](0);
         tracker.trackerValue = abi.encode(emptyArray);
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         vm.expectRevert("Invalid type");
         RulesEngineComponentFacet(address(red)).createTracker(policyID, tracker, "trName", TrackerArrayTypes.VOID);
     }
@@ -1413,7 +1531,7 @@ abstract contract components is RulesEngineCommon {
         string memory trackerName = "tracker1";
 
         /// build the members of the struct:
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.trackerValue = abi.encode(trackerValues);
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
             policyID,
@@ -1463,7 +1581,7 @@ abstract contract components is RulesEngineCommon {
         string memory trackerName = "tracker1";
 
         /// build the members of the struct:
-        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         tracker.trackerValue = abi.encode(trackerValues);
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
             policyID,
@@ -1513,7 +1631,7 @@ abstract contract components is RulesEngineCommon {
         string memory trackerName = "tracker1";
 
         /// build the members of the struct:
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.trackerValue = abi.encode(trackerValues);
         uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
             policyID,
@@ -1560,7 +1678,7 @@ abstract contract components is RulesEngineCommon {
         string memory trackerName = "tracker1";
 
         /// build the members of the struct:
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.trackerValue = abi.encode(trackerValues);
         vm.expectRevert("Invalid type");
         RulesEngineComponentFacet(address(red)).createMappedTracker(
