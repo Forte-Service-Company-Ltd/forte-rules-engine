@@ -80,8 +80,7 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         ) revert(INVALID_TYPE);
         _validateTrackerType(tracker);
         if (trackerKeys.length != trackerValues.length) revert(KEY_AND_VALUE_SAME);
-        uint256 trackerIndex = lib._getTrackerStorage().trackerIndexCounter[policyId];
-        trackerIndex = _incrementTrackerIndex(policyId);
+        uint256 trackerIndex = _incrementTrackerIndex(policyId);
         require(trackerIndex < MAX_LOOP, MAX_TRACKERS);
         tracker.mapped = true;
         tracker.set = true;
