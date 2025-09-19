@@ -125,7 +125,8 @@ contract NonCustodialMarketplaceTestERC721 is RulesEngineCommon {
                 bytes4(keccak256("transferFrom(address,address,uint256)")),
                 callingFunctionTypes,
                 "transferFrom(address,address,uint256)",
-                ""
+                "",
+                "transferFrom"
             );
         }
 

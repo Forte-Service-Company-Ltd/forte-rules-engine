@@ -349,7 +349,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -382,7 +382,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
@@ -422,8 +422,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](2);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
-        fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
+        fc.parameterTypes[1] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](2);
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
@@ -485,8 +485,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](2);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
-        fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
+        fc.parameterTypes[1] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](2);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -534,8 +534,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](2);
-        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
-        fc.parameterTypes[1] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
+        fc.parameterTypes[1] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](2);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -583,8 +583,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](2);
-        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
-        fc.parameterTypes[1] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
+        fc.parameterTypes[1] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](2);
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.FOREIGN_CALL;
@@ -646,7 +646,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -679,7 +679,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -712,7 +712,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -785,10 +785,10 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](4);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
-        fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
-        fc.parameterTypes[2] = ParamTypes.DYNAMIC_TYPE_ARRAY;
-        fc.parameterTypes[3] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
+        fc.parameterTypes[1] = ParamTypes.ARRAY_OF_VALUE_TYPES;
+        fc.parameterTypes[2] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
+        fc.parameterTypes[3] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](4);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -888,10 +888,10 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](4);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
-        fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
-        fc.parameterTypes[2] = ParamTypes.DYNAMIC_TYPE_ARRAY;
-        fc.parameterTypes[3] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
+        fc.parameterTypes[1] = ParamTypes.ARRAY_OF_VALUE_TYPES;
+        fc.parameterTypes[2] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
+        fc.parameterTypes[3] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
 
         fc.encodedIndices = new ForeignCallEncodedIndex[](4);
         fc.encodedIndices[0].index = 0;
@@ -1075,8 +1075,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](2);
-        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
-        fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
+        fc.parameterTypes[1] = ParamTypes.ARRAY_OF_VALUE_TYPES;
 
         fc.encodedIndices = new ForeignCallEncodedIndex[](2);
         fc.encodedIndices[0].index = 0;
@@ -1126,8 +1126,8 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](2);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
-        fc.parameterTypes[1] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
+        fc.parameterTypes[1] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
 
         fc.encodedIndices = new ForeignCallEncodedIndex[](2);
         fc.encodedIndices[0].index = 0;
@@ -1373,7 +1373,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -1489,7 +1489,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](0); // No parameters
-        fc.returnType = ParamTypes.STATIC_TYPE_ARRAY; // Returning uint256 array
+        fc.returnType = ParamTypes.ARRAY_OF_VALUE_TYPES; // Returning uint256 array
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
 
         ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
@@ -1502,7 +1502,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
-        assertEq(uint256(result.pType), uint256(ParamTypes.STATIC_TYPE_ARRAY));
+        assertEq(uint256(result.pType), uint256(ParamTypes.ARRAY_OF_VALUE_TYPES));
 
         // Decode the returned array and verify it matches expected
         uint256[] memory returnedArray = abi.decode(result.value, (uint256[]));
@@ -1528,7 +1528,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](0); // No parameters
-        fc.returnType = ParamTypes.STATIC_TYPE_ARRAY; // Returning address array
+        fc.returnType = ParamTypes.ARRAY_OF_VALUE_TYPES; // Returning address array
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
 
         ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
@@ -1541,7 +1541,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
-        assertEq(uint256(result.pType), uint256(ParamTypes.STATIC_TYPE_ARRAY));
+        assertEq(uint256(result.pType), uint256(ParamTypes.ARRAY_OF_VALUE_TYPES));
 
         // Decode the returned array and verify it matches expected
         address[] memory returnedArray = abi.decode(result.value, (address[]));
@@ -1567,7 +1567,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](0); // No parameters
-        fc.returnType = ParamTypes.DYNAMIC_TYPE_ARRAY; // Returning string array
+        fc.returnType = ParamTypes.ARRAY_OF_REFERENCE_TYPES; // Returning string array
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
 
         ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
@@ -1579,7 +1579,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
-        assertEq(uint256(result.pType), uint256(ParamTypes.DYNAMIC_TYPE_ARRAY));
+        assertEq(uint256(result.pType), uint256(ParamTypes.ARRAY_OF_REFERENCE_TYPES));
 
         // Decode the returned array and verify it matches expected
         string[] memory returnedArray = abi.decode(result.value, (string[]));
@@ -1605,7 +1605,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](0); // No parameters
-        fc.returnType = ParamTypes.DYNAMIC_TYPE_ARRAY; // Returning bytes array
+        fc.returnType = ParamTypes.ARRAY_OF_REFERENCE_TYPES; // Returning bytes array
         fc.encodedIndices = new ForeignCallEncodedIndex[](0); // No parameters
 
         ForeignCallEncodedIndex[] memory typeSpecificIndices = new ForeignCallEncodedIndex[](0);
@@ -1617,7 +1617,7 @@ abstract contract rulesEngineInternalFunctions is RulesEngineCommon {
         TestProcessorFacet testProcessorFacet = new TestProcessorFacet();
         result = testProcessorFacet.evaluateForeignCallForRuleExternal(fc, vals, retVals, typeSpecificIndices, 1);
 
-        assertEq(uint256(result.pType), uint256(ParamTypes.DYNAMIC_TYPE_ARRAY));
+        assertEq(uint256(result.pType), uint256(ParamTypes.ARRAY_OF_REFERENCE_TYPES));
 
         // Decode the returned array and verify it matches expected
         bytes[] memory returnedArray = abi.decode(result.value, (bytes[]));

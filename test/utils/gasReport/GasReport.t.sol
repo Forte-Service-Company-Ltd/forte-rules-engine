@@ -1026,7 +1026,8 @@ contract GasReports is GasHelpers, RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes("transferFrom(address,address,uint256)")))),
             pTypes,
             "transferFrom(address,address,uint256)",
-            "address,address,uint256"
+            "address,address,uint256",
+            "transferFrom"
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes("transferFrom(address,address,uint256)"))));
@@ -1096,7 +1097,8 @@ contract GasReports is GasHelpers, RulesEngineCommon {
             bytes4(bytes4(keccak256(bytes("func(address,uint256)")))),
             pTypes,
             "func(address,uint256)",
-            "address,uint256"
+            "address,uint256",
+            "func"
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes("func(address,uint256)"))));

@@ -174,7 +174,14 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
-        RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            sigCallingFunction,
+            pTypes,
+            callingFunction,
+            "",
+            callingFunction
+        );
         bytes4[] memory selectors = new bytes4[](functionAmount);
         if (functionAmount > 0) for (uint i; i < functionAmount; i++) selectors[i] = _modifySelectorWithIterator(sigCallingFunction, i);
         uint256[][] memory _ruleIds = new uint256[][](functionAmount);
@@ -245,7 +252,14 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             if (functionAmount > 0)
                 for (uint i; i < functionAmount; i++) {
                     selectors[i] = _modifySelectorWithIterator(sigCallingFunction, i);
-                    RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, selectors[i], pTypes, callingFunction, "");
+                    RulesEngineComponentFacet(address(red)).createCallingFunction(
+                        policyId,
+                        selectors[i],
+                        pTypes,
+                        callingFunction,
+                        "",
+                        callingFunction
+                    );
                 }
             uint256[][] memory _ruleIds = new uint256[][](ruleAmounts);
             uint256[] memory _ids = new uint256[](1);
@@ -338,7 +352,14 @@ abstract contract PolicyCRUDFuzzTest is RulesEngineCommon {
             if (functionAmount > 0)
                 for (uint i; i < functionAmount; i++) {
                     selectors[i] = _modifySelectorWithIterator(sigCallingFunction, i);
-                    RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, selectors[i], pTypes, callingFunction, "");
+                    RulesEngineComponentFacet(address(red)).createCallingFunction(
+                        policyId,
+                        selectors[i],
+                        pTypes,
+                        callingFunction,
+                        "",
+                        callingFunction
+                    );
                 }
             if (shouldRevert) selectors[identicalElementIndex] = selectors[copiedElementIndex]; // we duplicate a random element in a random position
 

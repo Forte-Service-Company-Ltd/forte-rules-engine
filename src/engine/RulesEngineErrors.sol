@@ -59,6 +59,7 @@ string constant EFFECT_REQ = "Must have at least one effect";
 string constant MAPPED_TRACKER_KEY_INDICES_LENGTH_MISMATCH = "Mapped tracker key indices length mismatch.";
 string constant MAPPED_TRACKER_KEY_CANNOT_BE_DOUBLE_NESTED = "Mapped tracker key cannot be double nested";
 string constant DUPLICATES_NOT_ALLOWED = "Duplicates not allowed";
+string constant OPCODE_NOT_ALLOWED = "OpCode Not Allowed in Conditional";
 
 // Admin Error Constants
 string constant RULES_ENGINE_ONLY = "OnlyRulesEngineCanCreateAdminRoles";

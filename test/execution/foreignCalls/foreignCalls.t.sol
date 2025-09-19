@@ -204,7 +204,8 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
                     transferSelector,
                     pTypes,
                     "transferFrom(address,uint256,bytes)",
-                    ""
+                    "",
+                    "transferFrom"
                 );
 
                 bytes4[] memory selectors = new bytes4[](1);
@@ -387,7 +388,8 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
                     transferSelector,
                     pTypes,
                     "transferSigTest(address,uint256,string,string)",
-                    ""
+                    "",
+                    "transferSigTest"
                 );
 
                 bytes4[] memory selectors = new bytes4[](1);
@@ -582,7 +584,8 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
                     transferSelector,
                     pTypes,
                     "transferSigTest(address,uint256,string,string)",
-                    ""
+                    "",
+                    "transferSigTest"
                 );
 
                 bytes4[] memory selectors = new bytes4[](1);

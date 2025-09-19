@@ -51,7 +51,14 @@ abstract contract storageTest is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
         bytes4 sigCallingFunction = bytes4(keccak256(bytes(callingFunction)));
-        RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, sigCallingFunction, pTypes, callingFunction, "");
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            sigCallingFunction,
+            pTypes,
+            callingFunction,
+            "",
+            callingFunction
+        );
         callingFunctions.push(sigCallingFunction);
         Rule memory rule;
         // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, 4, LogicalOp.GT, 0, 1
@@ -95,7 +102,14 @@ abstract contract storageTest is RulesEngineCommon {
         pTypes[1] = ParamTypes.UINT;
         for (uint256 i = 0; i < index; i++) {
             bytes4 selector = _modifySelectorWithIterator(cf2Selector, i);
-            RulesEngineComponentFacet(address(red)).createCallingFunction(policyIds[0], selector, pTypes, callingFunction, "");
+            RulesEngineComponentFacet(address(red)).createCallingFunction(
+                policyIds[0],
+                selector,
+                pTypes,
+                callingFunction,
+                "",
+                callingFunction
+            );
             callingFunctions.push(selector);
             uint256[][] memory blankRuleIds = new uint256[][](0);
             RulesEnginePolicyFacet(address(red)).updatePolicy(
@@ -126,7 +140,8 @@ abstract contract storageTest is RulesEngineCommon {
                 _modifySelectorWithIterator(cfSelector, i),
                 pTypes,
                 callingFunction,
-                ""
+                "",
+                callingFunction
             );
             assertTrue(
                 RulesEngineComponentFacet(address(red)).getCallingFunction(policyIds[0], _modifySelectorWithIterator(cfSelector, i)).set

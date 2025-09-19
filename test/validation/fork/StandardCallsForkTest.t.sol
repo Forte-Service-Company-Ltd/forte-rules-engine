@@ -643,7 +643,8 @@ contract StandardCallsForked is RulesEngineCommon {
             bytes4(keccak256("transferFrom(address,address,uint256)")), // 0x23b872dd
             pTypes,
             "transferFrom(address,address,uint256)",
-            ""
+            "",
+            "transferFrom"
         );
 
         // Rule: amount <= 1000 tokens → PASS (if false, revert)
@@ -707,7 +708,8 @@ contract StandardCallsForked is RulesEngineCommon {
             bytes4(keccak256("transferFrom(address,address,uint256)")),
             pTypes,
             "transferFrom(address,address,uint256)",
-            ""
+            "",
+            "transferFrom"
         );
 
         // to != BLACKLISTED_USER → PASS (if false, revert)
@@ -773,7 +775,8 @@ contract StandardCallsForked is RulesEngineCommon {
             bytes4(keccak256("safeTransferFrom(address,address,uint256,uint256,bytes)")),
             pTypes,
             "safeTransferFrom(address,address,uint256,uint256,bytes)",
-            ""
+            "",
+            "safeTransferFrom"
         );
 
         // to != BLACKLISTED_USER → PASS (if false, revert)

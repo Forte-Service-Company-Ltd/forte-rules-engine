@@ -27,7 +27,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -73,7 +73,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -120,8 +120,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](2);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
-        fc.parameterTypes[1] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
+        fc.parameterTypes[1] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](2);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -175,7 +175,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -213,7 +213,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.foreignCallAddress = address(foreignCall);
         fc.signature = bytes4(keccak256(bytes(functionSig)));
         fc.parameterTypes = new ParamTypes[](1);
-        fc.parameterTypes[0] = ParamTypes.STATIC_TYPE_ARRAY;
+        fc.parameterTypes[0] = ParamTypes.ARRAY_OF_VALUE_TYPES;
         fc.encodedIndices = new ForeignCallEncodedIndex[](1);
         fc.encodedIndices[0].index = 0;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
@@ -331,7 +331,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
                 bytes4(keccak256(bytes(callingFunction))),
                 pTypes,
                 callingFunction,
-                ""
+                "",
+                callingFunction
             );
 
             bytes4[] memory selectors = new bytes4[](1);
@@ -461,7 +462,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
                 bytes4(keccak256(bytes(callingFunction))),
                 pTypes,
                 callingFunction,
-                ""
+                "",
+                callingFunction
             );
 
             bytes4[] memory selectors = new bytes4[](1);
@@ -554,7 +556,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         bytes4[] memory selectors = new bytes4[](1);
@@ -650,7 +653,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         bytes4[] memory selectors = new bytes4[](1);
@@ -740,7 +744,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         bytes4[] memory selectors = new bytes4[](1);
@@ -833,7 +838,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         bytes4[] memory selectors = new bytes4[](1);
@@ -929,7 +935,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         bytes4[] memory selectors = new bytes4[](1);
@@ -1028,7 +1035,8 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         bytes4[] memory selectors = new bytes4[](1);
@@ -1063,7 +1071,6 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         vm.stopPrank();
     }
 
-
     function testRulesEngine_Unit_ForeignCall_NotSet() public ifDeploymentTestsEnabled endWithStopPrank {
         ForeignCall memory fc;
         fc.foreignCallAddress = address(0x1234);
@@ -1075,7 +1082,6 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         fc.encodedIndices[0].index = 1;
         fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
 
-        
         _setUpForeignCallWithAlwaysTrueRuleValueTypeArg(fc, "transfer(address,uint256)", "testSig(uint256)", ParamTypes.UINT);
 
         uint foreignCallId = 1;
@@ -1084,7 +1090,7 @@ abstract contract foreignCallsEdgeCases is rulesEngineInternalFunctions {
         vm.startPrank(policyAdmin);
         RulesEngineForeignCallFacet(address(red)).deleteForeignCall(policyId, foreignCallId);
         vm.stopPrank();
-        
+
         vm.expectRevert("Foreign Call referenced in rule not set");
         userContract.transfer(address(0x1234), 100);
     }

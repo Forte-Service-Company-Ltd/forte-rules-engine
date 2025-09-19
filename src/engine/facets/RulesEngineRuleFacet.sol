@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 import "src/engine/facets/RulesEngineAdminRolesFacet.sol";
 import "src/engine/facets/RulesEngineComponentFacet.sol";
 import {RulesEngineStorageLib as StorageLib} from "src/engine/facets/RulesEngineStorageLib.sol";
+
 /**
  * @title Rules Engine Policy Facet
  * @dev This contract serves as the primary data facet for the Rules Engine rules. It is responsible for creating, updating,
@@ -211,6 +212,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
 
         _data.ruleStorageSets[_policyId][_ruleId].set = true;
         _data.ruleStorageSets[_policyId][_ruleId].rule = _rule;
+        _data.ruleStorageSets[_policyId][_ruleId].rule.ruleIndex = _ruleId;
         _updateTrackerIdMapping(_data, _policyId, _ruleId);
         return _ruleId;
     }
@@ -410,7 +412,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
     function _validateRule(Rule calldata rule, uint256 policyId) internal view {
         // instructionSet
         if (rule.instructionSet.length == 0) revert(EMPTY_INSTRUCTION_SET); // only applies to top level instruction set
-        _validateInstructionSet(rule.instructionSet, policyId);
+        _validateInstructionSet(rule.instructionSet, policyId, false);
         for (uint i = 0; i < rule.rawData.argumentTypes.length; i++) {
             _validateParamType(rule.rawData.argumentTypes[i]);
         }
@@ -433,7 +435,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
         for (uint256 i = 0; i < effects.length; i++) {
             _validateEffectType(effects[i].effectType);
             _validateParamType(effects[i].pType);
-            _validateInstructionSet(effects[i].instructionSet, policyId);
+            _validateInstructionSet(effects[i].instructionSet, policyId, true);
         }
     }
 
@@ -447,12 +449,13 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             _validateParamType(placeholders[i].pType);
         }
     }
+
     /**
      * @notice Validates an instruction set.
      * @param instructionSet The instructionSet to validate.
      * @param policyId The policyId.
      */
-    function _validateInstructionSet(uint256[] calldata instructionSet, uint256 policyId) internal view {
+    function _validateInstructionSet(uint256[] calldata instructionSet, uint256 policyId, bool isEffect) internal view {
         uint expectedDataElements; // the number of expected data elements in the instruction set (memory pointers)
         bool isData; // the first item of an instruction set must be an opcode, so isData must be "initialized" to false
         uint totalInstructions; // the total number of instructions in the instruction set (opcodes)
@@ -467,13 +470,13 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                 dataCounter++;
                 if (!_isLessLimitedOpCode(instructionHold)) {
                     // if the instruction is data, we just check that it won't point to an index outside of max memory size
-                    if (instruction > memorySize) revert(MEMORY_OVERFLOW);
+                    if (instruction >= memorySize) revert(MEMORY_OVERFLOW);
                 } else {
                     // Verify that the tracker exists in the policy
                     if (dataCounter == 1) {
                         if (instructionHold == uint(LogicalOp.PLH)) {
                             // PLH is only limited by the Max loop size
-                            if (instruction > MAX_LOOP) revert(MEMORY_OVERFLOW);
+                            if (instruction >= MAX_LOOP) revert(MEMORY_OVERFLOW);
                         } else {
                             TrackerStorage storage trackerData = lib._getTrackerStorage();
                             if (!trackerData.trackers[policyId][instruction].set) revert(TRACKER_NOT_SET);
@@ -490,7 +493,7 @@ contract RulesEngineRuleFacet is FacetCommonImports {
             } else {
                 ++totalInstructions;
                 // if the instruction is not data, we check that it is a valid opcode
-                if (instruction > opsTotalSize) revert(INVALID_INSTRUCTION);
+                if (instruction >= opsTotalSize) revert(INVALID_INSTRUCTION);
                 // NUM is a special case since it can expect any data, so very little check is needed
                 if (instruction == uint(LogicalOp.NUM)) {
                     // we only validate that NUM will have its argument as part of the instruction set
@@ -501,6 +504,9 @@ contract RulesEngineRuleFacet is FacetCommonImports {
                     // we skip setting the isData flag and the expectedDataElements since we won't go through any data
                     continue;
                 }
+                // Certain OpCodes(TRUM, TRU) are only allowed as effects because they change state
+                if (!isEffect && (instruction == uint(LogicalOp.TRUM) || instruction == uint(LogicalOp.TRU)))
+                    revert(OPCODE_NOT_ALLOWED);
                 //we set the expectedDataElements based its position inside the LogicalOp enum
                 if (instruction < opsSize1) expectedDataElements = 1;
                 else if (instruction < opsSizeUpTo2) expectedDataElements = 2;

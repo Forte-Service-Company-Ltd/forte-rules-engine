@@ -192,7 +192,8 @@ contract trackersStringFuzz is DiamondMineNoCheatcodes, RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction2))),
             pTypes,
             callingFunction2,
-            ""
+            "",
+            callingFunction2
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction2))));
