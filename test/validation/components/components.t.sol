@@ -1720,7 +1720,7 @@ abstract contract components is RulesEngineCommon {
 
         Trackers memory tracker;
         tracker.mapped = true;
-        tracker.trackerKeyType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.trackerKeyType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         /// create tracker key arrays
         bytes[] memory trackerKeys = new bytes[](2);
         trackerKeys[0] = abi.encode(trackerKeys1); // key 1
@@ -1735,7 +1735,7 @@ abstract contract components is RulesEngineCommon {
         string memory trackerName = "tracker1";
 
         /// build the members of the struct:
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.trackerValue = abi.encode(trackerValues);
 
         vm.expectRevert("Invalid tracker key type");
