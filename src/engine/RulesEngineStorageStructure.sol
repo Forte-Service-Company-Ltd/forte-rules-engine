@@ -68,8 +68,8 @@ enum ParamTypes {
     BOOL,
     VOID,
     BYTES,
-    STATIC_TYPE_ARRAY,
-    DYNAMIC_TYPE_ARRAY
+    ARRAY_OF_VALUE_TYPES,
+    ARRAY_OF_REFERENCE_TYPES
 }
 
 enum TrackerArrayTypes {
@@ -134,6 +134,7 @@ struct Effect {
     string errorMessage;
     // The instruction set that will be run at effect execution
     uint256[] instructionSet;
+    uint256 eventPlaceholderIndex;
 }
 
 /**
@@ -193,6 +194,7 @@ struct CallingFunctionHashMapping {
     string callingFunction;
     bytes4 signature;
     string encodedValues;
+    string name;
 }
 
 /**
@@ -363,6 +365,7 @@ struct Rule {
     Placeholder[] placeHolders;
     Placeholder[] positiveEffectPlaceHolders;
     Placeholder[] negativeEffectPlaceHolders;
+    uint256 ruleIndex;
     // List of all positive effects
     Effect[] posEffects;
     // List of all negative effects
