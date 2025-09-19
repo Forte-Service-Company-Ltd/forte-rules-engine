@@ -379,14 +379,14 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
     ) private view returns (bytes memory, uint256, bytes memory) {
         if (globalVarType == GLOBAL_MSG_SENDER) {
             if (argType == ParamTypes.ADDR) {
-                bytes32 value = bytes32(uint256(uint160(msg.sender)));
+                bytes memory value = abi.encode(uint256(uint160(msg.sender)));
                 encodedCall = bytes.concat(encodedCall, value);
             } else {
                 revert(MSGSENDER_ONLY_ADDR);
             }
         } else if (globalVarType == GLOBAL_BLOCK_TIMESTAMP) {
             if (argType == ParamTypes.UINT) {
-                bytes32 value = bytes32(block.timestamp);
+                bytes memory value = abi.encode(block.timestamp);
                 encodedCall = bytes.concat(encodedCall, value);
             } else {
                 revert(BLOCKTIME_ONLY_UINT);
@@ -416,14 +416,14 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             }
         } else if (globalVarType == GLOBAL_BLOCK_NUMBER) {
             if (argType == ParamTypes.UINT) {
-                bytes32 value = bytes32(block.number);
+                bytes memory value = abi.encode(block.number);
                 encodedCall = bytes.concat(encodedCall, value);
             } else {
                 revert(BLK_NUMBER_ONLY_UINT);
             }
         } else if (globalVarType == GLOBAL_TX_ORIGIN) {
             if (argType == ParamTypes.ADDR) {
-                bytes32 value = bytes32(uint256(uint160(tx.origin)));
+                bytes memory value = abi.encode(uint256(uint160(tx.origin)));
                 encodedCall = bytes.concat(encodedCall, value);
             } else {
                 revert(TX_ORG_ONLY_ADDR);
