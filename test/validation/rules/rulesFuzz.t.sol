@@ -194,13 +194,57 @@ abstract contract rulesFuzz is RulesEngineCommon {
         if (!causesOverflow) savePolicyAndExecuteInstructionSet(ruleId, policyIds, false);
     }
 
-    function testRulesEngine_Fuzz_createRule_instructionSetLengthForLessLimited(uint opA, uint opB, bool causesTrackerNotSet) public {
+    function testRulesEngine_Fuzz_createRule_instructionSetLengthForLessLimitedEffects(uint opA, uint opB, bool causesTrackerNotSet) public {
         opA = bound(opA, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
         opB = bound(opB, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
         uint8[3] memory lessLimitedOps = [4, 17, 18];
         // we only use less limited opcodes: PLHM, TRU, TRUM
         opA = lessLimitedOps[opA % 3];
         opB = lessLimitedOps[opB % 3];
+        (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
+        // the instruction set will have 90 or 91 instructions depending on the causesOverflow flag.
+        uint[] memory instructionSet = buildInstructionSetMax(opA, opB, opAElements, opBElements, false, 1);
+        // rule setup
+        Rule memory rule;
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = _createBlankPolicy();
+        // Only create a tracker some of the time
+        if (!causesTrackerNotSet) {
+            Trackers memory tracker;
+            /// build the members of the struct
+            tracker.pType = ParamTypes.UINT;
+            tracker.trackerValue = abi.encode(2);
+            // Add the tracker
+            RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
+        }
+        // Condition: always true (1 == 1)
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint256(LogicalOp.NUM);
+        rule.instructionSet[1] = 1;
+        rule.instructionSet[2] = uint256(LogicalOp.NUM);
+        rule.instructionSet[3] = 1;
+        rule.instructionSet[4] = uint256(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+        rule.negEffects = new Effect[](1);
+        Effect memory effect;
+        effect.valid = true;
+        effect.effectType = EffectTypes.EXPRESSION;
+        effect.text = "";
+        effect.instructionSet = instructionSet;
+        rule.negEffects[0] = effect;
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0] = effect;
+        // test
+        if (causesTrackerNotSet) vm.expectRevert("Tracker referenced in rule not set");
+        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+    }
+
+    function testRulesEngine_Fuzz_createRule_instructionSetLengthForLessLimitedConditional(bool causesTrackerNotSet) public {
+        
+        // we only use less limited opcodes allowed in condition instruction set: PLHM
+        uint opA = 4;
+        uint opB = 4;
         (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
         // the instruction set will have 90 or 91 instructions depending on the causesOverflow flag.
         uint[] memory instructionSet = buildInstructionSetMax(opA, opB, opAElements, opBElements, false, 1);
