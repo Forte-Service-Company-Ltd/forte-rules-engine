@@ -1691,6 +1691,64 @@ abstract contract components is RulesEngineCommon {
         );
     }
 
+    function testRulesEngine_Unit_Tracker_MappedTrackerKeysCannotBeArrays_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
+        // create policy and tracker array type
+
+        vm.startPrank(policyAdmin);
+        uint256 policyID = _createBlankPolicy();
+        bool hasAdminRole = RulesEngineAdminRolesFacet(address(red)).isPolicyAdmin(policyID, policyAdmin);
+        assertTrue(hasAdminRole);
+        // create tracker value arrays
+        /// create tracker value arrays
+        address[] memory trackerValues1 = new address[](2);
+        trackerValues1[0] = address(0x001);
+        trackerValues1[1] = address(0x002);
+
+        /// create tracker value arrays
+        address[] memory trackerValues2 = new address[](2);
+        trackerValues2[0] = address(0x003);
+        trackerValues2[1] = address(0x004);
+
+        address[] memory trackerKeys1 = new address[](2);
+        trackerKeys1[0] = address(0x001);
+        trackerKeys1[1] = address(0x002);
+
+        /// create tracker value arrays
+        address[] memory trackerKeys2 = new address[](2);
+        trackerKeys2[0] = address(0x003);
+        trackerKeys2[1] = address(0x004);
+
+        Trackers memory tracker;
+        tracker.mapped = true;
+        tracker.trackerKeyType = ParamTypes.STATIC_TYPE_ARRAY;
+        /// create tracker key arrays
+        bytes[] memory trackerKeys = new bytes[](2);
+        trackerKeys[0] = abi.encode(trackerKeys1); // key 1
+        trackerKeys[1] = abi.encode(trackerKeys2); // key 2
+
+        /// create tracker value arrays
+        bytes[] memory trackerValues = new bytes[](2);
+        trackerValues[0] = abi.encode(trackerValues); // value 1
+        trackerValues[1] = abi.encode(trackerValues2); // value
+
+        /// create tracker name
+        string memory trackerName = "tracker1";
+
+        /// build the members of the struct:
+        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.trackerValue = abi.encode(trackerValues);
+
+        vm.expectRevert("Invalid tracker key type");
+        RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyID,
+            tracker,
+            trackerName,
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.ADDR_ARRAY
+        );
+    }
+
     function testRulesEngine_Unit_ValidateDiamondMineDeploymentBytecode() public ifDeploymentTestsEnabled endWithStopPrank {
         vm.startPrank(policyAdmin);
 

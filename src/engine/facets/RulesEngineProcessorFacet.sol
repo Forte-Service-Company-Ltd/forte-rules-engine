@@ -754,6 +754,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             encodedKey = abi.encode(_mappedTrackerKey);
         } else if (trk.trackerKeyType == ParamTypes.BYTES || trk.trackerKeyType == ParamTypes.STR) {
             encodedKey = ProcessorLib._uintToBytes(_mappedTrackerKey);
+        } else {
+            revert(INVALID_TRACKER_KEY_TYPE);
         }
 
         if (trk.pType == ParamTypes.UINT || trk.pType == ParamTypes.ADDR || trk.pType == ParamTypes.BOOL) {
@@ -762,6 +764,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             encodedValue = ProcessorLib._uintToBytes(_trackerValue);
         } else if (trk.pType == ParamTypes.ARRAY_OF_VALUE_TYPES || trk.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             encodedValue = abi.encode(_trackerValue);
+        } else {
+            revert(INVALID_TRACKER_KEY_TYPE);
         }
         // re encode as bytes to mapping
         lib._getTrackerStorage().mappedTrackerValues[_policyId][_trackerId][encodedKey] = encodedValue;
