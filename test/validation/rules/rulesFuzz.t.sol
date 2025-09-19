@@ -17,9 +17,9 @@ abstract contract rulesFuzz is RulesEngineCommon {
     function testRulesEngine_Fuzz_createRule_InvalidInstruction(uint8 _opA, uint8 _opB) public {
         uint256 opA = uint256(_opA);
         uint256 opB = uint256(_opB);
-        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM
-        if (opA == 17 || opA == 18 || opA == 4 || opA == 2) opA = 6;
-        if (opB == 17 || opB == 18 || opB == 4 || opB == 2) opB = 6;
+        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM, DIV
+        if (opA == 17 || opA == 18 || opA == 4 || opA == 2 || opA == 8) opA = 6;
+        if (opB == 17 || opB == 18 || opB == 4 || opB == 2 || opB == 8) opB = 6;
 
         (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
         uint256[] memory instructionSet = buildInstructionSet2Opcodes(opA, opB, opAElements, opBElements, 0);
@@ -32,17 +32,22 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
         // test
-        if (opA > RulesEngineRuleFacet(address(red)).getOpsTotalSize() || opB > RulesEngineRuleFacet(address(red)).getOpsTotalSize())
-            vm.expectRevert("Invalid Instruction");
-        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        uint ruleId;
+        bool willRevert = opA >= RulesEngineRuleFacet(address(red)).getOpsTotalSize() ||
+            opB >= RulesEngineRuleFacet(address(red)).getOpsTotalSize();
+        if (willRevert) vm.expectRevert("Invalid Instruction");
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        // we check that the rule will never overflow memory during execution
+        if (!willRevert) savePolicyAndExecuteInstructionSet(ruleId, policyIds, false);
     }
 
     function testRulesEngine_Fuzz_createRule_negInvalidInstructionSet(uint8 _opA, uint8 _opB, uint _opAElements, uint _opBElements) public {
         uint256 opA = bound(_opA, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
         uint256 opB = bound(_opB, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
-        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM
-        if (opA == 17 || opA == 18 || opA == 4 || opA == 2) opA = 6;
-        if (opB == 17 || opB == 18 || opB == 4 || opB == 2) opB = 6;
+        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM, DIV
+        if (opA == 17 || opA == 18 || opA == 4 || opA == 2 || opA == 8) opA = 6;
+        if (opB == 17 || opB == 18 || opB == 4 || opB == 2 || opB == 8) opB = 6;
         _opAElements = bound(_opAElements, 1, 4);
         _opBElements = bound(_opBElements, 1, 4);
 
@@ -57,20 +62,26 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.instructionSet = instructionSet;
         rule.posEffects = new Effect[](1);
         rule.posEffects[0] = effectId_event;
+
         // test
+        uint ruleId;
         /// @notice we could revert for 2 reasons so we cannot check for a specific string
         /// @notice we can also run into a scenario where instruction _a_ can take 3 or 4 elements and total instructions are 4 or 5,
         /// which would match a valid case, so we have to account for that exception
-        if ((opAElements != _opAElements || opBElements != _opBElements) && totalElements != opAElements + 1) vm.expectRevert();
-        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        bool willRevert = (opAElements != _opAElements || opBElements != _opBElements) && (totalElements != opAElements + 1);
+        if (willRevert) vm.expectRevert();
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        // we check that the rule will never overflow memory during execution
+        if (!willRevert) savePolicyAndExecuteInstructionSet(ruleId, policyIds, false);
     }
 
     function testRulesEngine_Fuzz_createRule_NUMOpcodeNeedsItsArgument(uint8 _opA, uint8 _opB, bool shouldRevert) public {
         uint256 opA = bound(_opA, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
         uint256 opB = bound(_opB, 0, RulesEngineRuleFacet(address(red)).getOpsTotalSize() - 1);
-        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM
-        if (opA == 17 || opA == 18 || opA == 4 || opA == 2) opA = 6;
-        if (opB == 17 || opB == 18 || opB == 4 || opB == 2) opB = 6;
+        // we avoid less limited opcodes: PLH, PLHM, TRU, TRUM, DIV
+        if (opA == 17 || opA == 18 || opA == 4 || opA == 2 || opA == 8) opA = 6;
+        if (opB == 17 || opB == 18 || opB == 4 || opB == 2 || opB == 8) opB = 6;
 
         (uint opAElements, uint opBElements) = findArgumentSizes(opA, opB);
         uint totalElements = opAElements + opBElements + 2 + (shouldRevert ? 1 : 2); // 2 for the opA and opB themselves and some room for NUM opcode
@@ -90,8 +101,12 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.negEffects[0] = effectId_revert;
 
         // test
+        uint ruleId;
         if (shouldRevert) vm.expectRevert();
-        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+
+        // we check that the rule will never overflow memory during execution
+        if (!shouldRevert) savePolicyAndExecuteInstructionSet(ruleId, policyIds, false);
     }
 
     function testRulesEngine_Fuzz_createRule_memoryOverFlow(uint8 _opA, uint8 _opB, uint8 _plhIdx, uint8 _data) public {
@@ -119,8 +134,10 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
         rule.placeHolders[1].typeSpecificIndex = _plhIdx;
         // test
-        if (_data > RulesEngineRuleFacet(address(red)).getMemorySize()) vm.expectRevert("Memory Overflow");
-        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        uint ruleId;
+        bool willRevert = _data >= RulesEngineRuleFacet(address(red)).getMemorySize();
+        if (willRevert) vm.expectRevert("Memory Overflow");
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
     function testRulesEngine_Fuzz_createRule_WithPLHmemoryOverFlow(uint8 _plhIdx, uint8 _data) public {
@@ -144,12 +161,12 @@ abstract contract rulesFuzz is RulesEngineCommon {
         rule.placeHolders[1].pType = ParamTypes.UINT;
         rule.placeHolders[1].flags = FLAG_TRACKER_VALUE;
         rule.placeHolders[1].typeSpecificIndex = _plhIdx;
-        // test
 
-        if (_data > RulesEngineRuleFacet(address(red)).getMaxLoopSize()) {
-            vm.expectRevert("Memory Overflow");
-        }
-        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        // test
+        uint ruleId;
+        bool willRevert = _data >= RulesEngineRuleFacet(address(red)).getMaxLoopSize();
+        if (willRevert) vm.expectRevert("Memory Overflow");
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
     function testRulesEngine_Fuzz_createRule_instructionSetLength(uint opA, uint opB, bool causesOverflow) public {
@@ -168,15 +185,13 @@ abstract contract rulesFuzz is RulesEngineCommon {
         uint256[] memory policyIds = new uint256[](1);
         policyIds[0] = _createBlankPolicy();
         rule.instructionSet = instructionSet;
-        rule.negEffects = new Effect[](1);
-        rule.negEffects[0] = effectId_revert;
         rule.posEffects = new Effect[](1);
-        rule.posEffects[0] = effectId_revert;
+        rule.posEffects[0] = effectId_event;
         // test
         if (causesOverflow) vm.expectRevert("Instruction Set Too Large");
         uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
         // if the instruction set is valid, we execute the rule to make sure it won't revert due to unexpected reasons
-        if (!causesOverflow) savePolicyAndExecuteInstructionSet(ruleId, policyIds);
+        if (!causesOverflow) savePolicyAndExecuteInstructionSet(ruleId, policyIds, false);
     }
 
     function testRulesEngine_Fuzz_createRule_instructionSetLengthForLessLimited(uint opA, uint opB, bool causesTrackerNotSet) public {
@@ -203,13 +218,12 @@ abstract contract rulesFuzz is RulesEngineCommon {
             RulesEngineComponentFacet(address(red)).createTracker(policyIds[0], tracker, "trName", TrackerArrayTypes.VOID);
         }
         rule.instructionSet = instructionSet;
-        rule.negEffects = new Effect[](1);
-        rule.negEffects[0] = effectId_revert;
         rule.posEffects = new Effect[](1);
-        rule.posEffects[0] = effectId_revert;
+        rule.posEffects[0] = effectId_event;
         // test
+        uint ruleId;
         if (causesTrackerNotSet) vm.expectRevert("Tracker referenced in rule not set");
-        RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
+        ruleId = RulesEngineRuleFacet(address(red)).createRule(policyIds[0], rule, ruleName, ruleDescription);
     }
 
     function testRulesEngine_Fuzz_createRule_simple(uint256 _ruleValue, uint256 _transferValue) public {
@@ -240,7 +254,8 @@ abstract contract rulesFuzz is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
@@ -276,8 +291,11 @@ abstract contract rulesFuzz is RulesEngineCommon {
         if (op >= RulesEngineRuleFacet(address(red)).getOpsSizeUpTo2()) argSize = 3;
         if (op >= RulesEngineRuleFacet(address(red)).getOpsSizeUpTo3()) argSize = 4;
     }
-
     function savePolicyAndExecuteInstructionSet(uint ruleId, uint[] memory policyIds) internal {
+        savePolicyAndExecuteInstructionSet(ruleId, policyIds, true);
+    }
+
+    function savePolicyAndExecuteInstructionSet(uint ruleId, uint[] memory policyIds, bool expectRevert) internal {
         ParamTypes[] memory pTypes = new ParamTypes[](2);
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
@@ -287,7 +305,8 @@ abstract contract rulesFuzz is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
         // Save the Policy
         callingFunctions.push(bytes4(keccak256(bytes(callingFunction))));
@@ -308,7 +327,7 @@ abstract contract rulesFuzz is RulesEngineCommon {
         // test that rule ( amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)" ) processes correctly
         vm.startPrank(userContractAddress);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 1e18);
-        vm.expectRevert(abi.encode(revert_text));
+        if (expectRevert) vm.expectRevert(abi.encode(revert_text));
         RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
     }
 

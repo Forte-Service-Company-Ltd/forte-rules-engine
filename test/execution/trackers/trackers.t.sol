@@ -2666,7 +2666,7 @@ abstract contract trackers is RulesEngineCommon {
 
         // build tracker for static uint array
         Trackers memory tracker;
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.set = true;
 
         // Create initial array
@@ -2748,7 +2748,7 @@ abstract contract trackers is RulesEngineCommon {
 
         // build tracker for static uint array
         Trackers memory tracker;
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.set = true;
 
         // Create empty array
@@ -2994,7 +2994,7 @@ abstract contract trackers is RulesEngineCommon {
 
         // build tracker for static uint array
         Trackers memory tracker;
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.set = true;
 
         // Create large uint array (100 elements)
@@ -3061,7 +3061,7 @@ abstract contract trackers is RulesEngineCommon {
 
         // build tracker for static address array
         Trackers memory tracker;
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.set = true;
 
         // Create initial address array
@@ -3127,7 +3127,7 @@ abstract contract trackers is RulesEngineCommon {
 
         // build tracker for static bool array
         Trackers memory tracker;
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.set = true;
 
         // Create initial bool array
@@ -3197,7 +3197,7 @@ abstract contract trackers is RulesEngineCommon {
 
         // build tracker for dynamic string array
         Trackers memory tracker;
-        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         tracker.set = true;
 
         // Create initial string array
@@ -3281,7 +3281,7 @@ abstract contract trackers is RulesEngineCommon {
 
         // build tracker for dynamic string array
         Trackers memory tracker;
-        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         tracker.set = true;
 
         // Create empty string array
@@ -3339,7 +3339,7 @@ abstract contract trackers is RulesEngineCommon {
 
         // build tracker for dynamic string array
         Trackers memory tracker;
-        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         tracker.set = true;
 
         // Create large string array (50 elements)
@@ -3410,7 +3410,7 @@ abstract contract trackers is RulesEngineCommon {
 
         // build tracker for dynamic bytes array
         Trackers memory tracker;
-        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
         tracker.set = true;
 
         // Create initial bytes array
@@ -3473,7 +3473,7 @@ abstract contract trackers is RulesEngineCommon {
         uint256 policyId = _createBlankPolicy();
         {
             Trackers memory tracker;
-            tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+            tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
             tracker.set = true;
             uint256[] memory emptyArray = new uint256[](0);
             tracker.trackerValue = abi.encode(emptyArray);
@@ -3510,7 +3510,7 @@ abstract contract trackers is RulesEngineCommon {
         {
             vm.startPrank(maliciousActor);
             Trackers memory maliciousTracker;
-            maliciousTracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+            maliciousTracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
             maliciousTracker.set = true;
             uint256[] memory maliciousArray = new uint256[](1);
             maliciousArray[0] = 999;
@@ -3536,7 +3536,7 @@ abstract contract trackers is RulesEngineCommon {
 
         // Build tracker for static uint array
         Trackers memory tracker;
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
         tracker.set = true;
         uint256[] memory emptyArray = new uint256[](0);
         tracker.trackerValue = abi.encode(emptyArray);
@@ -3582,7 +3582,7 @@ abstract contract trackers is RulesEngineCommon {
         vm.startPrank(address(maliciousContract));
         {
             Trackers memory maliciousTracker;
-            maliciousTracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+            maliciousTracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
             maliciousTracker.set = true;
             uint256[] memory maliciousArray = new uint256[](1);
             maliciousArray[0] = 999;
@@ -3722,7 +3722,8 @@ abstract contract trackers is RulesEngineCommon {
             bytes4(keccak256(bytes(callingFunction))),
             pTypes,
             callingFunction,
-            ""
+            "",
+            callingFunction
         );
 
         // Update policy
@@ -3780,7 +3781,7 @@ abstract contract trackers is RulesEngineCommon {
         // Create tracker struct for address→static array mapping
         Trackers memory tracker;
         tracker.mapped = true;
-        tracker.pType = ParamTypes.STATIC_TYPE_ARRAY; // tracker stores static array values
+        tracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES; // tracker stores static array values
         tracker.trackerKeyType = ParamTypes.ADDR; // keys are addresses
 
         // Create tracker key arrays (address keys)
@@ -3826,7 +3827,8 @@ abstract contract trackers is RulesEngineCommon {
                 bytes4(keccak256(bytes(callingFunction))),
                 pTypes,
                 callingFunction,
-                ""
+                "",
+                callingFunction
             );
 
             // Create a rule that updates the mapped tracker using TRUM and always passes
@@ -3952,7 +3954,7 @@ abstract contract trackers is RulesEngineCommon {
             vm.startPrank(policyAdmin);
             Trackers memory manualTracker;
             manualTracker.mapped = true;
-            manualTracker.pType = ParamTypes.STATIC_TYPE_ARRAY;
+            manualTracker.pType = ParamTypes.ARRAY_OF_VALUE_TYPES;
             manualTracker.trackerKeyType = ParamTypes.ADDR;
 
             bytes[] memory trackerKey = new bytes[](1);
@@ -3979,7 +3981,7 @@ abstract contract trackers is RulesEngineCommon {
         // Create tracker struct for uint→dynamic array mapping
         Trackers memory tracker;
         tracker.mapped = true;
-        tracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY; // tracker stores dynamic array values
+        tracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES; // tracker stores dynamic array values
         tracker.trackerKeyType = ParamTypes.UINT; // keys are uints
 
         // Create tracker key arrays (uint keys)
@@ -4026,7 +4028,8 @@ abstract contract trackers is RulesEngineCommon {
                 bytes4(keccak256(bytes(callingFunction))),
                 pTypes,
                 callingFunction,
-                ""
+                "",
+                callingFunction
             );
 
             // Create a rule that updates the mapped tracker using TRUM and always passes
@@ -4148,7 +4151,7 @@ abstract contract trackers is RulesEngineCommon {
             vm.startPrank(policyAdmin);
             Trackers memory manualTracker;
             manualTracker.mapped = true;
-            manualTracker.pType = ParamTypes.DYNAMIC_TYPE_ARRAY;
+            manualTracker.pType = ParamTypes.ARRAY_OF_REFERENCE_TYPES;
             manualTracker.trackerKeyType = ParamTypes.UINT;
 
             bytes[] memory trackerKey = new bytes[](1);
