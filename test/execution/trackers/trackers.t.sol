@@ -3771,25 +3771,8 @@ abstract contract trackers is RulesEngineCommon {
         // Calculate the expected hash of the msg.data
         bytes memory actualMsgData = abi.encodeWithSelector(RulesEngineProcessorFacet.checkPolicies.selector, arguments);
 
-        // Replicate the exact _handleGlobalVar implementation
-        bytes memory encodedData = new bytes(actualMsgData.length + 64);
-
-        // Replicate the exact assembly from _handleGlobalVar
-        assembly {
-            mstore(add(encodedData, 32), 0x20)
-            mstore(add(encodedData, 64), mload(actualMsgData))
-        }
-
-        // Copy the actual data starting at position 64
-        // This overwrites the length that was stored at position 64
-        for (uint256 i = 0; i < actualMsgData.length; i++) {
-            encodedData[i + 64] = actualMsgData[i];
-        }
-
-        bytes32 expectedHash = keccak256(encodedData);
-
         // Verify that the stored hash matches the expected hash
-        assertEq(storedHash, expectedHash, "Stored hash should match expected hash of msg.data");
+        assertEq(storedHash, keccak256(actualMsgData), "Stored hash should match expected hash of msg.data");
     }
 
     function testRulesEngine_Unit_MappedTrackerArray_StaticType() public ifDeploymentTestsEnabled resetsGlobalVariables {
