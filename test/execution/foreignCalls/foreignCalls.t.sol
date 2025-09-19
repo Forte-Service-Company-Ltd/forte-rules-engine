@@ -4,9 +4,7 @@ pragma solidity ^0.8.24;
 import "test/utils/RulesEngineCommon.t.sol";
 import "test/execution/foreignCalls/foreignCallsEdgeCases.t.sol";
 
-/// forge-config: default.allow_internal_expect_revert = true
 abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
-    /// forge-config: default.allow_internal_expect_revert = true
     /**
      *
      *
