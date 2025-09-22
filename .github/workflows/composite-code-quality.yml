@@ -8,7 +8,6 @@ on:
     types: [opened, synchronize, reopened, edited, ready_for_review]
 permissions:
   pull-requests: write
-
 jobs:
   code-quality:
     uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-code-quality.yaml@INF-294-Code-Quality-Workflow
