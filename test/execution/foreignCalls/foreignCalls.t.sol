@@ -1777,4 +1777,162 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
             vm.stopPrank();
         }
     }
+
+    function testRulesEngine_Unit_ForeignCall_Address_CannotBe_ZeroAddress() public ifDeploymentTestsEnabled endWithStopPrank {
+        uint256 policyId = _createBlankPolicy();
+        ForeignCall memory fc = _createBasicForeignCall();
+        fc.foreignCallAddress = address(0);
+
+        vm.expectRevert("Zero Address Is Not Allowed");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "zeroAddressTest", "simpleCheck(uint256)");
+
+        //create a valid foreign call for testing updateForeignCall
+        fc.foreignCallAddress = address(0x1337);
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            fc,
+            "validTest",
+            "simpleCheck(uint256)"
+        );
+
+        fc.foreignCallAddress = address(0); // Set to zero address
+
+        vm.expectRevert("Zero Address Is Not Allowed");
+        RulesEngineForeignCallFacet(address(red)).updateForeignCall(policyId, foreignCallId, fc);
+    }
+
+    // The following tests demonstrate that invalid enum values cannot be passed to the contract functions
+    // because Solidity's ABI validation prevents them from being decoded properly.
+
+    // These tests are skipped by default due to foundry's limitations in handling expected reverts from ABI decoding issues.
+    // They are included here for completeness and can be run by following these steps:
+
+    // 1. Uncomment the `vm.skip(true);` line in each test function.
+    // Next set the env for the foundry version. This profile allows foundry to handle the reverts correctly.
+    // 2. FOUNDRY_PROFILE=validation - confirm this is set correctly by running echo $FOUNDRY_PROFILE
+    // 3. Run the tests with forge test -vvvv --ffi --match-test testRulesEngine_Unit_ForeignCall_Validation_
+    function testRulesEngine_Unit_ForeignCall_Validation_CreateForeignCall_InvalidReturnType()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        vm.skip(true);
+        uint256 policyId = _createBlankPolicy();
+
+        ForeignCall memory fc = _createBasicForeignCall();
+
+        // Directly modify the returnType to invalid value using assembly
+        assembly {
+            // fc is a struct in memory, returnType is the 4th field
+            // struct layout: [set][foreignCallAddress][signature][returnType][foreignCallIndex]...
+            // returnType is at offset 0x60
+            mstore(add(fc, 0x60), 8) // Set returnType to invalid value 8
+        }
+
+        // This reverts at the ABI level with error code 0x21: panic: failed to convert value into enum type
+        vm.expectRevert(hex"4e487b710000000000000000000000000000000000000000000000000000000000000021");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "invalidReturnTypeTest", "simpleCheck(uint256)");
+    }
+
+    function testRulesEngine_Unit_ForeignCall_Validation_CreateForeignCall_InvalidParamType()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        vm.skip(true);
+        uint256 policyId = _createBlankPolicy();
+
+        ForeignCall memory fc = _createBasicForeignCall();
+
+        // Directly modify the parameter type to invalid value using assembly
+        assembly {
+            // fcParamTypes is stored in fc.parameterTypes, which is a pointer to the array
+            // Load the array pointer from fc.parameterTypes (at offset 0xa0 in the struct)
+            let paramTypesPtr := mload(add(fc, 0xa0))
+            // The array layout in memory is: [length][element0][element1]...
+            // Modify the first element which is at offset 0x20 from the array pointer
+            mstore(add(paramTypesPtr, 0x20), 9) // Set first element to invalid value 9
+        }
+
+        // This reverts at the ABI level with error code 0x21: panic: failed to convert value into enum type
+        vm.expectRevert(hex"4e487b710000000000000000000000000000000000000000000000000000000000000021");
+        RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "invalidParamTypeTest", "simpleCheck(uint256)");
+    }
+
+    function testRulesEngine_Unit_ForeignCall_Validation_UpdateForeignCall_InvalidReturnType()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        vm.skip(true);
+        uint256 policyId = _createBlankPolicy();
+
+        // First create a valid foreign call
+        ForeignCall memory validFc = _createBasicForeignCall();
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            validFc,
+            "validTest",
+            "simpleCheck(uint256)"
+        );
+
+        // Now create a ForeignCall with invalid returnType for update
+        ForeignCall memory fc = _createBasicForeignCall();
+
+        // Directly modify the returnType to invalid value using assembly
+        assembly {
+            mstore(add(fc, 0x60), 10) // Set returnType to invalid value 10
+        }
+
+        // This reverts at the ABI level with error code 0x21: panic: failed to convert value into enum type
+        vm.expectRevert(abi.encodeWithSignature("Panic(uint256)", 0x21));
+        RulesEngineForeignCallFacet(address(red)).updateForeignCall(policyId, foreignCallId, fc);
+    }
+
+    function testRulesEngine_Unit_ForeignCall_Validation_UpdateForeignCall_InvalidParamType()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
+        vm.skip(true);
+        uint256 policyId = _createBlankPolicy();
+
+        // First create a valid foreign call
+        ForeignCall memory validFc = _createBasicForeignCall();
+        uint256 foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+            policyId,
+            validFc,
+            "validTest",
+            "simpleCheck(uint256)"
+        );
+
+        // Now create a ForeignCall with invalid parameter type for update
+        ForeignCall memory fc = _createBasicForeignCall();
+
+        // Directly modify the parameter type to invalid value using assembly
+        assembly {
+            // Load the array pointer from fc.parameterTypes
+            let paramTypesPtr := mload(add(fc, 0xa0))
+            // Modify the first element
+            mstore(add(paramTypesPtr, 0x20), 11) // Set first element to invalid value 11
+        }
+
+        // This reverts at the ABI level with error code 0x21: panic: failed to convert value into enum type
+        vm.expectRevert(abi.encodeWithSignature("Panic(uint256)", 0x21));
+        RulesEngineForeignCallFacet(address(red)).updateForeignCall(policyId, foreignCallId, fc);
+    }
+
+    function _createBasicForeignCall() internal view returns (ForeignCall memory fc) {
+        ParamTypes[] memory fcParamTypes = new ParamTypes[](1);
+        fcParamTypes[0] = ParamTypes.UINT;
+
+        fc.encodedIndices = new ForeignCallEncodedIndex[](1);
+        fc.encodedIndices[0].index = 0;
+        fc.encodedIndices[0].eType = EncodedIndexType.ENCODED_VALUES;
+        fc.foreignCallAddress = address(testContract);
+        fc.signature = bytes4(keccak256(bytes("simpleCheck(uint256)")));
+        fc.returnType = ParamTypes.UINT;
+        fc.parameterTypes = fcParamTypes;
+        fc.mappedTrackerKeyIndices = new ForeignCallEncodedIndex[](0);
+    }
 }
