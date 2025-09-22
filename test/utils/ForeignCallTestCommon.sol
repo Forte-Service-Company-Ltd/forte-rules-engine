@@ -112,7 +112,7 @@ contract ForeignCallTestContract {
         return true;
     }
 
-    function testSigWithArrayPassthrough(string[] memory encodedArray) public pure returns (string[] memory) {        
+    function testSigWithArrayPassthrough(string[] memory encodedArray) public pure returns (string[] memory) {
         return encodedArray;
     }
 
@@ -137,7 +137,7 @@ contract ForeignCallTestContract {
         return array;
     }
 
-    function testSigWithArraySetInternallyNoArg() public pure returns (string[] memory) {       
+    function testSigWithArraySetInternallyNoArg() public pure returns (string[] memory) {
         string[] memory array = new string[](5);
         array[0] = ("super");
         array[1] = ("superduper");
@@ -166,6 +166,12 @@ contract ForeignCallTestContract {
 
     function testSigWithBytes(bytes memory encodedBytes) public returns (bool) {
         decodedBytes = encodedBytes;
+        return true;
+    }
+
+    function testSig(bytes memory msgData, string memory str) public returns (bool) {
+        decodedBytes = msgData;
+        decodedStrOne = str;
         return true;
     }
 
