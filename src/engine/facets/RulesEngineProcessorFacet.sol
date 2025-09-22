@@ -643,14 +643,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                     }
                 } else if (typ == ParamTypes.STR || typ == ParamTypes.BYTES) {
                     // Convert string to uint256 for direct comparison using == and != operations
-                    (bool isTrackerValue, , ) = _extractFlags(_placeHolders[pli]);
-                    // PLHM can be assumed to always be a tracker value as it is only used in mapped trackers
-                    // Therefore we interpret the results as a tracker value
-                    if (isTrackerValue || op == LogicalOp.PLHM) {
-                        v = abi.decode(value, (uint256));
-                    } else {
-                        v = uint256(keccak256(value));
-                    }
+                    v = uint256(keccak256(value));
                 } else if (typ == ParamTypes.ARRAY_OF_VALUE_TYPES || typ == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
                     // length of array for direct comparison using == and != operations
                     v = abi.decode(value, (uint256));

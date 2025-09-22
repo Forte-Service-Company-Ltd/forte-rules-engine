@@ -3814,10 +3814,11 @@ abstract contract trackers is RulesEngineCommon {
 
     function _calculateExpectedMsgDataHash(bytes memory arguments) internal pure returns (bytes32) {
         // Calculate the expected hash of the msg.data
+        // The current _handleGlobalVar implementation returns msg.data directly without complex encoding
         bytes memory actualMsgData = abi.encodeWithSelector(RulesEngineProcessorFacet.checkPolicies.selector, arguments);
 
-        // Verify that the stored hash matches the expected hash
-        assertEq(storedHash, keccak256(actualMsgData), "Stored hash should match expected hash of msg.data");
+        // The tracker stores the hash of the raw msg.data
+        return keccak256(actualMsgData);
     }
 
     function testRulesEngine_Unit_MappedTrackerArray_StaticType() public ifDeploymentTestsEnabled resetsGlobalVariables {
@@ -4211,22 +4212,6 @@ abstract contract trackers is RulesEngineCommon {
             bytes memory value = RulesEngineComponentFacet(address(red)).getMappedTrackerValue(policyId, trackerIndex, abi.encode(1));
             assertEq(value, abi.encode(6), "Manual update should store new array length");
         }
-        // Replicate the exact _handleGlobalVar implementation
-        bytes memory encodedData = new bytes(actualMsgData.length + 64);
-
-        // Replicate the exact assembly from _handleGlobalVar
-        assembly {
-            mstore(add(encodedData, 32), 0x20)
-            mstore(add(encodedData, 64), mload(actualMsgData))
-        }
-
-        // Copy the actual data starting at position 64
-        // This overwrites the length that was stored at position 64
-        for (uint256 i = 0; i < actualMsgData.length; i++) {
-            encodedData[i + 64] = actualMsgData[i];
-        }
-
-        return keccak256(encodedData);
     }
 
     function _executeMsgDataTestShared(bool isMappedTracker, uint256 policyId, uint256 trackerIndex, uint256 value) internal {
@@ -4361,7 +4346,7 @@ abstract contract trackers is RulesEngineCommon {
         fcArgs[0] = ParamTypes.STR;
         fc.parameterTypes = fcArgs;
 
-        foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "testSig(string)");
+        foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "name", "testSig(string)");
     }
 
     function _createForeignCallRule(uint256 policyId, uint256 foreignCallId) private returns (uint256 ruleId) {
@@ -4393,7 +4378,14 @@ abstract contract trackers is RulesEngineCommon {
         pTypes[0] = ParamTypes.ADDR;
         pTypes[1] = ParamTypes.UINT;
 
-        RulesEngineComponentFacet(address(red)).createCallingFunction(policyId, transferSelector, pTypes, "transfer(address,uint256)", "");
+        RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            transferSelector,
+            pTypes,
+            "transfer(address,uint256)",
+            "",
+            "name"
+        );
 
         bytes4[] memory selectors = new bytes4[](1);
         selectors[0] = transferSelector;
@@ -4493,7 +4485,7 @@ abstract contract trackers is RulesEngineCommon {
         fcArgs[0] = ParamTypes.BYTES;
         fc.parameterTypes = fcArgs;
 
-        foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "testSigWithBytes(bytes)");
+        foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(policyId, fc, "testSigWithBytes(bytes)", "name");
     }
 
     function test_ForeignCall_RawMappedTracker_EdgeCases() public ifDeploymentTestsEnabled endWithStopPrank {
