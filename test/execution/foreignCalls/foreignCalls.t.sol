@@ -66,7 +66,11 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         vm.stopSnapshotGas();
     }
 
-    function testRulesEngine_Unit_createRule_ForeignCall_ForeignCallReferencedDynamicArrays_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_createRule_ForeignCall_ForeignCallReferencedDynamicArrays_Positive()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
         setupRuleWithForeignCallWithArrayToAnotherForeignCall(EffectTypes.REVERT, false);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 2); // rule's lower limit is 2
         vm.startSnapshotGas("checkRule_ForeignCall_ForeignCallDynamicArrayReferenced");
@@ -75,7 +79,11 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         vm.stopSnapshotGas();
     }
 
-    function testRulesEngine_Unit_createRule_ForeignCallWithArrayToAnotherForeignCallNoParameter_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
+    function testRulesEngine_Unit_createRule_ForeignCallWithArrayToAnotherForeignCallNoParameter_Positive()
+        public
+        ifDeploymentTestsEnabled
+        endWithStopPrank
+    {
         setupRuleWithForeignCallWithArrayToAnotherForeignCallNoParameter(EffectTypes.REVERT, false);
         bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes(callingFunction))), address(0x7654321), 2); // rule's lower limit is 2
         vm.startSnapshotGas("checkRule_ForeignCall_ForeignCallWithArrayToAnotherForeignCallNoParameter");
@@ -1621,5 +1629,157 @@ abstract contract foreignCalls is RulesEngineCommon, foreignCallsEdgeCases {
         // we check that the nft balance didn't increased, and that user got banned
         assertTrue(testContract2.getNaughty(user1), "user should be banned");
         assertEq(balanceBefore, nftContract.balanceOf(user1), "NFT balance should stay the same");
+    }
+
+    function testRulesEngine_Unit_ForeignCall_GlobalMsgData_ComplexMultiStringEncoding()
+        public
+        ifDeploymentTestsEnabled
+        resetsGlobalVariables
+    {
+        uint256 policyId;
+        uint256 ruleId;
+
+        {
+            vm.startPrank(policyAdmin);
+
+            policyId = _createBlankPolicy();
+
+            // Need a function that accepts both bytes (for msg.data) and string parameters
+            address foreignCallTarget = address(testContract);
+            bytes4 testSigSelector = bytes4(keccak256(bytes("testSig(bytes,string)")));
+
+            uint256 foreignCallId;
+            {
+                ParamTypes[] memory fcParamTypes = new ParamTypes[](2);
+                fcParamTypes[0] = ParamTypes.BYTES; // This will receive GLOBAL_MSG_DATA
+                fcParamTypes[1] = ParamTypes.STR; // This will receive the second string from original call
+
+                ForeignCall memory fc;
+                fc.encodedIndices = new ForeignCallEncodedIndex[](2);
+                // First parameter: use GLOBAL_MSG_DATA
+                fc.encodedIndices[0].index = GLOBAL_MSG_DATA;
+                fc.encodedIndices[0].eType = EncodedIndexType.GLOBAL_VAR;
+                // Second parameter: use the second string parameter from the original call (index 2)
+                fc.encodedIndices[1].index = 2;
+                fc.encodedIndices[1].eType = EncodedIndexType.ENCODED_VALUES;
+
+                fc.foreignCallAddress = foreignCallTarget;
+                fc.signature = testSigSelector;
+                fc.returnType = ParamTypes.BOOL;
+                fc.parameterTypes = fcParamTypes;
+                foreignCallId = RulesEngineForeignCallFacet(address(red)).createForeignCall(
+                    policyId,
+                    fc,
+                    "testSig(bytes,string)",
+                    "testSig(bytes data, string str)"
+                );
+            }
+
+            // Effect for the foreign call
+            Effect memory effect;
+            effect.valid = true;
+            effect.dynamicParam = false;
+            effect.effectType = EffectTypes.EXPRESSION;
+            effect.pType = ParamTypes.VOID;
+            effect.param = abi.encodePacked(foreignCallId);
+            effect.text = "";
+            effect.errorMessage = "";
+            effect.instructionSet = new uint256[](0);
+
+            Rule memory rule;
+            rule.instructionSet = new uint256[](2);
+            rule.instructionSet[0] = uint(LogicalOp.PLH);
+            rule.instructionSet[1] = 0; // Reference placeholder 0 (the foreign call)
+
+            rule.placeHolders = new Placeholder[](1);
+            // Placeholder 0: foreign call
+            rule.placeHolders[0].pType = ParamTypes.BOOL;
+            rule.placeHolders[0].typeSpecificIndex = uint128(foreignCallId);
+            rule.placeHolders[0].flags = uint8(FLAG_FOREIGN_CALL);
+
+            rule.negEffects = new Effect[](1);
+            rule.negEffects[0] = effectId_revert;
+            rule.posEffects = new Effect[](1);
+            rule.posEffects[0] = effect;
+
+            ruleId = RulesEngineRuleFacet(address(red)).createRule(policyId, rule, ruleName, ruleDescription);
+
+            {
+                // Create a function signature that takes two strings
+                bytes4 testSelector = bytes4(keccak256(bytes("testComplexStrings(address,string,string)")));
+                ParamTypes[] memory pTypes = new ParamTypes[](3);
+                pTypes[0] = ParamTypes.ADDR;
+                pTypes[1] = ParamTypes.STR;
+                pTypes[2] = ParamTypes.STR;
+                RulesEngineComponentFacet(address(red)).createCallingFunction(
+                    policyId,
+                    testSelector,
+                    pTypes,
+                    "testComplexStrings(address,string,string)",
+                    "",
+                    "testComplexStrings"
+                );
+
+                bytes4[] memory selectors = new bytes4[](1);
+                selectors[0] = testSelector;
+                uint256[][] memory ruleIdsArr = new uint256[][](1);
+                ruleIdsArr[0] = new uint256[](1);
+                ruleIdsArr[0][0] = ruleId;
+                RulesEnginePolicyFacet(address(red)).updatePolicy(
+                    policyId,
+                    selectors,
+                    ruleIdsArr,
+                    PolicyType.CLOSED_POLICY,
+                    policyName,
+                    policyDescription
+                );
+            }
+
+            {
+                uint256[] memory policyIds = new uint256[](1);
+                policyIds[0] = policyId;
+                vm.stopPrank();
+                vm.startPrank(callingContractAdmin);
+                RulesEnginePolicyFacet(address(red)).applyPolicy(userContractAddress, policyIds);
+                vm.stopPrank();
+            }
+        }
+
+        {
+            vm.startPrank(userContractAddress);
+            // Create the complex call data scenario:
+            // - First string is exactly 32 characters: "hahahahahahahahahahahahahahaha"
+            // - Second string is 20 characters: "blahblahblahblahblah"
+            string memory firstString = "hahahahahahahahahahahahahahahaha"; // 32 chars
+            string memory secondString = "blahblahblahblahblah"; // 20 chars
+
+            // Verify string lengths
+            assertEq(bytes(firstString).length, 32, "First string should be exactly 32 characters");
+            assertEq(bytes(secondString).length, 20, "Second string should be exactly 20 characters");
+
+            bytes memory complexCalldata = abi.encodeWithSelector(
+                bytes4(keccak256(bytes("testComplexStrings(address,string,string)"))),
+                address(0x789),
+                firstString,
+                secondString
+            );
+
+            vm.startSnapshotGas("checkRule_ForeignCall_GlobalMsgData_ComplexMultiStringEncoding");
+            RulesEngineProcessorFacet(address(red)).checkPolicies(complexCalldata);
+            vm.stopSnapshotGas();
+
+            // Check that the decoded strings in the test contract match expectations
+            string memory decodedString = testContract.getDecodedStrOne();
+            bytes memory decodedData = testContract.getDecodedBytes();
+            assertEq(decodedString, secondString, "Foreign call should have received the second string parameter correctly");
+
+            // GLOBAL_MSG_DATA contains the Rules Engine's checkPolicies call data
+            bytes memory expectedRulesEngineCallData = abi.encodeWithSelector(
+                RulesEngineProcessorFacet.checkPolicies.selector,
+                complexCalldata
+            );
+            assertEq(decodedData, expectedRulesEngineCallData, "Foreign call should have received the Rules Engine's msg.data correctly");
+            vm.stopPrank();
+        }
     }
 }

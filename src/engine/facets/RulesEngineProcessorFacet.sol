@@ -395,7 +395,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             if (argType == ParamTypes.STR || argType == ParamTypes.BYTES) {
                 encodedCall = bytes.concat(encodedCall, bytes32(32 * (fc.parameterTypes.length) + lengthToAppend));
                 dynamicData = bytes.concat(dynamicData, bytes32(msg.data.length), msg.data);
-                lengthToAppend += msg.data.length;
+                lengthToAppend += (msg.data.length + 32);
             } else {
                 revert(MSGDTA_ONLY_STRING);
             }
