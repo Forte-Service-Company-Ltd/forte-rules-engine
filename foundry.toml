@@ -8,7 +8,9 @@ optimizer_runs = 2000000000
 ffi = true
 
 # Used to ignore selfdestruct warning
-ignored_warnings_from = ["test/execution/foreignCalls/foreignCallsEdgeCases.t.sol"]
+ignored_warnings_from = [
+    "test/execution/foreignCalls/foreignCallsEdgeCases.t.sol",
+]
 
 remappings = [
     "@openzeppelin/=dependencies/@openzeppelin-contracts-5.3.0/",
@@ -26,6 +28,17 @@ optimize = true
 optimizer_runs = 2000000000
 ffi = true
 fork_url = "${ETHEREUM_RPC_KEY}"
+
+# Coverage testing configuration with via-IR to avoid stack too deep errors
+[profile.coverage]
+src = "src"
+out = "out"
+libs = ["lib", "dependencies"]
+solc_version = "0.8.28"
+optimize = true
+optimizer_runs = 2000000000
+ffi = true
+via_ir = true
 
 [soldeer]
 remappings_generate = true
