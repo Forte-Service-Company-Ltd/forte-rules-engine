@@ -652,15 +652,11 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 // update the tracker value
                 // If the Tracker Type == Place Holder, pull the data from the place holder, otherwise, pull it from Memory
                 TrackerTypes tt = TrackerTypes(_prog[idx + 3]);
-                uint256 pli = _prog[idx + 2];
-                tt == TrackerTypes.MEMORY
-                    ? _updateTrackerValue(_policyId, _prog[idx + 1], mem[pli])
-                    : _updateTrackerValue(
-                        _policyId,
-                        _prog[idx + 1],
-                        _arguments[pli],
-                        _placeHolders[pli].flags != FacetUtils.FLAG_TRACKER_VALUE
-                    );
+                if (tt == TrackerTypes.MEMORY) {
+                    _updateTrackerValue(_policyId, _prog[idx + 1], mem[_prog[idx + 2]]);
+                } else {
+                    _updateTrackerValue(_policyId, _prog[idx + 1], _arguments[_prog[idx + 2]]);
+                }
                 idx += 4;
             } else if (op == LogicalOp.TRUM) {
                 // update the tracker value
@@ -675,10 +671,9 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
                 TrackerTypes tt = TrackerTypes(_prog[idx + 4]);
                 uint256 key = mem[_prog[idx + 3]];
                 uint256 pli = _prog[idx + 2];
-                uint256 flags = _placeHolders[pli].flags;
                 tt == TrackerTypes.MEMORY
                     ? _updateMappedTrackerValue(_policyId, _prog[idx + 1], mem[pli], key)
-                    : _updateMappedTrackerValue(_policyId, _prog[idx + 1], _arguments[pli], key, flags != FacetUtils.FLAG_TRACKER_VALUE);
+                    : _updateMappedTrackerValue(_policyId, _prog[idx + 1], _arguments[pli], key);
                 idx += 5;
             } else if (op == LogicalOp.NUM) {
                 v = _prog[idx + 1];
@@ -764,14 +759,10 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _trackerId The ID of the tracker whose value is being updated.
      * @param _trackerValue The new value to be assigned to the tracker, encoded as bytes.
      */
-    function _updateTrackerValue(uint256 _policyId, uint256 _trackerId, bytes memory _trackerValue, bool _mightNeedHashing) internal {
+    function _updateTrackerValue(uint256 _policyId, uint256 _trackerId, bytes memory _trackerValue) internal {
         // retrieve the tracker
         Trackers storage trk = lib._getTrackerStorage().trackers[_policyId][_trackerId];
-        if (_mightNeedHashing && (trk.pType == ParamTypes.STR || trk.pType == ParamTypes.BYTES)) {
-            trk.trackerValue = abi.encode(keccak256(_trackerValue));
-        } else {
-            trk.trackerValue = _trackerValue;
-        }
+        trk.trackerValue = _trackerValue;
     }
 
     /**
@@ -837,8 +828,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         uint256 _policyId,
         uint256 _trackerId,
         bytes memory _trackerValue,
-        uint256 _mappedTrackerKey,
-        bool _mightNeedHashing
+        uint256 _mappedTrackerKey
     ) internal {
         // retrieve the tracker
         Trackers storage trk = lib._getTrackerStorage().trackers[_policyId][_trackerId];
@@ -850,9 +840,6 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
             encodedKey = ProcessorLib._uintToBytes(_mappedTrackerKey);
         } else {
             revert(INVALID_TRACKER_KEY_TYPE);
-        }
-        if (_mightNeedHashing && (trk.pType == ParamTypes.STR || trk.pType == ParamTypes.BYTES)) {
-            _trackerValue = abi.encode(keccak256(_trackerValue));
         }
         // store the tracker  value to the tracker mapping
         lib._getTrackerStorage().mappedTrackerValues[_policyId][_trackerId][encodedKey] = _trackerValue;

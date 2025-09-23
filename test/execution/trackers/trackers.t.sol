@@ -103,7 +103,7 @@ abstract contract trackers is RulesEngineCommon {
         vm.stopSnapshotGas();
         tracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, 1);
         bytes memory comparison = abi.encode("post");
-        assertEq(tracker.trackerValue, abi.encode(keccak256(comparison)));
+        assertEq(tracker.trackerValue, comparison);
     }
 
     function testRulesEngine_Unit_CheckRules_Explicit_WithTrackerUpdateEffectString() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -126,7 +126,7 @@ abstract contract trackers is RulesEngineCommon {
         vm.stopSnapshotGas();
         tracker = RulesEngineComponentFacet(address(red)).getTracker(policyId, 1);
         bytes memory comparison = abi.encode("post");
-        assertEq(tracker.trackerValue, abi.encode(keccak256(comparison)));
+        assertEq(tracker.trackerValue, comparison);
     }
 
     function testRulesEngine_Unit_CheckRules_WithTrackerValue() public ifDeploymentTestsEnabled endWithStopPrank {
@@ -3814,11 +3814,8 @@ abstract contract trackers is RulesEngineCommon {
 
     function _calculateExpectedMsgDataHash(bytes memory arguments) internal pure returns (bytes32) {
         // Calculate the expected hash of the msg.data
-        // The current _handleGlobalVar implementation returns msg.data directly without complex encoding
-        bytes memory actualMsgData = abi.encodeWithSelector(RulesEngineProcessorFacet.checkPolicies.selector, arguments);
-
-        // The tracker stores the hash of the raw msg.data
-        return keccak256(actualMsgData);
+        // The msg.data that the rules engine sees is the arguments passed to checkPolicies directly
+        return keccak256(arguments);
     }
 
     function testRulesEngine_Unit_MappedTrackerArray_StaticType() public ifDeploymentTestsEnabled resetsGlobalVariables {
@@ -4236,19 +4233,17 @@ abstract contract trackers is RulesEngineCommon {
         string memory trackerType = isMappedTracker ? "mapped tracker" : "regular tracker";
         assertTrue(storedValue.length > 0, string.concat("No data stored in ", trackerType));
 
-        // Decode the stored hash
-        bytes32 storedHash = abi.decode(storedValue, (bytes32));
+        // The stored value should be the raw msg.data bytes, not a hash
+        // When checkPolicies is called, msg.data contains the full call to checkPolicies including the arguments
+        bytes memory expectedMsgData = abi.encodeWithSelector(RulesEngineProcessorFacet.checkPolicies.selector, arguments);
 
-        // Calculate the expected hash using shared method
-        bytes32 expectedHash = _calculateExpectedMsgDataHash(arguments);
-
-        // Verify that the stored hash matches the expected hash
-        assertEq(storedHash, expectedHash, "Stored hash should match expected hash of msg.data");
+        // Verify that the stored data matches the expected msg.data
+        assertEq(storedValue, expectedMsgData, "Stored data should match expected msg.data");
 
         // For regular tracker, verify that the value was actually updated from initial value
         if (!isMappedTracker) {
-            bytes32 initialHash = keccak256(abi.encode(bytes("initial")));
-            assertTrue(storedHash != initialHash, "Tracker value should have changed from initial value");
+            bytes memory initialValue = abi.encode(bytes("initial"));
+            assertTrue(keccak256(storedValue) != keccak256(initialValue), "Tracker value should have changed from initial value");
         }
     }
 
