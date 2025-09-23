@@ -20,6 +20,7 @@ string constant MEMORY_OVERFLOW = "Memory Overflow";
 string constant EMPTY_INSTRUCTION_SET = "Empty Instruction Set";
 string constant ZERO_ADDRESS_NOT_ALLOWED = "Zero Address Is Not Allowed";
 string constant INVALID_TYPE = "Invalid type";
+string constant INVALID_MEMORY_TRACKER_UPDATE_TYPE = "Invalid memory tracker update type";
 string constant INVALID_TRACKER_KEY_TYPE = "Invalid tracker key type";
 string constant KEY_AND_VALUE_SAME = "Tracker keys and values must have the same length";
 string constant CALLING_FUNCTION_NOT_SET = "Calling function not set";

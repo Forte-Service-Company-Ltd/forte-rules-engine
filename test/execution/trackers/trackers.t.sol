@@ -4688,4 +4688,454 @@ abstract contract trackers is RulesEngineCommon {
             TrackerArrayTypes.VOID
         );
     }
+
+    function testRulesEngine_Unit_TrackerUpdate_RevertOnMemoryStringUpdate() public ifDeploymentTestsEnabled endWithStopPrank {
+        // Create a blank policy
+        uint256 policyId = _createBlankPolicy();
+
+        // Build tracker for string type
+        Trackers memory tracker;
+        tracker.pType = ParamTypes.STR;
+        tracker.set = true;
+        tracker.trackerValue = abi.encode("initial");
+
+        // Create the tracker
+        vm.startPrank(policyAdmin);
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
+            policyId,
+            tracker,
+            "stringTracker",
+            TrackerArrayTypes.VOID
+        );
+        vm.stopPrank();
+
+        // Create a rule that tries to update the string tracker from memory (should revert)
+        vm.startPrank(policyAdmin);
+        Rule memory rule;
+
+        // Simple condition that always passes (1 == 1)
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.NUM);
+        rule.instructionSet[1] = 1;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 1;
+        rule.instructionSet[4] = uint(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        // Create effect that tries to update tracker from memory (TRU with TrackerTypes.MEMORY)
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0].valid = true;
+        rule.posEffects[0].effectType = EffectTypes.EXPRESSION;
+        rule.posEffects[0].text = "";
+        rule.posEffects[0].errorMessage = "";
+
+        // TRU instruction: NUM 42 TRU trackerIndex valueIndex TrackerTypes.MEMORY
+        // This will try to call _updateTrackerValue(policyId, trackerId, uint256)
+        // which should revert for string/bytes types
+        rule.posEffects[0].instructionSet = new uint256[](6);
+        rule.posEffects[0].instructionSet[0] = uint(LogicalOp.NUM);
+        rule.posEffects[0].instructionSet[1] = 42; // Some numeric value to store in memory
+        rule.posEffects[0].instructionSet[2] = uint(LogicalOp.TRU);
+        rule.posEffects[0].instructionSet[3] = trackerId; // Tracker index
+        rule.posEffects[0].instructionSet[4] = 0; // Memory index 0 (where 42 is stored)
+        rule.posEffects[0].instructionSet[5] = uint(TrackerTypes.MEMORY); // Use memory (not placeholder)
+
+        rule.negEffects = new Effect[](0);
+
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(
+            policyId,
+            rule,
+            "memoryStringUpdateRule",
+            "Tests memory string update"
+        );
+        vm.stopPrank();
+
+        // Set up calling function
+        vm.startPrank(policyAdmin);
+        ParamTypes[] memory pTypes = new ParamTypes[](1);
+        pTypes[0] = ParamTypes.ADDR;
+        bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes("testFunction(address)"))),
+            pTypes,
+            "testFunction",
+            "",
+            "testFunction"
+        );
+
+        // Update policy with rule
+        bytes4[] memory callingFunctions = new bytes4[](1);
+        callingFunctions[0] = callingFunctionId;
+        uint256[][] memory ruleIds = new uint256[][](1);
+        ruleIds[0] = new uint256[](1);
+        ruleIds[0][0] = ruleId;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            callingFunctions,
+            ruleIds,
+            PolicyType.OPEN_POLICY,
+            "testPolicy",
+            "Test policy for memory tracker update"
+        );
+        vm.stopPrank();
+
+        // Apply policy to user contract
+        vm.startPrank(callingContractAdmin);
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract), policyIds);
+        vm.stopPrank();
+
+        // Execute the policy and expect revert
+        vm.startPrank(address(userContract));
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes("testFunction(address)"))), address(0x1234));
+
+        vm.expectRevert("Invalid memory tracker update type");
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+    }
+
+    function testRulesEngine_Unit_TrackerUpdate_RevertOnMemoryBytesUpdate() public ifDeploymentTestsEnabled endWithStopPrank {
+        // Create a blank policy
+        uint256 policyId = _createBlankPolicy();
+
+        // Build tracker for bytes type
+        Trackers memory tracker;
+        tracker.pType = ParamTypes.BYTES;
+        tracker.set = true;
+        tracker.trackerValue = abi.encode(hex"deadbeef");
+
+        // Create the tracker
+        vm.startPrank(policyAdmin);
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createTracker(
+            policyId,
+            tracker,
+            "bytesTracker",
+            TrackerArrayTypes.VOID
+        );
+        vm.stopPrank();
+
+        // Create a rule that tries to update the bytes tracker from memory (should revert)
+        vm.startPrank(policyAdmin);
+        Rule memory rule;
+
+        // Simple condition that always passes (1 == 1)
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.NUM);
+        rule.instructionSet[1] = 1;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 1;
+        rule.instructionSet[4] = uint(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        // Create effect that tries to update tracker from memory (TRU with TrackerTypes.MEMORY)
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0].valid = true;
+        rule.posEffects[0].effectType = EffectTypes.EXPRESSION;
+        rule.posEffects[0].text = "";
+        rule.posEffects[0].errorMessage = "";
+
+        // TRU instruction: NUM 123 TRU trackerIndex valueIndex TrackerTypes.MEMORY
+        // This will try to call _updateTrackerValue(policyId, trackerId, uint256)
+        // which should revert for string/bytes types
+        rule.posEffects[0].instructionSet = new uint256[](6);
+        rule.posEffects[0].instructionSet[0] = uint(LogicalOp.NUM);
+        rule.posEffects[0].instructionSet[1] = 123; // Some numeric value to store in memory
+        rule.posEffects[0].instructionSet[2] = uint(LogicalOp.TRU);
+        rule.posEffects[0].instructionSet[3] = trackerId; // Tracker index
+        rule.posEffects[0].instructionSet[4] = 0; // Memory index 0 (where 123 is stored)
+        rule.posEffects[0].instructionSet[5] = uint(TrackerTypes.MEMORY); // Use memory (not placeholder)
+
+        rule.negEffects = new Effect[](0);
+
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(
+            policyId,
+            rule,
+            "memoryBytesUpdateRule",
+            "Tests memory bytes update"
+        );
+        vm.stopPrank();
+
+        // Set up calling function
+        vm.startPrank(policyAdmin);
+        ParamTypes[] memory pTypes = new ParamTypes[](1);
+        pTypes[0] = ParamTypes.ADDR;
+        bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes("testFunction(address)"))),
+            pTypes,
+            "testFunction",
+            "",
+            "testFunction"
+        );
+
+        // Update policy with rule
+        bytes4[] memory callingFunctions = new bytes4[](1);
+        callingFunctions[0] = callingFunctionId;
+        uint256[][] memory ruleIds = new uint256[][](1);
+        ruleIds[0] = new uint256[](1);
+        ruleIds[0][0] = ruleId;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            callingFunctions,
+            ruleIds,
+            PolicyType.OPEN_POLICY,
+            "testPolicy",
+            "Test policy for memory tracker update"
+        );
+        vm.stopPrank();
+
+        // Apply policy to user contract
+        vm.startPrank(callingContractAdmin);
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract), policyIds);
+        vm.stopPrank();
+
+        // Execute the policy and expect revert
+        vm.startPrank(address(userContract));
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes("testFunction(address)"))), address(0x1234));
+
+        vm.expectRevert("Invalid memory tracker update type");
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+    }
+
+    function testRulesEngine_Unit_MappedTrackerUpdate_RevertOnMemoryStringUpdate() public ifDeploymentTestsEnabled endWithStopPrank {
+        // Create a blank policy
+        uint256 policyId = _createBlankPolicy();
+
+        // Build mapped tracker for string type
+        Trackers memory tracker;
+        tracker.pType = ParamTypes.STR;
+        tracker.mapped = true;
+        tracker.trackerKeyType = ParamTypes.UINT;
+
+        // Create initial tracker data
+        bytes[] memory trackerKeys = new bytes[](1);
+        bytes[] memory trackerValues = new bytes[](1);
+        trackerKeys[0] = abi.encode(1);
+        trackerValues[0] = abi.encode("initial");
+
+        // Create the mapped tracker
+        vm.startPrank(policyAdmin);
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyId,
+            tracker,
+            "mappedStringTracker",
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.VOID
+        );
+        vm.stopPrank();
+
+        // Create a rule that tries to update the mapped string tracker from memory (should revert)
+        vm.startPrank(policyAdmin);
+        Rule memory rule;
+
+        // Simple condition that always passes (1 == 1)
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.NUM);
+        rule.instructionSet[1] = 1;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 1;
+        rule.instructionSet[4] = uint(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        // Create effect that tries to update mapped tracker from memory (TRUM with TrackerTypes.MEMORY)
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0].valid = true;
+        rule.posEffects[0].effectType = EffectTypes.EXPRESSION;
+        rule.posEffects[0].text = "";
+        rule.posEffects[0].errorMessage = "";
+
+        // TRUM instruction: NUM 42 NUM 1 TRUM trackerIndex valueIndex keyIndex TrackerTypes.MEMORY
+        // This will try to call _updateMappedTrackerValue(policyId, trackerId, uint256, uint256)
+        // which should revert for string/bytes types
+        rule.posEffects[0].instructionSet = new uint256[](9);
+        rule.posEffects[0].instructionSet[0] = uint(LogicalOp.NUM);
+        rule.posEffects[0].instructionSet[1] = 42; // Some numeric value to store in memory
+        rule.posEffects[0].instructionSet[2] = uint(LogicalOp.NUM);
+        rule.posEffects[0].instructionSet[3] = 1; // Key value
+        rule.posEffects[0].instructionSet[4] = uint(LogicalOp.TRUM);
+        rule.posEffects[0].instructionSet[5] = trackerId; // Tracker index
+        rule.posEffects[0].instructionSet[6] = 0; // Memory index 0 (where 42 is stored)
+        rule.posEffects[0].instructionSet[7] = 1; // Memory index 1 (where 1 is stored)
+        rule.posEffects[0].instructionSet[8] = uint(TrackerTypes.MEMORY); // Use memory (not placeholder)
+
+        rule.negEffects = new Effect[](0);
+
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(
+            policyId,
+            rule,
+            "memoryMappedStringUpdateRule",
+            "Tests memory mapped string update"
+        );
+        vm.stopPrank();
+
+        // Set up calling function
+        vm.startPrank(policyAdmin);
+        ParamTypes[] memory pTypes = new ParamTypes[](1);
+        pTypes[0] = ParamTypes.ADDR;
+        bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes("testFunction(address)"))),
+            pTypes,
+            "testFunction",
+            "",
+            "testFunction"
+        );
+
+        // Update policy with rule
+        bytes4[] memory callingFunctions = new bytes4[](1);
+        callingFunctions[0] = callingFunctionId;
+        uint256[][] memory ruleIds = new uint256[][](1);
+        ruleIds[0] = new uint256[](1);
+        ruleIds[0][0] = ruleId;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            callingFunctions,
+            ruleIds,
+            PolicyType.OPEN_POLICY,
+            "testPolicy",
+            "Test policy for memory mapped tracker update"
+        );
+        vm.stopPrank();
+
+        // Apply policy to user contract
+        vm.startPrank(callingContractAdmin);
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract), policyIds);
+        vm.stopPrank();
+
+        // Execute the policy and expect revert
+        vm.startPrank(address(userContract));
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes("testFunction(address)"))), address(0x1234));
+
+        vm.expectRevert("Invalid memory tracker update type");
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+    }
+
+    function testRulesEngine_Unit_MappedTrackerUpdate_RevertOnMemoryBytesUpdate() public ifDeploymentTestsEnabled endWithStopPrank {
+        // Create a blank policy
+        uint256 policyId = _createBlankPolicy();
+
+        // Build mapped tracker for bytes type
+        Trackers memory tracker;
+        tracker.pType = ParamTypes.BYTES;
+        tracker.mapped = true;
+        tracker.trackerKeyType = ParamTypes.UINT;
+
+        // Create initial tracker data
+        bytes[] memory trackerKeys = new bytes[](1);
+        bytes[] memory trackerValues = new bytes[](1);
+        trackerKeys[0] = abi.encode(1);
+        trackerValues[0] = abi.encode(hex"deadbeef");
+
+        // Create the mapped tracker
+        vm.startPrank(policyAdmin);
+        uint256 trackerId = RulesEngineComponentFacet(address(red)).createMappedTracker(
+            policyId,
+            tracker,
+            "mappedStringTracker",
+            trackerKeys,
+            trackerValues,
+            TrackerArrayTypes.VOID
+        );
+        vm.stopPrank();
+
+        // Create a rule that tries to update the mapped string tracker from memory (should revert)
+        vm.startPrank(policyAdmin);
+        Rule memory rule;
+
+        // Simple condition that always passes (1 == 1)
+        rule.instructionSet = new uint256[](7);
+        rule.instructionSet[0] = uint(LogicalOp.NUM);
+        rule.instructionSet[1] = 1;
+        rule.instructionSet[2] = uint(LogicalOp.NUM);
+        rule.instructionSet[3] = 1;
+        rule.instructionSet[4] = uint(LogicalOp.EQ);
+        rule.instructionSet[5] = 0;
+        rule.instructionSet[6] = 1;
+
+        // Create effect that tries to update mapped tracker from memory (TRUM with TrackerTypes.MEMORY)
+        rule.posEffects = new Effect[](1);
+        rule.posEffects[0].valid = true;
+        rule.posEffects[0].effectType = EffectTypes.EXPRESSION;
+        rule.posEffects[0].text = "";
+        rule.posEffects[0].errorMessage = "";
+
+        // TRUM instruction: NUM 42 NUM 1 TRUM trackerIndex valueIndex keyIndex TrackerTypes.MEMORY
+        // This will try to call _updateMappedTrackerValue(policyId, trackerId, uint256, uint256)
+        // which should revert for string/bytes types
+        rule.posEffects[0].instructionSet = new uint256[](9);
+        rule.posEffects[0].instructionSet[0] = uint(LogicalOp.NUM);
+        rule.posEffects[0].instructionSet[1] = 42; // Some numeric value to store in memory
+        rule.posEffects[0].instructionSet[2] = uint(LogicalOp.NUM);
+        rule.posEffects[0].instructionSet[3] = 1; // Key value
+        rule.posEffects[0].instructionSet[4] = uint(LogicalOp.TRUM);
+        rule.posEffects[0].instructionSet[5] = trackerId; // Tracker index
+        rule.posEffects[0].instructionSet[6] = 0; // Memory index 0 (where 42 is stored)
+        rule.posEffects[0].instructionSet[7] = 1; // Memory index 1 (where 1 is stored)
+        rule.posEffects[0].instructionSet[8] = uint(TrackerTypes.MEMORY); // Use memory (not placeholder)
+
+        rule.negEffects = new Effect[](0);
+
+        uint256 ruleId = RulesEngineRuleFacet(address(red)).createRule(
+            policyId,
+            rule,
+            "memoryMappedStringUpdateRule",
+            "Tests memory mapped string update"
+        );
+        vm.stopPrank();
+
+        // Set up calling function
+        vm.startPrank(policyAdmin);
+        ParamTypes[] memory pTypes = new ParamTypes[](1);
+        pTypes[0] = ParamTypes.ADDR;
+        bytes4 callingFunctionId = RulesEngineComponentFacet(address(red)).createCallingFunction(
+            policyId,
+            bytes4(keccak256(bytes("testFunction(address)"))),
+            pTypes,
+            "testFunction",
+            "",
+            "testFunction"
+        );
+
+        // Update policy with rule
+        bytes4[] memory callingFunctions = new bytes4[](1);
+        callingFunctions[0] = callingFunctionId;
+        uint256[][] memory ruleIds = new uint256[][](1);
+        ruleIds[0] = new uint256[](1);
+        ruleIds[0][0] = ruleId;
+
+        RulesEnginePolicyFacet(address(red)).updatePolicy(
+            policyId,
+            callingFunctions,
+            ruleIds,
+            PolicyType.OPEN_POLICY,
+            "testPolicy",
+            "Test policy for memory mapped tracker update"
+        );
+        vm.stopPrank();
+
+        // Apply policy to user contract
+        vm.startPrank(callingContractAdmin);
+        uint256[] memory policyIds = new uint256[](1);
+        policyIds[0] = policyId;
+        RulesEnginePolicyFacet(address(red)).applyPolicy(address(userContract), policyIds);
+        vm.stopPrank();
+
+        // Execute the policy and expect revert
+        vm.startPrank(address(userContract));
+        bytes memory arguments = abi.encodeWithSelector(bytes4(keccak256(bytes("testFunction(address)"))), address(0x1234));
+
+        vm.expectRevert("Invalid memory tracker update type");
+        RulesEngineProcessorFacet(address(red)).checkPolicies(arguments);
+    }
 }

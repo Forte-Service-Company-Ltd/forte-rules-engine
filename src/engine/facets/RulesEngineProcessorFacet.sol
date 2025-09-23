@@ -745,7 +745,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         if (trk.pType == ParamTypes.UINT || trk.pType == ParamTypes.ADDR || trk.pType == ParamTypes.BOOL) {
             trk.trackerValue = abi.encode(_trackerValue);
         } else if (trk.pType == ParamTypes.BYTES || trk.pType == ParamTypes.STR) {
-            trk.trackerValue = ProcessorLib._uintToBytes(_trackerValue);
+            revert(INVALID_MEMORY_TRACKER_UPDATE_TYPE);
         } else if (trk.pType == ParamTypes.ARRAY_OF_VALUE_TYPES || trk.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             trk.trackerValue = abi.encode(_trackerValue);
         } else {
@@ -760,9 +760,8 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
      * @param _trackerValue The new value to be assigned to the tracker, encoded as bytes.
      */
     function _updateTrackerValue(uint256 _policyId, uint256 _trackerId, bytes memory _trackerValue) internal {
-        // retrieve the tracker
-        Trackers storage trk = lib._getTrackerStorage().trackers[_policyId][_trackerId];
-        trk.trackerValue = _trackerValue;
+        // update the tracker
+        lib._getTrackerStorage().trackers[_policyId][_trackerId].trackerValue = _trackerValue;
     }
 
     /**
@@ -790,7 +789,7 @@ contract RulesEngineProcessorFacet is FacetCommonImports {
         if (trk.pType == ParamTypes.UINT || trk.pType == ParamTypes.ADDR || trk.pType == ParamTypes.BOOL) {
             encodedValue = abi.encode(_trackerValue);
         } else if (trk.pType == ParamTypes.BYTES || trk.pType == ParamTypes.STR) {
-            encodedValue = ProcessorLib._uintToBytes(_trackerValue);
+            revert(INVALID_MEMORY_TRACKER_UPDATE_TYPE);
         } else if (trk.pType == ParamTypes.ARRAY_OF_VALUE_TYPES || trk.pType == ParamTypes.ARRAY_OF_REFERENCE_TYPES) {
             encodedValue = abi.encode(_trackerValue);
         } else {
