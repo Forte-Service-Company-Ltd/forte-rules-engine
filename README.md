@@ -1,4 +1,4 @@
-## Forte Rules Engine - UNDER DEVELOPMENT
+## Forte Rules Engine
 
 [![Project Version][version-image]][version-url]
 
