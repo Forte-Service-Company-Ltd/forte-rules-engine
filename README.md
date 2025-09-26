@@ -2,13 +2,9 @@
 
 [![Project Version][version-image]][version-url]
 
-This is the next iteration of the Forte Rules Engine! If you're looking for the original version, go [here](https://github.com/thrackle-io/forte-rules-engine-v1).
+This repository contains an EVM-based protocol called the Forte Rules Engine. This protocol lets you easily define powerful, flexible, composable on-chain policies without hardcoding rules into your smart contracts. 
 
-This enhanced architecture prioritizes ease of integration and increased rule configurability. Check out our quickstart guide [here](https://docs.forterulesengine.io/v2/quickstart)!
-
-This project is under development and **not yet audited**.
-
-This repository contains an EVM-based protocol designed to meet the unique needs of tokenized assets and on-chain economies. The protocol enables the creation and management of economic and compliance controls for your on-chain economy at the token level, allowing for maximum flexibility while maintaining the transparency and trustlessness of Web3.
+Check out our docs and quickstart guide [here](https://docs.forterulesengine.io/v2/quickstart)!
 
 ## Contributing
 
