@@ -16,5 +16,5 @@ env:
 
 jobs:
   test:
-    uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-build-test-report.yaml@v0.0.1
+    uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-build-test-report.yaml@INF-294-Code-Quality-Workflow
     secrets: inherit
