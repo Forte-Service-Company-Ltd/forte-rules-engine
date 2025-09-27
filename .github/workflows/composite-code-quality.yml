@@ -1,4 +1,4 @@
-name: Composite Build and Test
+name: Composite Code Quality
 
 on:
   push:
@@ -11,10 +11,7 @@ on:
 permissions:
   pull-requests: write
 
-env:
-  FOUNDRY_PROFILE: ci
-
 jobs:
-  test:
-    uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-build-test-report.yaml@INF-294-Code-Quality-Workflow
+  code-quality:
+    uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-code-quality.yaml@INF-294-Code-Quality-Workflow
     secrets: inherit
