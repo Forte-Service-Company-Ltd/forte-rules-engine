@@ -3,7 +3,6 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin-contracts-upgradeable-5.4.0/token/ERC20/ERC20Upgradeable.sol";
 import "src/client/RulesEngineClientERC20.sol";
-import "@openzeppelin-contracts-upgradeable-5.4.0/token/ERC20/ERC20Upgradeable.sol";
 
 contract ExampleERC20Upgradeable is ERC20Upgradeable, RulesEngineClientERC20 {
 
