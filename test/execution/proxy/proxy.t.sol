@@ -87,11 +87,11 @@ contract ProxyTest is RulesEngineCommon {
         vm.stopPrank();
         _setupRuleWithRevertTransferFrom(userContractERC20Address);
         vm.startPrank(callingContractAdmin);
-        ExampleERC20Upgradeable(userContractERC20Address).mint(callingContractAdmin, 50);
+        ExampleERC20(userContractERC20Address).mint(callingContractAdmin, 50);
 
         // Set up an approved transfer for a calling contract.
         DummyTrade trader = new DummyTrade();
-        ExampleERC20Upgradeable(userContractERC20Address).approve(address(trader), 1);
+        IERC20(userContractERC20Address).approve(address(trader), 1);
 
         vm.expectRevert(abi.encodePacked(revert_text));
         trader.dummyTrade(userContractERC20Address, callingContractAdmin, address(22), 1);
