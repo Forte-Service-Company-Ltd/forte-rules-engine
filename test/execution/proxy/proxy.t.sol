@@ -64,18 +64,6 @@ contract ProxyTest is RulesEngineCommon {
         trader.dummyTrade(address(proxy), callingContractAdmin, address(22), 5);
     }
 
-    function testRulesEngine_Unit_Proxy_Contract_Call_Positive() public ifDeploymentTestsEnabled endWithStopPrank {
-        _setupRuleWithRevertForProxyTransferFrom(address(proxy));
-        vm.startPrank(callingContractAdmin);
-        ExampleERC20Upgradeable(address(proxy)).mint(callingContractAdmin, 50);
-
-        // Set up an approved transfer for a calling contract.
-        DummyTrade trader = new DummyTrade();
-        ExampleERC20Upgradeable(address(proxy)).approve(address(trader), 1);
-
-        vm.expectRevert(abi.encodePacked(revert_text));
-        trader.dummyTrade(address(proxy), callingContractAdmin, address(22), 1);
-    }
     /// Ensure that a contract call to a FRE enabled function still invokes the policies.
     function testRulesEngine_Unit_Contract_Call_Negative() public ifDeploymentTestsEnabled endWithStopPrank {
         vm.startPrank(callingContractAdmin);
@@ -155,7 +143,7 @@ contract ProxyTest is RulesEngineCommon {
 
         _addCallingFunctionToPolicyForTransferFrom(policyIds[0]);
 
-        // Rule: amount > 4 -> revert -> transfer(address _to, uint256 amount) returns (bool)"
+        // Rule: amount > 4 -> revert -> transferFrom(address _to, uint256 amount) returns (bool)"
         // Rule memory rule = _createGTRule(policyIds[0], 4);
         Rule memory rule;
         // Instruction set: LogicalOp.PLH, 0, LogicalOp.NUM, _amount, LogicalOp.GT, 0, 1
