@@ -1,4 +1,4 @@
-name: Composite Build and Test
+name: Composite Code Quality
 
 on:
   push:
@@ -12,6 +12,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  test:
-    uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-build-test-report.yaml@v0.0.2
+  code-quality:
+    uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-code-quality.yaml@v0.0.2
     secrets: inherit
