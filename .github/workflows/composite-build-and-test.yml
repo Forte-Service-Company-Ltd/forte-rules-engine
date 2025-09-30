@@ -11,9 +11,6 @@ on:
 permissions:
   pull-requests: write
 
-env:
-  FOUNDRY_PROFILE: ci
-
 jobs:
   test:
     uses: Forte-Service-Company-Ltd/infrastructure-tooling/.github/workflows/onchain-build-test-report.yaml@INF-294-Code-Quality-Workflow
