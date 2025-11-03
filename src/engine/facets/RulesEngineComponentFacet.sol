@@ -365,6 +365,8 @@ contract RulesEngineComponentFacet is FacetCommonImports {
         for (uint256 i = 0; i < _trackerKeys.length; i++) {
             // Step 2: Store tracker data
             _storeTrackerData(_policyId, _trackerIndex, _tracker, _trackerKeys[i], _trackerValues[i]);
+            lib._getTrackerMetadataStorage().trackerMetadata[_policyId][_trackerIndex].initialKeys.push(_trackerKeys[i]);
+            lib._getTrackerMetadataStorage().trackerMetadata[_policyId][_trackerIndex].initialValues.push(_trackerValues[i]);
         }
         emit TrackerUpdated(_policyId, _trackerIndex);
     }
