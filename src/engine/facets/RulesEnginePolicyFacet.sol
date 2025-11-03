@@ -18,7 +18,7 @@ contract RulesEnginePolicyFacet is FacetCommonImports {
     // Policy Management
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    string public constant version = "v0.9.1";
+    string public constant version = "v0.9.2";
 
     /**
      * @notice Updates a policy in storage.
