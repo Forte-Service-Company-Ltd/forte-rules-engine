@@ -14,7 +14,7 @@ forge build
 
 ### Dependencies
 
-In order to deploy the engine, there are some other requirements. First, a python virtual environment is needed to install the python requirements. We'll also set the env source now.
+In order to deploy the engine, there are some other requirements. First, a Python virtual environment is needed to install the Python requirements. We'll also set the env source now.
 
 ```bash
 python3 -m venv .venv
