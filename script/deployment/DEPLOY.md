@@ -54,9 +54,9 @@ GAS_NUMBER=20000000000  # Gas price in wei (optional)
 source .env
 ```
 
-**Direct Forge Deployment**
-Using the bash script
+#### Direct Forge Deployment Using Bash Script
 
+This method deploys the Forte Rules Engine contracts directly using Forge via a provided bash script. Ensure your environment variables are configured as described above before running the script.
 ```bash
 bash script/deployment/SimpleDeploy.sh
 ```
