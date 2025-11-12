@@ -4,7 +4,7 @@
 
 This repository contains an EVM-based protocol called the Forte Rules Engine. This protocol lets you easily define powerful, flexible, composable on-chain policies without hardcoding rules into your smart contracts. 
 
-Check out our docs and quickstart guide [here](https://docs.forterulesengine.io/quickstart)!
+Check out our docs and quickstart guide [here](https://docs.forterulesengine.io/quickstart#quickstart)!
 
 ## Contributing
 
