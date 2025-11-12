@@ -31,8 +31,14 @@ The following section will run through the deployment process of the Forte Rules
 
 Before deploying, configure your environment variables in the `.env` file:
 
+> ⚠️ **Security Warning:**  
+> - **Never commit your `.env` file to version control (e.g., git).**  
+> - **Do not store private keys in plaintext `.env` files for production or sensitive deployments.**  
+> - Use encrypted secrets management solutions (such as HashiCorp Vault, AWS Secrets Manager, or environment-specific secret stores) or hardware wallets to manage private keys securely.  
+> - The example below is for demonstration purposes only.  
+
 ```bash
-# Deployment Configuration
+# Deployment Configuration (Example - do not use plaintext keys in production)
 DEPLOYER_PRIVATE_KEY=0x1234567890abcdef...  # Private key of the deploying account
 DESIRED_DEPLOYMENT_ADDRESS=0x742d35Cc6634C0532925a3b8D400414004C07f5F  # Target deployment address
 ETH_RPC_URL=https://mainnet.infura.io/v3/your-project-id  # RPC URL for target chain
